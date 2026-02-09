@@ -1,0 +1,33 @@
+type Persona {
+    id_persona: ID
+    nombre: String
+    apellido: String
+    documento: String
+    email: String
+    telefono: String
+    estado: String
+    # Relacion con bienes si fuera necesario, pero por ahora solo campos basicos
+}
+
+input PersonaInput {
+    nombre: String!
+    apellido: String!
+    documento: String!
+    email: String
+    telefono: String
+    estado: String
+}
+
+input RegistroPersonaConBienesInput {
+    persona: PersonaInput!
+    bienes: [BienConPorcentajeInput]
+}
+
+input BienConPorcentajeInput {
+    bien: BienInput!
+    porcentaje: Float!
+}
+
+type Mutation {
+    registrarPersonaConBienes(input: RegistroPersonaConBienesInput): Persona
+}

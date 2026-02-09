@@ -1,0 +1,34 @@
+scalar Date
+scalar BigDecimal
+
+type Bien {
+    id_bien: ID
+    tipo: String
+    descripcion: String
+    valor: BigDecimal
+    fecha_adquisicion: Date
+    id_empresa: Int
+    estado: String
+}
+
+type PropiedadBien {
+    id_propiedad_bien: ID
+    bien: Bien
+    persona: Persona
+    porcentaje_propiedad: BigDecimal
+}
+
+input BienInput {
+    tipo: String
+    descripcion: String
+    valor: BigDecimal
+    fecha_adquisicion: Date
+    id_empresa: Int
+    estado: String
+}
+
+input PropiedadBienInput {
+    id_bien: Int
+    id_persona: Int
+    porcentaje_propiedad: BigDecimal
+}

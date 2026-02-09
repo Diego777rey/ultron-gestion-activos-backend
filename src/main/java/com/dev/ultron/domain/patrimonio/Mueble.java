@@ -16,7 +16,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "mueble", schema = "patrimonio")
-@PrimaryKeyJoinColumn(name = "id_mueble") // Mapping id_mueble to base id_bien
+@PrimaryKeyJoinColumn(name = "id_mueble")
 public class Mueble extends Bien {
 
     private String tipo_mueble;

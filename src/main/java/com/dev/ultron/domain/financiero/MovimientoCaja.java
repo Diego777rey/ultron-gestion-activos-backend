@@ -32,14 +32,14 @@ public class MovimientoCaja implements Serializable {
     @JoinColumn(name = "id_caja")
     private Caja caja;
 
-    private String tipo; // INGRESO, EGRESO, AJUSTE
+    private String tipo;
     private BigDecimal monto;
     private String concepto;
     private LocalDateTime fecha;
 
     @ManyToOne
     @JoinColumn(name = "id_persona")
-    private Persona persona; // Quien realizo el movimiento
+    private Persona persona;
 
     @ManyToOne
     @JoinColumn(name = "id_autorizador")
