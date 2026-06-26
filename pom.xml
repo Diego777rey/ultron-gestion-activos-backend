@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.dev</groupId>
 	<artifactId>ultron</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<name>ultron</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
@@ -111,7 +111,7 @@
 						</goals>
 						<configuration>
 							<schemaPaths>
-								<param>src/main/resources/graphql-client</param>
+								<param>src/main/resources/graphql</param>
 							</schemaPaths>
 							<packageName>com.dev.ultron.codegen</packageName>
 							<addGeneratedAnnotation>true</addGeneratedAnnotation>
