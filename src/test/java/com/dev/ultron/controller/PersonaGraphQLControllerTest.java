@@ -1,18 +1,21 @@
 package com.dev.ultron.controller;
 
+import com.dev.ultron.config.GraphQlScalarConfig;
 import com.dev.ultron.domain.personas.Persona;
 import com.dev.ultron.dto.personas.input.RegistroPersonaConBienesInput;
 import com.dev.ultron.service.PersonaService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.graphql.test.autoconfigure.GraphQlTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.graphql.test.tester.GraphQlTester;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@GraphQlTest(PersonaGraphQLController.class)
+@GraphQlTest({PersonaGraphQLController.class, HealthGraphQLController.class})
+@Import(GraphQlScalarConfig.class)
 public class PersonaGraphQLControllerTest {
 
     @Autowired
