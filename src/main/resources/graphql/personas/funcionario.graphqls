@@ -1,0 +1,33 @@
+# =============================================================
+# Schema de Funcionario - CRUD completo
+# =============================================================
+
+scalar BigDecimal
+
+# ---- OUTPUT: Tipo de salida para consultas ----
+type FuncionarioOutput {
+    id_funcionario: ID
+    persona: PersonaOutput
+    sueldo: BigDecimal
+    sector: String
+    fechaIngreso: String
+    facePrueba: Boolean
+    estado: Boolean
+}
+
+# ---- INPUT: Tipo de entrada para mutations ----
+input FuncionarioInput {
+    persona: PersonaInput!
+    sueldo: BigDecimal
+    sector: String
+    fechaIngreso: String
+    facePrueba: Boolean
+    estado: Boolean
+}
+
+# ---- MUTATIONS: Operaciones de escritura ----
+extend type Mutation {
+    registrarFuncionario(input: FuncionarioInput!): FuncionarioOutput
+    actualizarFuncionario(id: ID!, input: FuncionarioInput!): FuncionarioOutput
+    eliminarFuncionario(id: ID!): Boolean
+}

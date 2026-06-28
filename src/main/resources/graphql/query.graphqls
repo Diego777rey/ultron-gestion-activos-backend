@@ -1,3 +1,21 @@
+# =============================================================
+# Schema principal - Punto de entrada de Query y Mutation
+# Los tipos se extienden desde los archivos .graphqls de cada módulo
+# =============================================================
+
 type Query {
     status: String
+
+    # ---- Personas: Funcionarios ----
+    listarFuncionarios: [FuncionarioOutput!]!
+    buscarFuncionarioPorId(id: ID!): FuncionarioOutput
+
+    # ---- Personas: Clientes ----
+    listarClientes: [ClienteOutput!]!
+    buscarClientePorId(id: ID!): ClienteOutput
+}
+
+# Tipo base de Mutation - se extiende desde cada módulo
+type Mutation {
+    _empty: String
 }
