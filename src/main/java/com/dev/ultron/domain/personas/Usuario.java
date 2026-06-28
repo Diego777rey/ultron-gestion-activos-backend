@@ -30,7 +30,6 @@ public class Usuario implements Serializable {
     private String password;
     private String email;
     private Boolean activo;
-    private Long sucursal_id;
 
     @OneToMany(mappedBy = "usuario")
     @Builder.Default

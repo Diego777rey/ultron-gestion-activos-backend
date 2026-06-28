@@ -1,33 +1,26 @@
-type Persona {
+# =============================================================
+# Schema de Persona - Tipos base reutilizables
+# =============================================================
+
+# ---- OUTPUT: Tipo de salida para consultas ----
+type PersonaOutput {
     id_persona: ID
     nombre: String
     apellido: String
     documento: String
     email: String
     telefono: String
+    direccion: String
     estado: String
-    # Relacion con bienes si fuera necesario, pero por ahora solo campos basicos
 }
 
+# ---- INPUT: Tipo de entrada para mutations ----
 input PersonaInput {
     nombre: String!
     apellido: String!
     documento: String!
     email: String
     telefono: String
+    direccion: String
     estado: String
-}
-
-input RegistroPersonaConBienesInput {
-    persona: PersonaInput!
-    bienes: [BienConPorcentajeInput]
-}
-
-input BienConPorcentajeInput {
-    bien: BienInput!
-    porcentaje: Float!
-}
-
-type Mutation {
-    registrarPersonaConBienes(input: RegistroPersonaConBienesInput): Persona
 }

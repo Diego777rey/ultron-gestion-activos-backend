@@ -1,0 +1,33 @@
+# =============================================================
+# Schema de Cliente - CRUD completo
+# =============================================================
+
+# ---- OUTPUT: Tipo de salida para consultas ----
+type ClienteOutput {
+    id_cliente: ID
+    persona: PersonaOutput
+    ruc: String
+    tipoCliente: String
+    limiteCredito: BigDecimal
+    fechaRegistro: String
+    observaciones: String
+    estado: Boolean
+}
+
+# ---- INPUT: Tipo de entrada para mutations ----
+input ClienteInput {
+    persona: PersonaInput!
+    ruc: String
+    tipoCliente: String
+    limiteCredito: BigDecimal
+    fechaRegistro: String
+    observaciones: String
+    estado: Boolean
+}
+
+# ---- MUTATIONS: Operaciones de escritura ----
+extend type Mutation {
+    registrarCliente(input: ClienteInput!): ClienteOutput
+    actualizarCliente(id: ID!, input: ClienteInput!): ClienteOutput
+    eliminarCliente(id: ID!): Boolean
+}

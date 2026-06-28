@@ -8,5 +8,6 @@ public record PersonaInput(
         String documento,
         String email,
         String telefono,
+        String direccion,
         String estado) implements Serializable {
 }

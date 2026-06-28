@@ -1,5 +1,4 @@
 scalar Date
-scalar BigDecimal
 
 type Bien {
     id_bien: ID
@@ -14,7 +13,7 @@ type Bien {
 type PropiedadBien {
     id_propiedad_bien: ID
     bien: Bien
-    persona: Persona
+    persona: PersonaOutput
     porcentaje_propiedad: BigDecimal
 }
 

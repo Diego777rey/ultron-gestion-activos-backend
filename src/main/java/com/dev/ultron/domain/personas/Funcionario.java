@@ -22,21 +22,20 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "cliente", schema = "personas")
-public class Cliente implements Serializable {
+@Table(name = "funcionario", schema = "personas")
+public class Funcionario implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_cliente;
+    private Long id_funcionario;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona", nullable = false, unique = true)
     private Persona persona;
 
-    private String ruc;
-    private String tipoCliente;
-    private BigDecimal limiteCredito;
-    private LocalDate fechaRegistro;
-    private String observaciones;
+    private BigDecimal sueldo;
+    private String sector;
+    private LocalDate fechaIngreso;
+    private boolean facePrueba;
     private boolean estado;
 }
