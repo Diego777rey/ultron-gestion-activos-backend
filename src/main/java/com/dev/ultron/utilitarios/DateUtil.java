@@ -24,12 +24,23 @@ public class DateUtil {
     }
 
     public static LocalDate parseDate(String dateStr) {
-        return dateStr != null && !dateStr.isBlank() ? LocalDate.parse(dateStr, DATE_FORMATTER) : null;
+        if (dateStr == null || dateStr.isBlank()) {
+            return null;
+        }
+        if (dateStr.contains("-")) {
+            return LocalDate.parse(dateStr);
+        }
+        return LocalDate.parse(dateStr, DATE_FORMATTER);
     }
 
     public static LocalDateTime parseDateTime(String dateTimeStr) {
-        return dateTimeStr != null && !dateTimeStr.isBlank() ? LocalDateTime.parse(dateTimeStr, DATETIME_FORMATTER)
-                : null;
+        if (dateTimeStr == null || dateTimeStr.isBlank()) {
+            return null;
+        }
+        if (dateTimeStr.contains("T") || dateTimeStr.contains("-")) {
+            return LocalDateTime.parse(dateTimeStr);
+        }
+        return LocalDateTime.parse(dateTimeStr, DATETIME_FORMATTER);
     }
 
     public static LocalDate now() {
