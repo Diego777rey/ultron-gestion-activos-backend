@@ -32,7 +32,7 @@ from pathlib import Path
 content = Path("pom.xml").read_text()
 content = re.sub(
     r"(<artifactId>ultron</artifactId>\\s*\\n\\s*<version>)[^<]+(</version>)",
-    rf"\\g<1>{new_version}\\g<2>",
+    r"\\g<1>${new_version}\\g<2>",
     content,
     count=1,
 )
