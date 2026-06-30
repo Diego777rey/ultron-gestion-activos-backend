@@ -8,11 +8,23 @@ type Query {
 
     # ---- Personas: Funcionarios ----
     listarFuncionarios: [FuncionarioOutput!]!
+    listarFuncionariosPaginado(page: Int!, size: Int!): FuncionarioPageResponse!
     buscarFuncionarioPorId(id: ID!): FuncionarioOutput
 
     # ---- Personas: Clientes ----
     listarClientes: [ClienteOutput!]!
+    listarClientesPaginado(page: Int!, size: Int!): ClientePageResponse!
     buscarClientePorId(id: ID!): ClienteOutput
+
+    # ---- Personas: Roles ----
+    listarRoles: [RoleOutput!]!
+    listarRolesPaginado(page: Int!, size: Int!): RolePageResponse!
+    buscarRolePorId(id: ID!): RoleOutput
+
+    # ---- Personas: Usuarios ----
+    listarUsuarios: [UsuarioOutput!]!
+    listarUsuariosPaginado(page: Int!, size: Int!): UsuarioPageResponse!
+    buscarUsuarioPorId(id: ID!): UsuarioOutput
 }
 
 # Tipo base de Mutation - se extiende desde cada módulo

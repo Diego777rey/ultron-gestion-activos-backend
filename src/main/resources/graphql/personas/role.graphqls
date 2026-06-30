@@ -1,0 +1,26 @@
+# =============================================================
+# Schema de Role - CRUD completo
+# =============================================================
+
+type RoleOutput {
+    id: ID
+    descripcion: String
+    activo: String
+}
+
+type RolePageResponse {
+    content: [RoleOutput!]!
+    pageInfo: PageInfo!
+}
+
+
+input RoleInput {
+    descripcion: String!
+    activo: String
+}
+
+extend type Mutation {
+    registrarRole(input: RoleInput!): RoleOutput
+    actualizarRole(id: ID!, input: RoleInput!): RoleOutput
+    eliminarRole(id: ID!): Boolean
+}

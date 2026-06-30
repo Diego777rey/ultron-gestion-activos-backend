@@ -15,6 +15,12 @@ type FuncionarioOutput {
     estado: Boolean
 }
 
+type FuncionarioPageResponse {
+    content: [FuncionarioOutput!]!
+    pageInfo: PageInfo!
+}
+
+
 # ---- INPUT: Tipo de entrada para mutations ----
 input FuncionarioInput {
     persona: PersonaInput!

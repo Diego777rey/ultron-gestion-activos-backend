@@ -1,0 +1,11 @@
+# =============================================================
+# Tipos Comunes y Genéricos para Paginación
+# =============================================================
+
+type PageInfo {
+    pageNumber: Int!
+    pageSize: Int!
+    totalElements: Float!
+    totalPages: Int!
+    last: Boolean!
+}

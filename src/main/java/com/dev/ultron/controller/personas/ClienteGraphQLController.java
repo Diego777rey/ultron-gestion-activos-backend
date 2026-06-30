@@ -31,6 +31,11 @@ public class ClienteGraphQLController {
     }
 
     @QueryMapping
+    public com.dev.ultron.generic.PageResponse<ClienteOutput> listarClientesPaginado(@Argument int page, @Argument int size) {
+        return clienteService.listarClientesPaginado(page, size);
+    }
+
+    @QueryMapping
     public ClienteOutput buscarClientePorId(@Argument Long id) {
         return clienteService.buscarClientePorId(id);
     }
