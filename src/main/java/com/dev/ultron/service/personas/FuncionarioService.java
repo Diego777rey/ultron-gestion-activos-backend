@@ -90,6 +90,16 @@ public class FuncionarioService extends GenericCrudService<Funcionario, Long> {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public com.dev.ultron.generic.PageResponse<FuncionarioOutput> listarFuncionariosPaginado(int page, int size) {
+        org.springframework.data.domain.Page<Funcionario> pagina = listarPaginado(
+            org.springframework.data.domain.PageRequest.of(page, size)
+        );
+        return new com.dev.ultron.generic.PageResponse<>(
+            pagina.map(FuncionarioMapper::toOutput)
+        );
+    }
+
     /**
      * Busca un funcionario por ID y retorna como output DTO.
      */

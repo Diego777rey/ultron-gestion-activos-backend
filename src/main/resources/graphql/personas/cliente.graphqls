@@ -14,6 +14,12 @@ type ClienteOutput {
     estado: Boolean
 }
 
+type ClientePageResponse {
+    content: [ClienteOutput!]!
+    pageInfo: PageInfo!
+}
+
+
 # ---- INPUT: Tipo de entrada para mutations ----
 input ClienteInput {
     persona: PersonaInput!

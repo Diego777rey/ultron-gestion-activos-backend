@@ -1,0 +1,34 @@
+# =============================================================
+# Schema de Usuario - CRUD completo
+# =============================================================
+
+type UsuarioOutput {
+    id: ID
+    username: String
+    email: String
+    activo: Boolean
+    id_funcionario: ID
+    funcionario: FuncionarioOutput
+    roles: [RoleOutput!]
+}
+
+type UsuarioPageResponse {
+    content: [UsuarioOutput!]!
+    pageInfo: PageInfo!
+}
+
+
+input UsuarioInput {
+    username: String!
+    password: String
+    email: String
+    activo: Boolean
+    id_funcionario: ID!
+    roleIds: [ID!]
+}
+
+extend type Mutation {
+    registrarUsuario(input: UsuarioInput!): UsuarioOutput
+    actualizarUsuario(id: ID!, input: UsuarioInput!): UsuarioOutput
+    eliminarUsuario(id: ID!): Boolean
+}

@@ -54,6 +54,14 @@ public abstract class GenericCrudService<T, ID> {
     }
 
     /**
+     * Lista todas las entidades de forma paginada.
+     */
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<T> listarPaginado(org.springframework.data.domain.Pageable pageable) {
+        return getRepository().findAll(pageable);
+    }
+
+    /**
      * Busca una entidad por su ID.
      */
     @Transactional(readOnly = true)

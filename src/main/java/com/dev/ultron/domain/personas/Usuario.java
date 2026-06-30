@@ -1,9 +1,12 @@
 package com.dev.ultron.domain.personas;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -30,6 +33,10 @@ public class Usuario implements Serializable {
     private String password;
     private String email;
     private Boolean activo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_funcionario", unique = true)
+    private Funcionario funcionario;
 
     @OneToMany(mappedBy = "usuario")
     @Builder.Default
