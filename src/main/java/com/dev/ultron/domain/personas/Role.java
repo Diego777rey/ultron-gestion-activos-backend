@@ -14,12 +14,16 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.dev.ultron.utilitarios.UppercaseEntityListener;
+import jakarta.persistence.EntityListeners;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "role", schema = "personas")
+@EntityListeners(UppercaseEntityListener.class)
 public class Role implements Serializable {
 
     @Id
