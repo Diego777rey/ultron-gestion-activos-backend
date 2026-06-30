@@ -46,8 +46,6 @@ public class PersonaService extends GenericCrudService<Persona, Long> {
      */
     @Transactional(readOnly = true)
     public Optional<Persona> buscarPorDocumento(String documento) {
-        return personaRepository.findAll().stream()
-                .filter(p -> p.getDocumento() != null && p.getDocumento().equals(documento))
-                .findFirst();
+        return personaRepository.findFirstByDocumento(documento);
     }
 }

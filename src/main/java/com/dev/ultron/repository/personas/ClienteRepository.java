@@ -13,5 +13,6 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     Optional<Cliente> findByRuc(String ruc);
 
-    boolean existsByPersonaDocumento(String documento);
+    @org.springframework.data.jpa.repository.Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Cliente c WHERE c.persona.documento = :documento")
+    boolean existsByPersonaDocumento(@org.springframework.data.repository.query.Param("documento") String documento);
 }
