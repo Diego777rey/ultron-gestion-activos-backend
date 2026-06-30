@@ -25,11 +25,14 @@ public class FuncionarioService extends GenericCrudService<Funcionario, Long> {
 
     private final FuncionarioRepository funcionarioRepository;
     private final PersonaService personaService;
+    private final com.dev.ultron.repository.personas.ClienteRepository clienteRepository;
 
     public FuncionarioService(FuncionarioRepository funcionarioRepository,
-                              PersonaService personaService) {
+                              PersonaService personaService,
+                              com.dev.ultron.repository.personas.ClienteRepository clienteRepository) {
         this.funcionarioRepository = funcionarioRepository;
         this.personaService = personaService;
+        this.clienteRepository = clienteRepository;
     }
 
     @Override
@@ -45,19 +48,39 @@ public class FuncionarioService extends GenericCrudService<Funcionario, Long> {
     }
 
     /**
-     * Registra un nuevo funcionario creando primero la persona asociada.
-     * Operación transaccional: si falla la creación del funcionario,
-     * se revierte también la creación de la persona.
+     * Registra un nuevo funcionario. Reutiliza la persona si ya existe por documento,
+     * y crea un registro de cliente automático si no existe.
      */
     @Transactional
     public FuncionarioOutput registrarFuncionario(FuncionarioInput input) {
-        // Crear y guardar la persona
-        Persona persona = PersonaMapper.toEntity(input.persona());
-        persona = personaService.guardar(persona);
+        String documento = input.persona().documento();
+        Persona persona = personaService.buscarPorDocumento(documento).orElse(null);
+
+        if (persona == null) {
+            // Crear y guardar la persona
+            persona = PersonaMapper.toEntity(input.persona());
+            persona = personaService.guardar(persona);
+        } else {
+            // Actualizar datos de persona existente
+            PersonaMapper.updateEntity(persona, input.persona());
+            persona = personaService.actualizar(persona);
+        }
 
         // Crear el funcionario con la persona ya persistida
         Funcionario funcionario = FuncionarioMapper.toEntity(input, persona);
         funcionario = guardar(funcionario);
+
+        // Crear cliente automático si no existe
+        if (!clienteRepository.existsByPersonaDocumento(persona.getDocumento())) {
+            com.dev.ultron.domain.personas.Cliente nuevoCliente = com.dev.ultron.domain.personas.Cliente.builder()
+                    .persona(persona)
+                    .ruc(persona.getDocumento())
+                    .tipoCliente("Persona Física")
+                    .fechaRegistro(java.time.LocalDate.now())
+                    .estado(true)
+                    .build();
+            clienteRepository.save(nuevoCliente);
+        }
 
         return FuncionarioMapper.toOutput(funcionario);
     }

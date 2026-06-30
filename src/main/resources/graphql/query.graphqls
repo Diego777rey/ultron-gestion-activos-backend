@@ -25,6 +25,9 @@ type Query {
     listarUsuarios: [UsuarioOutput!]!
     listarUsuariosPaginado(page: Int!, size: Int!): UsuarioPageResponse!
     buscarUsuarioPorId(id: ID!): UsuarioOutput
+    
+    # ---- Personas: Base ----
+    buscarPersonaPorDocumento(documento: String!): PersonaOutput
 }
 
 # Tipo base de Mutation - se extiende desde cada módulo

@@ -45,15 +45,22 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
     }
 
     /**
-     * Registra un nuevo cliente creando primero la persona asociada.
-     * Operación transaccional: si falla la creación del cliente,
-     * se revierte también la creación de la persona.
+     * Registra un nuevo cliente. Reutiliza la persona si ya existe por documento.
      */
     @Transactional
     public ClienteOutput registrarCliente(ClienteInput input) {
-        // Crear y guardar la persona
-        Persona persona = PersonaMapper.toEntity(input.persona());
-        persona = personaService.guardar(persona);
+        String documento = input.persona().documento();
+        Persona persona = personaService.buscarPorDocumento(documento).orElse(null);
+
+        if (persona == null) {
+            // Crear y guardar la persona
+            persona = PersonaMapper.toEntity(input.persona());
+            persona = personaService.guardar(persona);
+        } else {
+            // Actualizar datos de persona existente
+            PersonaMapper.updateEntity(persona, input.persona());
+            persona = personaService.actualizar(persona);
+        }
 
         // Crear el cliente con la persona ya persistida
         Cliente cliente = ClienteMapper.toEntity(input, persona);
