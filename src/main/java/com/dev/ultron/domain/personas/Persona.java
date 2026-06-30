@@ -11,12 +11,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.io.Serializable;
 
+import com.dev.ultron.utilitarios.UppercaseEntityListener;
+import jakarta.persistence.EntityListeners;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "persona", schema = "personas")
+@EntityListeners(UppercaseEntityListener.class)
 public class Persona implements Serializable {
 
     @Id
