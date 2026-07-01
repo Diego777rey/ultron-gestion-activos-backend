@@ -20,6 +20,8 @@ type Query {
     listarRoles: [RoleOutput!]!
     listarRolesPaginado(page: Int!, size: Int!): RolePageResponse!
     buscarRolePorId(id: ID!): RoleOutput
+    rolesUsuarioPaginado(usuarioId: ID!, page: Int!, size: Int!, filter: String): RolePageResponse!
+    rolesDisponiblesUsuarioPaginado(usuarioId: ID!, page: Int!, size: Int!, filter: String): RolePageResponse!
 
     # ---- Personas: Usuarios ----
     listarUsuarios: [UsuarioOutput!]!

@@ -67,6 +67,26 @@ public class RoleService extends GenericCrudService<Role, Long> {
     }
 
     @Transactional(readOnly = true)
+    public com.dev.ultron.generic.PageResponse<RoleOutput> rolesUsuarioPaginado(Long usuarioId, int page, int size, String filter) {
+        org.springframework.data.domain.Page<Role> pagina = roleRepository.findRolesByUsuarioIdPaginado(
+            usuarioId, filter, org.springframework.data.domain.PageRequest.of(page, size)
+        );
+        return new com.dev.ultron.generic.PageResponse<>(
+            pagina.map(RoleMapper::toOutput)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public com.dev.ultron.generic.PageResponse<RoleOutput> rolesDisponiblesUsuarioPaginado(Long usuarioId, int page, int size, String filter) {
+        org.springframework.data.domain.Page<Role> pagina = roleRepository.findRolesDisponiblesByUsuarioIdPaginado(
+            usuarioId, filter, org.springframework.data.domain.PageRequest.of(page, size)
+        );
+        return new com.dev.ultron.generic.PageResponse<>(
+            pagina.map(RoleMapper::toOutput)
+        );
+    }
+
+    @Transactional(readOnly = true)
     public RoleOutput buscarRolePorId(Long id) {
         return RoleMapper.toOutput(buscarPorIdOrThrow(id));
     }

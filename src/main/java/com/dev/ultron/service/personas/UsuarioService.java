@@ -159,4 +159,45 @@ public class UsuarioService extends GenericCrudService<Usuario, Long> {
         return usuarioRepository.findByIdWithRolesAndFuncionario(id)
                 .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
     }
+
+    @Transactional
+    public UsuarioOutput agregarRolAUsuario(Long usuarioId, Long roleId) {
+        Usuario usuario = buscarPorIdOrThrow(usuarioId);
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado: " + roleId));
+
+        boolean yaAsignado = usuarioRoleRepository
+                .existsById(UsuarioRoleId.builder()
+                        .usuario_id(usuarioId)
+                        .role_id(roleId)
+                        .build());
+        if (yaAsignado) {
+            throw new IllegalArgumentException("El rol ya está asignado a este usuario");
+        }
+
+        UsuarioRole usuarioRole = UsuarioRole.builder()
+                .id(UsuarioRoleId.builder()
+                        .usuario_id(usuario.getId())
+                        .role_id(role.getId())
+                        .build())
+                .usuario(usuario)
+                .role(role)
+                .build();
+        usuarioRoleRepository.save(usuarioRole);
+        return UsuarioMapper.toOutput(recargar(usuarioId));
+    }
+
+    @Transactional
+    public UsuarioOutput quitarRolDeUsuario(Long usuarioId, Long roleId) {
+        buscarPorIdOrThrow(usuarioId);
+        UsuarioRoleId urId = UsuarioRoleId.builder()
+                .usuario_id(usuarioId)
+                .role_id(roleId)
+                .build();
+        if (!usuarioRoleRepository.existsById(urId)) {
+            throw new IllegalArgumentException("El usuario no tiene asignado ese rol");
+        }
+        usuarioRoleRepository.deleteById(urId);
+        return UsuarioMapper.toOutput(recargar(usuarioId));
+    }
 }
