@@ -114,10 +114,16 @@ public class FuncionarioService extends GenericCrudService<Funcionario, Long> {
     }
 
     @Transactional(readOnly = true)
-    public com.dev.ultron.generic.PageResponse<FuncionarioOutput> listarFuncionariosPaginado(int page, int size) {
-        org.springframework.data.domain.Page<Funcionario> pagina = listarPaginado(
-            org.springframework.data.domain.PageRequest.of(page, size)
-        );
+    public com.dev.ultron.generic.PageResponse<FuncionarioOutput> listarFuncionariosPaginado(int page, int size, String filter) {
+        org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<Funcionario> pagina;
+        
+        if (filter != null && !filter.trim().isEmpty()) {
+            pagina = funcionarioRepository.search(filter.trim(), pageRequest);
+        } else {
+            pagina = listarPaginado(pageRequest);
+        }
+        
         return new com.dev.ultron.generic.PageResponse<>(
             pagina.map(FuncionarioMapper::toOutput)
         );

@@ -8,7 +8,7 @@ type Query {
 
     # ---- Personas: Funcionarios ----
     listarFuncionarios: [FuncionarioOutput!]!
-    listarFuncionariosPaginado(page: Int!, size: Int!): FuncionarioPageResponse!
+    listarFuncionariosPaginado(page: Int!, size: Int!, filter: String): FuncionarioPageResponse!
     buscarFuncionarioPorId(id: ID!): FuncionarioOutput
 
     # ---- Personas: Clientes ----

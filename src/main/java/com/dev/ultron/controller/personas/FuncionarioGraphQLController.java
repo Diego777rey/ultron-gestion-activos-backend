@@ -31,8 +31,8 @@ public class FuncionarioGraphQLController {
     }
 
     @QueryMapping
-    public com.dev.ultron.generic.PageResponse<FuncionarioOutput> listarFuncionariosPaginado(@Argument int page, @Argument int size) {
-        return funcionarioService.listarFuncionariosPaginado(page, size);
+    public com.dev.ultron.generic.PageResponse<FuncionarioOutput> listarFuncionariosPaginado(@Argument int page, @Argument int size, @Argument String filter) {
+        return funcionarioService.listarFuncionariosPaginado(page, size, filter);
     }
 
     @QueryMapping
