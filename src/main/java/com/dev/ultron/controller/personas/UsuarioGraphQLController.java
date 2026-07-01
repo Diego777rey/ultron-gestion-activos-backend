@@ -48,4 +48,14 @@ public class UsuarioGraphQLController {
     public Boolean eliminarUsuario(@Argument Long id) {
         return usuarioService.eliminarUsuario(id);
     }
+
+    @MutationMapping
+    public UsuarioOutput agregarRolAUsuario(@Argument Long usuarioId, @Argument Long roleId) {
+        return usuarioService.agregarRolAUsuario(usuarioId, roleId);
+    }
+
+    @MutationMapping
+    public UsuarioOutput quitarRolDeUsuario(@Argument Long usuarioId, @Argument Long roleId) {
+        return usuarioService.quitarRolDeUsuario(usuarioId, roleId);
+    }
 }

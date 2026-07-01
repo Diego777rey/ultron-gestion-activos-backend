@@ -30,6 +30,18 @@ public class RoleGraphQLController {
     }
 
     @QueryMapping
+    public com.dev.ultron.generic.PageResponse<RoleOutput> rolesUsuarioPaginado(
+            @Argument Long usuarioId, @Argument int page, @Argument int size, @Argument String filter) {
+        return roleService.rolesUsuarioPaginado(usuarioId, page, size, filter);
+    }
+
+    @QueryMapping
+    public com.dev.ultron.generic.PageResponse<RoleOutput> rolesDisponiblesUsuarioPaginado(
+            @Argument Long usuarioId, @Argument int page, @Argument int size, @Argument String filter) {
+        return roleService.rolesDisponiblesUsuarioPaginado(usuarioId, page, size, filter);
+    }
+
+    @QueryMapping
     public RoleOutput buscarRolePorId(@Argument Long id) {
         return roleService.buscarRolePorId(id);
     }

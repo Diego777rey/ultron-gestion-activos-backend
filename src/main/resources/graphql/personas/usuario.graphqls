@@ -31,4 +31,6 @@ extend type Mutation {
     registrarUsuario(input: UsuarioInput!): UsuarioOutput
     actualizarUsuario(id: ID!, input: UsuarioInput!): UsuarioOutput
     eliminarUsuario(id: ID!): Boolean
+    agregarRolAUsuario(usuarioId: ID!, roleId: ID!): UsuarioOutput
+    quitarRolDeUsuario(usuarioId: ID!, roleId: ID!): UsuarioOutput
 }
