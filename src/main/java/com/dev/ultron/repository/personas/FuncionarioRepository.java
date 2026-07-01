@@ -13,4 +13,7 @@ public interface FuncionarioRepository extends JpaRepository<Funcionario, Long> 
 
     @org.springframework.data.jpa.repository.Query("SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END FROM Funcionario f WHERE f.persona.documento = :documento")
     boolean existsByPersonaDocumento(@org.springframework.data.repository.query.Param("documento") String documento);
+
+    @org.springframework.data.jpa.repository.Query("SELECT f FROM Funcionario f WHERE LOWER(f.persona.nombre) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(f.persona.apellido) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(f.persona.documento) LIKE LOWER(CONCAT('%', :filter, '%'))")
+    org.springframework.data.domain.Page<Funcionario> search(@org.springframework.data.repository.query.Param("filter") String filter, org.springframework.data.domain.Pageable pageable);
 }
