@@ -1,0 +1,44 @@
+# =============================================================
+# Schema de Vehículo - CRUD completo
+# =============================================================
+
+type VehiculoOutput {
+    id_bien: ID
+    tipo: String
+    descripcion: String
+    valor: BigDecimal
+    fecha_adquisicion: Date
+    id_empresa: Int
+    estado: String
+    cliente: ClienteOutput
+    marca: String
+    modelo: String
+    anio: Int
+    chapa: String
+    tipo_vehiculo: String
+}
+
+type VehiculoPageResponse {
+    content: [VehiculoOutput!]!
+    pageInfo: PageInfo!
+}
+
+input VehiculoInput {
+    id_cliente: ID!
+    descripcion: String
+    valor: BigDecimal
+    fecha_adquisicion: Date
+    id_empresa: Int
+    estado: String
+    marca: String
+    modelo: String
+    anio: Int
+    chapa: String
+    tipo_vehiculo: String
+}
+
+extend type Mutation {
+    registrarVehiculo(input: VehiculoInput!): VehiculoOutput
+    actualizarVehiculo(id: ID!, input: VehiculoInput!): VehiculoOutput
+    eliminarVehiculo(id: ID!): Boolean
+}

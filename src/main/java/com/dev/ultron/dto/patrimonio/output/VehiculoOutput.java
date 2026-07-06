@@ -1,5 +1,7 @@
 package com.dev.ultron.dto.patrimonio.output;
 
+import com.dev.ultron.dto.personas.output.ClienteOutput;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,6 +14,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class VehiculoOutput extends BienOutput {
+    private ClienteOutput cliente;
     private String marca;
     private String modelo;
     private Integer anio;

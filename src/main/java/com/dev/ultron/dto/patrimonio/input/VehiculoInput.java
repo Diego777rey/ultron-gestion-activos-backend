@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record VehiculoInput(
-        String tipo,
+        Long id_cliente,
         String descripcion,
         BigDecimal valor,
         LocalDate fecha_adquisicion,
