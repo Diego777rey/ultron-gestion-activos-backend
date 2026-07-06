@@ -30,6 +30,12 @@ type Query {
     
     # ---- Personas: Base ----
     buscarPersonaPorDocumento(documento: String!): PersonaOutput
+
+    # ---- Patrimonio: Vehículos ----
+    listarVehiculos: [VehiculoOutput!]!
+    listarVehiculosPaginado(page: Int!, size: Int!): VehiculoPageResponse!
+    listarVehiculosPorClientePaginado(idCliente: ID!, page: Int!, size: Int!): VehiculoPageResponse!
+    buscarVehiculoPorId(id: ID!): VehiculoOutput
 }
 
 # Tipo base de Mutation - se extiende desde cada módulo
