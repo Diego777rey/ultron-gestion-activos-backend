@@ -13,6 +13,10 @@ public class StringUtil {
         return str != null ? str.toUpperCase() : null;
     }
 
+    public static String normalizeUsername(String str) {
+        return str != null ? str.trim().toUpperCase() : null;
+    }
+
     public static String toLowerCase(String str) {
         return str != null ? str.toLowerCase() : null;
     }

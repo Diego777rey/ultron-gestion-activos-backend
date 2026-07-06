@@ -8,8 +8,11 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
@@ -33,8 +36,21 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/login", "/graphql", "/graphiql").permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(Customizer.withDefaults())
+                        .bearerTokenResolver(publicEndpointAwareBearerTokenResolver()))
                 .build();
+    }
+
+    @Bean
+    public BearerTokenResolver publicEndpointAwareBearerTokenResolver() {
+        DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
+        return (HttpServletRequest request) -> {
+            if ("/api/auth/login".equals(request.getRequestURI())) {
+                return null;
+            }
+            return delegate.resolve(request);
+        };
     }
 
     @Bean
