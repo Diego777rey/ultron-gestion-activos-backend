@@ -7,6 +7,7 @@ import com.dev.ultron.dto.personas.mapper.FuncionarioMapper;
 import com.dev.ultron.dto.personas.mapper.PersonaMapper;
 import com.dev.ultron.dto.personas.output.FuncionarioOutput;
 import com.dev.ultron.generic.GenericCrudService;
+import com.dev.ultron.generic.SearchNormalizer;
 import com.dev.ultron.repository.personas.FuncionarioRepository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,14 +26,20 @@ public class FuncionarioService extends GenericCrudService<Funcionario, Long> {
 
     private final FuncionarioRepository funcionarioRepository;
     private final PersonaService personaService;
-    private final com.dev.ultron.repository.personas.ClienteRepository clienteRepository;
+    private final ClienteService clienteService;
+    private final PersonaMapper personaMapper;
+    private final FuncionarioMapper funcionarioMapper;
 
     public FuncionarioService(FuncionarioRepository funcionarioRepository,
                               PersonaService personaService,
-                              com.dev.ultron.repository.personas.ClienteRepository clienteRepository) {
+                              ClienteService clienteService,
+                              PersonaMapper personaMapper,
+                              FuncionarioMapper funcionarioMapper) {
         this.funcionarioRepository = funcionarioRepository;
         this.personaService = personaService;
-        this.clienteRepository = clienteRepository;
+        this.clienteService = clienteService;
+        this.personaMapper = personaMapper;
+        this.funcionarioMapper = funcionarioMapper;
     }
 
     @Override
@@ -58,31 +65,21 @@ public class FuncionarioService extends GenericCrudService<Funcionario, Long> {
 
         if (persona == null) {
             // Crear y guardar la persona
-            persona = PersonaMapper.toEntity(input.persona());
+            persona = personaMapper.toEntity(input.persona());
             persona = personaService.guardar(persona);
         } else {
             // Actualizar datos de persona existente
-            PersonaMapper.updateEntity(persona, input.persona());
+            personaMapper.updateEntity(persona, input.persona());
             persona = personaService.actualizar(persona);
         }
 
         // Crear el funcionario con la persona ya persistida
-        Funcionario funcionario = FuncionarioMapper.toEntity(input, persona);
+        Funcionario funcionario = funcionarioMapper.toEntity(input, persona);
         funcionario = guardar(funcionario);
 
-        // Crear cliente automático si no existe
-        if (!clienteRepository.existsByPersonaDocumento(persona.getDocumento())) {
-            com.dev.ultron.domain.personas.Cliente nuevoCliente = com.dev.ultron.domain.personas.Cliente.builder()
-                    .persona(persona)
-                    .ruc(persona.getDocumento())
-                    .tipoCliente("Persona Física")
-                    .fechaRegistro(java.time.LocalDate.now())
-                    .estado(true)
-                    .build();
-            clienteRepository.save(nuevoCliente);
-        }
+        clienteService.crearClienteAutomaticoSiNoExiste(persona);
 
-        return FuncionarioMapper.toOutput(funcionario);
+        return funcionarioMapper.toOutput(funcionario);
     }
 
     /**
@@ -93,14 +90,14 @@ public class FuncionarioService extends GenericCrudService<Funcionario, Long> {
         Funcionario funcionario = buscarPorIdOrThrow(id);
 
         // Actualizar datos de persona
-        PersonaMapper.updateEntity(funcionario.getPersona(), input.persona());
+        personaMapper.updateEntity(funcionario.getPersona(), input.persona());
         personaService.actualizar(funcionario.getPersona());
 
         // Actualizar datos de funcionario
-        FuncionarioMapper.updateEntity(funcionario, input);
+        funcionarioMapper.updateEntity(funcionario, input);
         funcionario = actualizar(funcionario);
 
-        return FuncionarioMapper.toOutput(funcionario);
+        return funcionarioMapper.toOutput(funcionario);
     }
 
     /**
@@ -109,7 +106,7 @@ public class FuncionarioService extends GenericCrudService<Funcionario, Long> {
     @Transactional(readOnly = true)
     public List<FuncionarioOutput> listarTodosFuncionarios() {
         return listarTodos().stream()
-                .map(FuncionarioMapper::toOutput)
+                .map(funcionarioMapper::toOutput)
                 .toList();
     }
 
@@ -119,13 +116,13 @@ public class FuncionarioService extends GenericCrudService<Funcionario, Long> {
         org.springframework.data.domain.Page<Funcionario> pagina;
         
         if (filter != null && !filter.trim().isEmpty()) {
-            pagina = funcionarioRepository.search(filter.trim(), pageRequest);
+            pagina = funcionarioRepository.search(SearchNormalizer.normalizeFilter(filter), pageRequest);
         } else {
             pagina = listarPaginado(pageRequest);
         }
         
         return new com.dev.ultron.generic.PageResponse<>(
-            pagina.map(FuncionarioMapper::toOutput)
+            pagina.map(funcionarioMapper::toOutput)
         );
     }
 
@@ -134,7 +131,7 @@ public class FuncionarioService extends GenericCrudService<Funcionario, Long> {
      */
     @Transactional(readOnly = true)
     public FuncionarioOutput buscarFuncionarioPorId(Long id) {
-        return FuncionarioMapper.toOutput(buscarPorIdOrThrow(id));
+        return funcionarioMapper.toOutput(buscarPorIdOrThrow(id));
     }
 
     /**

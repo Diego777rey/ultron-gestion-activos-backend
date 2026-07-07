@@ -7,9 +7,9 @@ import com.dev.ultron.dto.patrimonio.mapper.VehiculoMapper;
 import com.dev.ultron.dto.patrimonio.output.VehiculoOutput;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
+import com.dev.ultron.generic.SearchNormalizer;
 import com.dev.ultron.repository.patrimonio.VehiculoRepository;
 import com.dev.ultron.service.personas.ClienteService;
-import com.dev.ultron.utilitarios.StringUtil;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,11 +30,14 @@ public class VehiculoService extends GenericCrudService<Vehiculo, Long> {
 
     private final VehiculoRepository vehiculoRepository;
     private final ClienteService clienteService;
+    private final VehiculoMapper vehiculoMapper;
 
     public VehiculoService(VehiculoRepository vehiculoRepository,
-                           ClienteService clienteService) {
+                           ClienteService clienteService,
+                           VehiculoMapper vehiculoMapper) {
         this.vehiculoRepository = vehiculoRepository;
         this.clienteService = clienteService;
+        this.vehiculoMapper = vehiculoMapper;
     }
 
     @Override
@@ -53,44 +56,44 @@ public class VehiculoService extends GenericCrudService<Vehiculo, Long> {
     @Transactional
     public VehiculoOutput registrarVehiculo(VehiculoInput input) {
         Cliente cliente = resolverCliente(input.id_cliente());
-        Vehiculo vehiculo = VehiculoMapper.toEntity(input, cliente);
+        Vehiculo vehiculo = vehiculoMapper.toEntity(input, cliente);
         vehiculo = guardar(vehiculo);
-        return VehiculoMapper.toOutput(vehiculo);
+        return vehiculoMapper.toOutput(vehiculo);
     }
 
     @Transactional
     public VehiculoOutput actualizarVehiculo(Long id, VehiculoInput input) {
         Vehiculo vehiculo = buscarPorIdOrThrow(id);
         Cliente cliente = resolverCliente(input.id_cliente());
-        VehiculoMapper.updateEntity(vehiculo, input, cliente);
+        vehiculoMapper.updateEntity(vehiculo, input, cliente);
         vehiculo = actualizar(vehiculo);
-        return VehiculoMapper.toOutput(vehiculo);
+        return vehiculoMapper.toOutput(vehiculo);
     }
 
     @Transactional(readOnly = true)
     public List<VehiculoOutput> listarTodosVehiculos() {
         return listarTodos().stream()
-                .map(VehiculoMapper::toOutput)
+                .map(vehiculoMapper::toOutput)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public PageResponse<VehiculoOutput> listarVehiculosPaginado(int page, int size) {
         Page<Vehiculo> pagina = listarPaginado(PageRequest.of(page, size));
-        return new PageResponse<>(pagina.map(VehiculoMapper::toOutput));
+        return new PageResponse<>(pagina.map(vehiculoMapper::toOutput));
     }
 
     @Transactional(readOnly = true)
     public PageResponse<VehiculoOutput> listarVehiculosPorClientePaginado(Long idCliente, int page, int size) {
         clienteService.buscarPorIdOrThrow(idCliente);
         Pageable pageable = PageRequest.of(page, size);
-        Page<Vehiculo> pagina = vehiculoRepository.findByClienteId_cliente(idCliente, pageable);
-        return new PageResponse<>(pagina.map(VehiculoMapper::toOutput));
+        Page<Vehiculo> pagina = vehiculoRepository.findByClienteId(idCliente, pageable);
+        return new PageResponse<>(pagina.map(vehiculoMapper::toOutput));
     }
 
     @Transactional(readOnly = true)
     public VehiculoOutput buscarVehiculoPorId(Long id) {
-        return VehiculoMapper.toOutput(buscarPorIdOrThrow(id));
+        return vehiculoMapper.toOutput(buscarPorIdOrThrow(id));
     }
 
     @Transactional
@@ -107,11 +110,12 @@ public class VehiculoService extends GenericCrudService<Vehiculo, Long> {
     }
 
     private void validarChapaUnica(String chapa, Long idExcluir) {
-        if (StringUtil.isNullOrEmpty(chapa)) {
+        String chapaNormalizada = SearchNormalizer.normalize(chapa);
+        if (chapaNormalizada == null) {
             return;
         }
-        if (vehiculoRepository.existsByChapaExcludingId(chapa, idExcluir)) {
-            throw new IllegalArgumentException("Ya existe un vehículo registrado con la chapa: " + chapa);
+        if (vehiculoRepository.existsByChapaExcludingId(chapaNormalizada, idExcluir)) {
+            throw new IllegalArgumentException("Ya existe un vehículo registrado con la chapa: " + chapaNormalizada);
         }
     }
 }

@@ -4,66 +4,55 @@ import com.dev.ultron.domain.personas.Cliente;
 import com.dev.ultron.domain.personas.Persona;
 import com.dev.ultron.dto.personas.input.ClienteInput;
 import com.dev.ultron.dto.personas.output.ClienteOutput;
-import com.dev.ultron.utilitarios.DateUtil;
-import com.dev.ultron.utilitarios.StringUtil;
+import com.dev.ultron.generic.mapper.BaseMapper;
+import com.dev.ultron.generic.mapper.MapStructConfig;
+import com.dev.ultron.generic.mapper.MappingHelper;
+import com.dev.ultron.generic.mapper.UpdatableMapper;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
-/**
- * Mapper para convertir entre Cliente entity, input y output.
- * Reutiliza PersonaMapper para los datos de persona.
- */
-public class ClienteMapper {
+@Mapper(config = MapStructConfig.class, uses = PersonaMapper.class)
+public interface ClienteMapper extends BaseMapper<Cliente, ClienteInput, ClienteOutput>, UpdatableMapper<Cliente, ClienteInput> {
 
-    private ClienteMapper() {
-    }
+    @Mapping(target = "id_cliente", ignore = true)
+    @Mapping(target = "vehiculos", ignore = true)
+    @Mapping(target = "persona", source = "persona")
+    @Mapping(target = "ruc", source = "input.ruc", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "tipoCliente", source = "input.tipoCliente", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "observaciones", source = "input.observaciones", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "fechaRegistro", source = "input.fechaRegistro", qualifiedByName = MappingHelper.PARSE_DATE)
+    @Mapping(target = "estado", source = "input.estado", qualifiedByName = MappingHelper.DEFAULT_BOOLEAN_TRUE)
+    Cliente toEntity(ClienteInput input, Persona persona);
 
-    /**
-     * Convierte un ClienteInput en una entidad Cliente nueva.
-     * La entidad Persona debe crearse primero y asignarse.
-     */
-    public static Cliente toEntity(ClienteInput input, Persona persona) {
-        if (input == null) return null;
-        return Cliente.builder()
-                .persona(persona)
-                .ruc(input.ruc())
-                .tipoCliente(StringUtil.toUpperCase(input.tipoCliente()))
-                .limiteCredito(input.limiteCredito())
-                .fechaRegistro(DateUtil.parseDate(input.fechaRegistro()))
-                .observaciones(StringUtil.toUpperCase(input.observaciones()))
-                .estado(input.estado() != null ? input.estado() : true)
-                .build();
-    }
+    @Override
+    @BeanMapping(nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id_cliente", ignore = true)
+    @Mapping(target = "vehiculos", ignore = true)
+    @Mapping(target = "persona", ignore = true)
+    @Mapping(target = "ruc", source = "ruc", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "tipoCliente", source = "tipoCliente", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "observaciones", source = "observaciones", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "fechaRegistro", source = "fechaRegistro", qualifiedByName = MappingHelper.PARSE_DATE)
+    void updateEntity(@MappingTarget Cliente cliente, ClienteInput input);
 
-    /**
-     * Actualiza una entidad Cliente existente con datos del input.
-     */
-    public static void updateEntity(Cliente cliente, ClienteInput input) {
-        if (input == null || cliente == null) return;
-        cliente.setRuc(input.ruc());
-        cliente.setTipoCliente(StringUtil.toUpperCase(input.tipoCliente()));
-        cliente.setLimiteCredito(input.limiteCredito());
-        if (input.fechaRegistro() != null) {
-            cliente.setFechaRegistro(DateUtil.parseDate(input.fechaRegistro()));
-        }
-        cliente.setObservaciones(StringUtil.toUpperCase(input.observaciones()));
-        if (input.estado() != null) {
-            cliente.setEstado(input.estado());
-        }
-    }
+    @Override
+    @Mapping(target = "fechaRegistro", source = "fechaRegistro", qualifiedByName = MappingHelper.FORMAT_DATE)
+    ClienteOutput toOutput(Cliente cliente);
 
     /**
-     * Convierte una entidad Cliente a ClienteOutput.
+     * Crea un cliente mínimo a partir de una persona ya persistida.
+     * Usado al registrar funcionarios para garantizar un registro de cliente asociado.
      */
-    public static ClienteOutput toOutput(Cliente cliente) {
-        if (cliente == null) return null;
-        return ClienteOutput.builder()
-                .id_cliente(cliente.getId_cliente())
-                .persona(PersonaMapper.toOutput(cliente.getPersona()))
-                .ruc(cliente.getRuc())
-                .tipoCliente(cliente.getTipoCliente())
-                .limiteCredito(cliente.getLimiteCredito())
-                .fechaRegistro(DateUtil.format(cliente.getFechaRegistro()))
-                .observaciones(cliente.getObservaciones())
-                .estado(cliente.isEstado())
-                .build();
-    }
+    @Mapping(target = "id_cliente", ignore = true)
+    @Mapping(target = "vehiculos", ignore = true)
+    @Mapping(target = "persona", source = "persona")
+    @Mapping(target = "ruc", source = "persona.documento")
+    @Mapping(target = "tipoCliente", constant = "PERSONA FISICA")
+    @Mapping(target = "limiteCredito", ignore = true)
+    @Mapping(target = "fechaRegistro", expression = "java(com.dev.ultron.utilitarios.DateUtil.now())")
+    @Mapping(target = "observaciones", ignore = true)
+    @Mapping(target = "estado", constant = "true")
+    Cliente toAutomaticoFromPersona(Persona persona);
 }

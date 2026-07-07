@@ -4,65 +4,35 @@ import com.dev.ultron.domain.personas.Funcionario;
 import com.dev.ultron.domain.personas.Persona;
 import com.dev.ultron.dto.personas.input.FuncionarioInput;
 import com.dev.ultron.dto.personas.output.FuncionarioOutput;
-import com.dev.ultron.utilitarios.DateUtil;
-import com.dev.ultron.utilitarios.StringUtil;
+import com.dev.ultron.generic.mapper.BaseMapper;
+import com.dev.ultron.generic.mapper.MapStructConfig;
+import com.dev.ultron.generic.mapper.MappingHelper;
+import com.dev.ultron.generic.mapper.UpdatableMapper;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
-/**
- * Mapper para convertir entre Funcionario entity, input y output.
- * Reutiliza PersonaMapper para los datos de persona.
- */
-public class FuncionarioMapper {
+@Mapper(config = MapStructConfig.class, uses = PersonaMapper.class)
+public interface FuncionarioMapper extends BaseMapper<Funcionario, FuncionarioInput, FuncionarioOutput>, UpdatableMapper<Funcionario, FuncionarioInput> {
 
-    private FuncionarioMapper() {
-    }
+    @Mapping(target = "id_funcionario", ignore = true)
+    @Mapping(target = "persona", source = "persona")
+    @Mapping(target = "sector", source = "input.sector", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "fechaIngreso", source = "input.fechaIngreso", qualifiedByName = MappingHelper.PARSE_DATE)
+    @Mapping(target = "facePrueba", source = "input.facePrueba", qualifiedByName = MappingHelper.DEFAULT_BOOLEAN_FALSE)
+    @Mapping(target = "estado", source = "input.estado", qualifiedByName = MappingHelper.DEFAULT_BOOLEAN_TRUE)
+    Funcionario toEntity(FuncionarioInput input, Persona persona);
 
-    /**
-     * Convierte un FuncionarioInput en una entidad Funcionario nueva.
-     * La entidad Persona debe crearse primero y asignarse.
-     */
-    public static Funcionario toEntity(FuncionarioInput input, Persona persona) {
-        if (input == null) return null;
-        return Funcionario.builder()
-                .persona(persona)
-                .sueldo(input.sueldo())
-                .sector(StringUtil.toUpperCase(input.sector()))
-                .fechaIngreso(DateUtil.parseDate(input.fechaIngreso()))
-                .facePrueba(input.facePrueba() != null ? input.facePrueba() : false)
-                .estado(input.estado() != null ? input.estado() : true)
-                .build();
-    }
+    @Override
+    @BeanMapping(nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id_funcionario", ignore = true)
+    @Mapping(target = "persona", ignore = true)
+    @Mapping(target = "sector", source = "sector", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "fechaIngreso", source = "fechaIngreso", qualifiedByName = MappingHelper.PARSE_DATE)
+    void updateEntity(@MappingTarget Funcionario funcionario, FuncionarioInput input);
 
-    /**
-     * Actualiza una entidad Funcionario existente con datos del input.
-     */
-    public static void updateEntity(Funcionario funcionario, FuncionarioInput input) {
-        if (input == null || funcionario == null) return;
-        funcionario.setSueldo(input.sueldo());
-        funcionario.setSector(StringUtil.toUpperCase(input.sector()));
-        if (input.fechaIngreso() != null) {
-            funcionario.setFechaIngreso(DateUtil.parseDate(input.fechaIngreso()));
-        }
-        if (input.facePrueba() != null) {
-            funcionario.setFacePrueba(input.facePrueba());
-        }
-        if (input.estado() != null) {
-            funcionario.setEstado(input.estado());
-        }
-    }
-
-    /**
-     * Convierte una entidad Funcionario a FuncionarioOutput.
-     */
-    public static FuncionarioOutput toOutput(Funcionario funcionario) {
-        if (funcionario == null) return null;
-        return FuncionarioOutput.builder()
-                .id_funcionario(funcionario.getId_funcionario())
-                .persona(PersonaMapper.toOutput(funcionario.getPersona()))
-                .sueldo(funcionario.getSueldo())
-                .sector(funcionario.getSector())
-                .fechaIngreso(DateUtil.format(funcionario.getFechaIngreso()))
-                .facePrueba(funcionario.isFacePrueba())
-                .estado(funcionario.isEstado())
-                .build();
-    }
+    @Override
+    @Mapping(target = "fechaIngreso", source = "fechaIngreso", qualifiedByName = MappingHelper.FORMAT_DATE)
+    FuncionarioOutput toOutput(Funcionario funcionario);
 }

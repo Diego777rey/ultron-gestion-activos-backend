@@ -11,15 +11,17 @@ import org.springframework.stereotype.Controller;
 public class PersonaGraphQLController {
 
     private final PersonaService personaService;
+    private final PersonaMapper personaMapper;
 
-    public PersonaGraphQLController(PersonaService personaService) {
+    public PersonaGraphQLController(PersonaService personaService, PersonaMapper personaMapper) {
         this.personaService = personaService;
+        this.personaMapper = personaMapper;
     }
 
     @QueryMapping
     public PersonaOutput buscarPersonaPorDocumento(@Argument String documento) {
         return personaService.buscarPorDocumento(documento)
-                .map(PersonaMapper::toOutput)
+                .map(personaMapper::toOutput)
                 .orElse(null);
     }
 }

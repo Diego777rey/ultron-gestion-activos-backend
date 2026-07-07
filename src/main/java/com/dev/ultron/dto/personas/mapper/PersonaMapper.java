@@ -3,63 +3,37 @@ package com.dev.ultron.dto.personas.mapper;
 import com.dev.ultron.domain.personas.Persona;
 import com.dev.ultron.dto.personas.input.PersonaInput;
 import com.dev.ultron.dto.personas.output.PersonaOutput;
-import com.dev.ultron.utilitarios.StringUtil;
+import com.dev.ultron.generic.mapper.BaseMapper;
+import com.dev.ultron.generic.mapper.MapStructConfig;
+import com.dev.ultron.generic.mapper.MappingHelper;
+import com.dev.ultron.generic.mapper.UpdatableMapper;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
-/**
- * Mapper centralizado para convertir entre Persona entity, input y output.
- * Reutilizable desde cualquier módulo que necesite mapear datos de persona.
- */
-public class PersonaMapper {
+@Mapper(config = MapStructConfig.class)
+public interface PersonaMapper extends BaseMapper<Persona, PersonaInput, PersonaOutput>, UpdatableMapper<Persona, PersonaInput> {
 
-    private PersonaMapper() {
-    }
+    @Mapping(target = "id_persona", ignore = true)
+    @Mapping(target = "nombre", source = "nombre", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "apellido", source = "apellido", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "documento", source = "documento", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "email", source = "email", qualifiedByName = MappingHelper.TO_LOWER_CASE)
+    @Mapping(target = "telefono", source = "telefono", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "direccion", source = "direccion", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "estado", source = "estado", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    Persona toEntity(PersonaInput input);
 
-    /**
-     * Convierte un PersonaInput en una entidad Persona nueva.
-     */
-    public static Persona toEntity(PersonaInput input) {
-        if (input == null) return null;
-        return Persona.builder()
-                .nombre(StringUtil.toUpperCase(input.nombre()))
-                .apellido(StringUtil.toUpperCase(input.apellido()))
-                .documento(input.documento())
-                .email(StringUtil.toLowerCase(input.email()))
-                .telefono(input.telefono())
-                .direccion(input.direccion())
-                .estado(input.estado())
-                .build();
-    }
-
-    /**
-     * Actualiza una entidad Persona existente con datos del input.
-     */
-    public static void updateEntity(Persona persona, PersonaInput input) {
-        if (input == null || persona == null) return;
-        persona.setNombre(StringUtil.toUpperCase(input.nombre()));
-        persona.setApellido(StringUtil.toUpperCase(input.apellido()));
-        persona.setDocumento(input.documento());
-        persona.setEmail(StringUtil.toLowerCase(input.email()));
-        persona.setTelefono(input.telefono());
-        persona.setDireccion(input.direccion());
-        if (input.estado() != null) {
-            persona.setEstado(input.estado());
-        }
-    }
-
-    /**
-     * Convierte una entidad Persona a PersonaOutput.
-     */
-    public static PersonaOutput toOutput(Persona persona) {
-        if (persona == null) return null;
-        return PersonaOutput.builder()
-                .id_persona(persona.getId_persona())
-                .nombre(persona.getNombre())
-                .apellido(persona.getApellido())
-                .documento(persona.getDocumento())
-                .email(persona.getEmail())
-                .telefono(persona.getTelefono())
-                .direccion(persona.getDireccion())
-                .estado(persona.getEstado())
-                .build();
-    }
+    @Override
+    @BeanMapping(nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id_persona", ignore = true)
+    @Mapping(target = "nombre", source = "nombre", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "apellido", source = "apellido", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "documento", source = "documento", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "email", source = "email", qualifiedByName = MappingHelper.TO_LOWER_CASE)
+    @Mapping(target = "telefono", source = "telefono", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "direccion", source = "direccion", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "estado", source = "estado", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    void updateEntity(@MappingTarget Persona persona, PersonaInput input);
 }

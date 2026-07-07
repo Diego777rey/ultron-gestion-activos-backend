@@ -1,5 +1,7 @@
 package com.dev.ultron.utilitarios;
 
+import com.dev.ultron.generic.SearchNormalizer;
+
 public class StringUtil {
 
     private StringUtil() {
@@ -14,17 +16,10 @@ public class StringUtil {
     }
 
     public static String normalizeUsername(String str) {
-        return str != null ? str.trim().toUpperCase() : null;
+        return SearchNormalizer.normalize(str);
     }
 
     public static String toLowerCase(String str) {
         return str != null ? str.toLowerCase() : null;
-    }
-
-    public static String capitalize(String str) {
-        if (isNullOrEmpty(str)) {
-            return str;
-        }
-        return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
     }
 }
