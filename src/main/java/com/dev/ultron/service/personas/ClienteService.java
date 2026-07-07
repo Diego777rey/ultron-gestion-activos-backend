@@ -25,11 +25,17 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
 
     private final ClienteRepository clienteRepository;
     private final PersonaService personaService;
+    private final PersonaMapper personaMapper;
+    private final ClienteMapper clienteMapper;
 
     public ClienteService(ClienteRepository clienteRepository,
-                          PersonaService personaService) {
+                          PersonaService personaService,
+                          PersonaMapper personaMapper,
+                          ClienteMapper clienteMapper) {
         this.clienteRepository = clienteRepository;
         this.personaService = personaService;
+        this.personaMapper = personaMapper;
+        this.clienteMapper = clienteMapper;
     }
 
     @Override
@@ -54,19 +60,19 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
 
         if (persona == null) {
             // Crear y guardar la persona
-            persona = PersonaMapper.toEntity(input.persona());
+            persona = personaMapper.toEntity(input.persona());
             persona = personaService.guardar(persona);
         } else {
             // Actualizar datos de persona existente
-            PersonaMapper.updateEntity(persona, input.persona());
+            personaMapper.updateEntity(persona, input.persona());
             persona = personaService.actualizar(persona);
         }
 
         // Crear el cliente con la persona ya persistida
-        Cliente cliente = ClienteMapper.toEntity(input, persona);
+        Cliente cliente = clienteMapper.toEntity(input, persona);
         cliente = guardar(cliente);
 
-        return ClienteMapper.toOutput(cliente);
+        return clienteMapper.toOutput(cliente);
     }
 
     /**
@@ -77,14 +83,14 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
         Cliente cliente = buscarPorIdOrThrow(id);
 
         // Actualizar datos de persona
-        PersonaMapper.updateEntity(cliente.getPersona(), input.persona());
+        personaMapper.updateEntity(cliente.getPersona(), input.persona());
         personaService.actualizar(cliente.getPersona());
 
         // Actualizar datos de cliente
-        ClienteMapper.updateEntity(cliente, input);
+        clienteMapper.updateEntity(cliente, input);
         cliente = actualizar(cliente);
 
-        return ClienteMapper.toOutput(cliente);
+        return clienteMapper.toOutput(cliente);
     }
 
     /**
@@ -93,7 +99,7 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
     @Transactional(readOnly = true)
     public List<ClienteOutput> listarTodosClientes() {
         return listarTodos().stream()
-                .map(ClienteMapper::toOutput)
+                .map(clienteMapper::toOutput)
                 .toList();
     }
 
@@ -106,7 +112,7 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
             org.springframework.data.domain.PageRequest.of(page, size)
         );
         return new com.dev.ultron.generic.PageResponse<>(
-            pagina.map(ClienteMapper::toOutput)
+            pagina.map(clienteMapper::toOutput)
         );
     }
 
@@ -115,7 +121,19 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
      */
     @Transactional(readOnly = true)
     public ClienteOutput buscarClientePorId(Long id) {
-        return ClienteMapper.toOutput(buscarPorIdOrThrow(id));
+        return clienteMapper.toOutput(buscarPorIdOrThrow(id));
+    }
+
+    /**
+     * Crea un cliente automático si la persona aún no tiene uno asociado.
+     * Usado al registrar funcionarios para mantener consistencia de datos.
+     */
+    @Transactional
+    public void crearClienteAutomaticoSiNoExiste(Persona persona) {
+        if (clienteRepository.existsByPersonaDocumento(persona.getDocumento())) {
+            return;
+        }
+        guardar(clienteMapper.toAutomaticoFromPersona(persona));
     }
 
     /**

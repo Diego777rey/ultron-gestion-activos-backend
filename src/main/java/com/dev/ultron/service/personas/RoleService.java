@@ -5,6 +5,7 @@ import com.dev.ultron.dto.personas.input.RoleInput;
 import com.dev.ultron.dto.personas.mapper.RoleMapper;
 import com.dev.ultron.dto.personas.output.RoleOutput;
 import com.dev.ultron.generic.GenericCrudService;
+import com.dev.ultron.generic.SearchNormalizer;
 import com.dev.ultron.repository.personas.RoleRepository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,9 +18,11 @@ import java.util.List;
 public class RoleService extends GenericCrudService<Role, Long> {
 
     private final RoleRepository roleRepository;
+    private final RoleMapper roleMapper;
 
-    public RoleService(RoleRepository roleRepository) {
+    public RoleService(RoleRepository roleRepository, RoleMapper roleMapper) {
         this.roleRepository = roleRepository;
+        this.roleMapper = roleMapper;
     }
 
     @Override
@@ -36,23 +39,23 @@ public class RoleService extends GenericCrudService<Role, Long> {
 
     @Transactional
     public RoleOutput registrarRole(RoleInput input) {
-        Role role = RoleMapper.toEntity(input);
+        Role role = roleMapper.toEntity(input);
         role = guardar(role);
-        return RoleMapper.toOutput(role);
+        return roleMapper.toOutput(role);
     }
 
     @Transactional
     public RoleOutput actualizarRole(Long id, RoleInput input) {
         Role role = buscarPorIdOrThrow(id);
-        RoleMapper.updateEntity(role, input);
+        roleMapper.updateEntity(role, input);
         role = actualizar(role);
-        return RoleMapper.toOutput(role);
+        return roleMapper.toOutput(role);
     }
 
     @Transactional(readOnly = true)
     public List<RoleOutput> listarTodosRoles() {
         return listarTodos().stream()
-                .map(RoleMapper::toOutput)
+                .map(roleMapper::toOutput)
                 .toList();
     }
 
@@ -62,33 +65,33 @@ public class RoleService extends GenericCrudService<Role, Long> {
             org.springframework.data.domain.PageRequest.of(page, size)
         );
         return new com.dev.ultron.generic.PageResponse<>(
-            pagina.map(RoleMapper::toOutput)
+            pagina.map(roleMapper::toOutput)
         );
     }
 
     @Transactional(readOnly = true)
     public com.dev.ultron.generic.PageResponse<RoleOutput> rolesUsuarioPaginado(Long usuarioId, int page, int size, String filter) {
         org.springframework.data.domain.Page<Role> pagina = roleRepository.findRolesByUsuarioIdPaginado(
-            usuarioId, filter, org.springframework.data.domain.PageRequest.of(page, size)
+            usuarioId, SearchNormalizer.normalizeFilter(filter), org.springframework.data.domain.PageRequest.of(page, size)
         );
         return new com.dev.ultron.generic.PageResponse<>(
-            pagina.map(RoleMapper::toOutput)
+            pagina.map(roleMapper::toOutput)
         );
     }
 
     @Transactional(readOnly = true)
     public com.dev.ultron.generic.PageResponse<RoleOutput> rolesDisponiblesUsuarioPaginado(Long usuarioId, int page, int size, String filter) {
         org.springframework.data.domain.Page<Role> pagina = roleRepository.findRolesDisponiblesByUsuarioIdPaginado(
-            usuarioId, filter, org.springframework.data.domain.PageRequest.of(page, size)
+            usuarioId, SearchNormalizer.normalizeFilter(filter), org.springframework.data.domain.PageRequest.of(page, size)
         );
         return new com.dev.ultron.generic.PageResponse<>(
-            pagina.map(RoleMapper::toOutput)
+            pagina.map(roleMapper::toOutput)
         );
     }
 
     @Transactional(readOnly = true)
     public RoleOutput buscarRolePorId(Long id) {
-        return RoleMapper.toOutput(buscarPorIdOrThrow(id));
+        return roleMapper.toOutput(buscarPorIdOrThrow(id));
     }
 
     @Transactional

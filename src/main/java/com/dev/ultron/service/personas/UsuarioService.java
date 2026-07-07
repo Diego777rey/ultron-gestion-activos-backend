@@ -9,12 +9,12 @@ import com.dev.ultron.dto.personas.input.UsuarioInput;
 import com.dev.ultron.dto.personas.mapper.UsuarioMapper;
 import com.dev.ultron.dto.personas.output.UsuarioOutput;
 import com.dev.ultron.generic.GenericCrudService;
+import com.dev.ultron.generic.SearchNormalizer;
 import com.dev.ultron.repository.personas.FuncionarioRepository;
 import com.dev.ultron.repository.personas.RoleRepository;
 import com.dev.ultron.repository.personas.UsuarioRepository;
 import com.dev.ultron.repository.personas.UsuarioRoleRepository;
 
-import com.dev.ultron.utilitarios.StringUtil;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,17 +30,20 @@ public class UsuarioService extends GenericCrudService<Usuario, Long> {
     private final RoleRepository roleRepository;
     private final UsuarioRoleRepository usuarioRoleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UsuarioMapper usuarioMapper;
 
     public UsuarioService(UsuarioRepository usuarioRepository,
                           FuncionarioRepository funcionarioRepository,
                           RoleRepository roleRepository,
                           UsuarioRoleRepository usuarioRoleRepository,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder,
+                          UsuarioMapper usuarioMapper) {
         this.usuarioRepository = usuarioRepository;
         this.funcionarioRepository = funcionarioRepository;
         this.roleRepository = roleRepository;
         this.usuarioRoleRepository = usuarioRoleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.usuarioMapper = usuarioMapper;
     }
 
     @Override
@@ -52,31 +55,31 @@ public class UsuarioService extends GenericCrudService<Usuario, Long> {
     public UsuarioOutput registrarUsuario(UsuarioInput input) {
         validarInput(input, null);
         String encodedPassword = passwordEncoder.encode(input.password());
-        Usuario usuario = UsuarioMapper.toEntity(input, encodedPassword);
+        Usuario usuario = usuarioMapper.toEntity(input, encodedPassword);
         usuario.setFuncionario(resolverFuncionario(input.id_funcionario(), null));
         usuario = guardar(usuario);
         asignarRoles(usuario, input.roleIds());
-        return UsuarioMapper.toOutput(recargar(usuario.getId()));
+        return usuarioMapper.toOutput(recargar(usuario.getId()));
     }
 
     @Transactional
     public UsuarioOutput actualizarUsuario(Long id, UsuarioInput input) {
         Usuario usuario = buscarPorIdOrThrow(id);
         validarInput(input, id);
-        UsuarioMapper.updateEntity(usuario, input);
+        usuarioMapper.updateEntity(usuario, input);
         if (input.password() != null && !input.password().isBlank()) {
             usuario.setPassword(passwordEncoder.encode(input.password()));
         }
         usuario.setFuncionario(resolverFuncionario(input.id_funcionario(), id));
         usuario = actualizar(usuario);
         reemplazarRoles(usuario, input.roleIds());
-        return UsuarioMapper.toOutput(recargar(usuario.getId()));
+        return usuarioMapper.toOutput(recargar(usuario.getId()));
     }
 
     @Transactional(readOnly = true)
     public List<UsuarioOutput> listarTodosUsuarios() {
         return usuarioRepository.findAllWithRolesAndFuncionario().stream()
-                .map(UsuarioMapper::toOutput)
+                .map(usuarioMapper::toOutput)
                 .toList();
     }
 
@@ -86,13 +89,13 @@ public class UsuarioService extends GenericCrudService<Usuario, Long> {
             org.springframework.data.domain.PageRequest.of(page, size)
         );
         return new com.dev.ultron.generic.PageResponse<>(
-            pagina.map(UsuarioMapper::toOutput)
+            pagina.map(usuarioMapper::toOutput)
         );
     }
 
     @Transactional(readOnly = true)
     public UsuarioOutput buscarUsuarioPorId(Long id) {
-        return UsuarioMapper.toOutput(recargar(id));
+        return usuarioMapper.toOutput(recargar(id));
     }
 
     @Transactional
@@ -112,7 +115,7 @@ public class UsuarioService extends GenericCrudService<Usuario, Long> {
         if (input.id_funcionario() == null) {
             throw new IllegalArgumentException("Debe seleccionar un funcionario para el usuario");
         }
-        String username = StringUtil.toUpperCase(input.username());
+        String username = SearchNormalizer.normalize(input.username());
         boolean usernameDuplicado = usuarioId == null
                 ? usuarioRepository.existsByUsername(username)
                 : usuarioRepository.existsByUsernameAndIdNot(username, usuarioId);
@@ -184,7 +187,7 @@ public class UsuarioService extends GenericCrudService<Usuario, Long> {
                 .role(role)
                 .build();
         usuarioRoleRepository.save(usuarioRole);
-        return UsuarioMapper.toOutput(recargar(usuarioId));
+        return usuarioMapper.toOutput(recargar(usuarioId));
     }
 
     @Transactional
@@ -198,6 +201,6 @@ public class UsuarioService extends GenericCrudService<Usuario, Long> {
             throw new IllegalArgumentException("El usuario no tiene asignado ese rol");
         }
         usuarioRoleRepository.deleteById(urId);
-        return UsuarioMapper.toOutput(recargar(usuarioId));
+        return usuarioMapper.toOutput(recargar(usuarioId));
     }
 }

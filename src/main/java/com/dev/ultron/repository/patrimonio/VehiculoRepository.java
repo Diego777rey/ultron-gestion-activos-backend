@@ -13,7 +13,8 @@ import java.util.Optional;
 @Repository
 public interface VehiculoRepository extends JpaRepository<Vehiculo, Long> {
 
-    Page<Vehiculo> findByClienteId_cliente(Long idCliente, Pageable pageable);
+    @Query("SELECT v FROM Vehiculo v WHERE v.cliente.id_cliente = :idCliente")
+    Page<Vehiculo> findByClienteId(@Param("idCliente") Long idCliente, Pageable pageable);
 
     @Query("SELECT CASE WHEN COUNT(v) > 0 THEN true ELSE false END FROM Vehiculo v "
             + "WHERE UPPER(v.chapa) = UPPER(:chapa) AND (:idExcluir IS NULL OR v.id_bien <> :idExcluir)")

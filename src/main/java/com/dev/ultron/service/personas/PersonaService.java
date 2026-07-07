@@ -2,6 +2,7 @@ package com.dev.ultron.service.personas;
 
 import com.dev.ultron.domain.personas.Persona;
 import com.dev.ultron.generic.GenericCrudService;
+import com.dev.ultron.generic.SearchNormalizer;
 import com.dev.ultron.repository.personas.PersonaRepository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -46,6 +47,10 @@ public class PersonaService extends GenericCrudService<Persona, Long> {
      */
     @Transactional(readOnly = true)
     public Optional<Persona> buscarPorDocumento(String documento) {
-        return personaRepository.findFirstByDocumento(documento);
+        String documentoNormalizado = SearchNormalizer.normalize(documento);
+        if (documentoNormalizado == null) {
+            return Optional.empty();
+        }
+        return personaRepository.findFirstByDocumento(documentoNormalizado);
     }
 }
