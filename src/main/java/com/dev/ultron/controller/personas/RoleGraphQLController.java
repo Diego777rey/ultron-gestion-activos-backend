@@ -25,8 +25,8 @@ public class RoleGraphQLController {
     }
 
     @QueryMapping
-    public com.dev.ultron.generic.PageResponse<RoleOutput> listarRolesPaginado(@Argument int page, @Argument int size) {
-        return roleService.listarRolesPaginado(page, size);
+    public com.dev.ultron.generic.PageResponse<RoleOutput> listarRolesPaginado(@Argument int page, @Argument int size, @Argument String filter) {
+        return roleService.listarRolesPaginado(page, size, filter);
     }
 
     @QueryMapping

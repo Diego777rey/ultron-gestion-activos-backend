@@ -17,4 +17,7 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 
     @Query("SELECT r FROM Role r WHERE r.id NOT IN (SELECT ur.role.id FROM UsuarioRole ur WHERE ur.usuario.id = :usuarioId) AND (:search IS NULL OR UPPER(r.descripcion) LIKE UPPER(CONCAT('%', :search, '%')))")
     Page<Role> findRolesDisponiblesByUsuarioIdPaginado(@Param("usuarioId") Long usuarioId, @Param("search") String search, Pageable pageable);
+
+    @Query("SELECT r FROM Role r WHERE LOWER(r.descripcion) LIKE LOWER(CONCAT('%', :filter, '%'))")
+    Page<Role> search(@Param("filter") String filter, Pageable pageable);
 }

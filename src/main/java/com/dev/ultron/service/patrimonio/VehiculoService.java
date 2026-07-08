@@ -78,16 +78,27 @@ public class VehiculoService extends GenericCrudService<Vehiculo, Long> {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<VehiculoOutput> listarVehiculosPaginado(int page, int size) {
-        Page<Vehiculo> pagina = listarPaginado(PageRequest.of(page, size));
+    public PageResponse<VehiculoOutput> listarVehiculosPaginado(int page, int size, String filter) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<Vehiculo> pagina;
+        if (filter != null && !filter.trim().isEmpty()) {
+            pagina = vehiculoRepository.search(SearchNormalizer.normalizeFilter(filter), pageRequest);
+        } else {
+            pagina = listarPaginado(pageRequest);
+        }
         return new PageResponse<>(pagina.map(vehiculoMapper::toOutput));
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<VehiculoOutput> listarVehiculosPorClientePaginado(Long idCliente, int page, int size) {
+    public PageResponse<VehiculoOutput> listarVehiculosPorClientePaginado(Long idCliente, int page, int size, String filter) {
         clienteService.buscarPorIdOrThrow(idCliente);
         Pageable pageable = PageRequest.of(page, size);
-        Page<Vehiculo> pagina = vehiculoRepository.findByClienteId(idCliente, pageable);
+        Page<Vehiculo> pagina;
+        if (filter != null && !filter.trim().isEmpty()) {
+            pagina = vehiculoRepository.searchByClienteId(idCliente, SearchNormalizer.normalizeFilter(filter), pageable);
+        } else {
+            pagina = vehiculoRepository.findByClienteId(idCliente, pageable);
+        }
         return new PageResponse<>(pagina.map(vehiculoMapper::toOutput));
     }
 

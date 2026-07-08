@@ -84,10 +84,14 @@ public class UsuarioService extends GenericCrudService<Usuario, Long> {
     }
 
     @Transactional(readOnly = true)
-    public com.dev.ultron.generic.PageResponse<UsuarioOutput> listarUsuariosPaginado(int page, int size) {
-        org.springframework.data.domain.Page<Usuario> pagina = listarPaginado(
-            org.springframework.data.domain.PageRequest.of(page, size)
-        );
+    public com.dev.ultron.generic.PageResponse<UsuarioOutput> listarUsuariosPaginado(int page, int size, String filter) {
+        org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<Usuario> pagina;
+        if (filter != null && !filter.trim().isEmpty()) {
+            pagina = usuarioRepository.search(SearchNormalizer.normalizeFilter(filter), pageRequest);
+        } else {
+            pagina = listarPaginado(pageRequest);
+        }
         return new com.dev.ultron.generic.PageResponse<>(
             pagina.map(usuarioMapper::toOutput)
         );

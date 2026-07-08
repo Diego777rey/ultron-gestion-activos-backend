@@ -13,19 +13,19 @@ type Query {
 
     # ---- Personas: Clientes ----
     listarClientes: [ClienteOutput!]!
-    listarClientesPaginado(page: Int!, size: Int!): ClientePageResponse!
+    listarClientesPaginado(page: Int!, size: Int!, filter: String): ClientePageResponse!
     buscarClientePorId(id: ID!): ClienteOutput
 
     # ---- Personas: Roles ----
     listarRoles: [RoleOutput!]!
-    listarRolesPaginado(page: Int!, size: Int!): RolePageResponse!
+    listarRolesPaginado(page: Int!, size: Int!, filter: String): RolePageResponse!
     buscarRolePorId(id: ID!): RoleOutput
     rolesUsuarioPaginado(usuarioId: ID!, page: Int!, size: Int!, filter: String): RolePageResponse!
     rolesDisponiblesUsuarioPaginado(usuarioId: ID!, page: Int!, size: Int!, filter: String): RolePageResponse!
 
     # ---- Personas: Usuarios ----
     listarUsuarios: [UsuarioOutput!]!
-    listarUsuariosPaginado(page: Int!, size: Int!): UsuarioPageResponse!
+    listarUsuariosPaginado(page: Int!, size: Int!, filter: String): UsuarioPageResponse!
     buscarUsuarioPorId(id: ID!): UsuarioOutput
     
     # ---- Personas: Base ----
@@ -33,8 +33,8 @@ type Query {
 
     # ---- Patrimonio: Vehículos ----
     listarVehiculos: [VehiculoOutput!]!
-    listarVehiculosPaginado(page: Int!, size: Int!): VehiculoPageResponse!
-    listarVehiculosPorClientePaginado(idCliente: ID!, page: Int!, size: Int!): VehiculoPageResponse!
+    listarVehiculosPaginado(page: Int!, size: Int!, filter: String): VehiculoPageResponse!
+    listarVehiculosPorClientePaginado(idCliente: ID!, page: Int!, size: Int!, filter: String): VehiculoPageResponse!
     buscarVehiculoPorId(id: ID!): VehiculoOutput
 }
 
