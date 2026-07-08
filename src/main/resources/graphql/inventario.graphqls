@@ -1,0 +1,144 @@
+# =============================================================
+# Schema de Inventario y Servicios
+# =============================================================
+
+# ---- Categoria Producto ----
+
+type CategoriaProductoOutput {
+    id_categoria_producto: ID
+    nombre: String
+    descripcion: String
+    estado: Boolean
+    categoriaPadre: CategoriaProductoOutput
+}
+
+type CategoriaProductoPageResponse {
+    content: [CategoriaProductoOutput!]!
+    pageInfo: PageInfo!
+}
+
+input CategoriaProductoInput {
+    nombre: String!
+    descripcion: String
+    estado: Boolean
+    idCategoriaPadre: ID
+}
+
+# ---- Producto ----
+
+type ProductoOutput {
+    id_producto: ID
+    codigo: String
+    nombre: String
+    descripcion: String
+    precioCompra: BigDecimal
+    precioVenta: BigDecimal
+    stock: BigDecimal
+    stockMinimo: BigDecimal
+    ubicacion: String
+    estado: Boolean
+    categoriaProducto: CategoriaProductoOutput
+}
+
+type ProductoPageResponse {
+    content: [ProductoOutput!]!
+    pageInfo: PageInfo!
+}
+
+input ProductoInput {
+    codigo: String!
+    nombre: String!
+    descripcion: String
+    precioCompra: BigDecimal
+    precioVenta: BigDecimal!
+    stock: BigDecimal!
+    stockMinimo: BigDecimal!
+    ubicacion: String
+    estado: Boolean
+    idCategoriaProducto: ID!
+}
+
+# ---- Categoria Servicio ----
+
+type CategoriaServicioOutput {
+    id_categoria_servicio: ID
+    nombre: String
+    descripcion: String
+    estado: Boolean
+    categoriaPadre: CategoriaServicioOutput
+}
+
+type CategoriaServicioPageResponse {
+    content: [CategoriaServicioOutput!]!
+    pageInfo: PageInfo!
+}
+
+input CategoriaServicioInput {
+    nombre: String!
+    descripcion: String
+    estado: Boolean
+    idCategoriaPadre: ID
+}
+
+# ---- Servicio ----
+
+type ServicioOutput {
+    id_servicio: ID
+    codigo: String
+    nombre: String
+    descripcion: String
+    precio: BigDecimal
+    estado: Boolean
+    categoriaServicio: CategoriaServicioOutput
+}
+
+type ServicioPageResponse {
+    content: [ServicioOutput!]!
+    pageInfo: PageInfo!
+}
+
+input ServicioInput {
+    codigo: String
+    nombre: String!
+    descripcion: String
+    precio: BigDecimal!
+    estado: Boolean
+    idCategoriaServicio: ID!
+}
+
+# ---- Queries & Mutations ----
+extend type Query {
+    listarCategoriasProducto: [CategoriaProductoOutput!]!
+    listarCategoriasProductoPaginado(page: Int!, size: Int!, filter: String): CategoriaProductoPageResponse!
+    buscarCategoriaProductoPorId(id: ID!): CategoriaProductoOutput
+
+    listarProductos: [ProductoOutput!]!
+    listarProductosPaginado(page: Int!, size: Int!, filter: String): ProductoPageResponse!
+    buscarProductoPorId(id: ID!): ProductoOutput
+
+    listarCategoriasServicio: [CategoriaServicioOutput!]!
+    listarCategoriasServicioPaginado(page: Int!, size: Int!, filter: String): CategoriaServicioPageResponse!
+    buscarCategoriaServicioPorId(id: ID!): CategoriaServicioOutput
+
+    listarServicios: [ServicioOutput!]!
+    listarServiciosPaginado(page: Int!, size: Int!, filter: String): ServicioPageResponse!
+    buscarServicioPorId(id: ID!): ServicioOutput
+}
+
+extend type Mutation {
+    registrarCategoriaProducto(input: CategoriaProductoInput!): CategoriaProductoOutput
+    actualizarCategoriaProducto(id: ID!, input: CategoriaProductoInput!): CategoriaProductoOutput
+    eliminarCategoriaProducto(id: ID!): Boolean
+
+    registrarProducto(input: ProductoInput!): ProductoOutput
+    actualizarProducto(id: ID!, input: ProductoInput!): ProductoOutput
+    eliminarProducto(id: ID!): Boolean
+
+    registrarCategoriaServicio(input: CategoriaServicioInput!): CategoriaServicioOutput
+    actualizarCategoriaServicio(id: ID!, input: CategoriaServicioInput!): CategoriaServicioOutput
+    eliminarCategoriaServicio(id: ID!): Boolean
+
+    registrarServicio(input: ServicioInput!): ServicioOutput
+    actualizarServicio(id: ID!, input: ServicioInput!): ServicioOutput
+    eliminarServicio(id: ID!): Boolean
+}
