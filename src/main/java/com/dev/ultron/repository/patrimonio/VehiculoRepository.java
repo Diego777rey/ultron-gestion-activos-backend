@@ -21,4 +21,10 @@ public interface VehiculoRepository extends JpaRepository<Vehiculo, Long> {
     boolean existsByChapaExcludingId(@Param("chapa") String chapa, @Param("idExcluir") Long idExcluir);
 
     Optional<Vehiculo> findByChapaIgnoreCase(String chapa);
+
+    @Query("SELECT v FROM Vehiculo v WHERE LOWER(v.chapa) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(v.marca) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(v.modelo) LIKE LOWER(CONCAT('%', :filter, '%'))")
+    Page<Vehiculo> search(@Param("filter") String filter, Pageable pageable);
+
+    @Query("SELECT v FROM Vehiculo v WHERE v.cliente.id_cliente = :idCliente AND (LOWER(v.chapa) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(v.marca) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(v.modelo) LIKE LOWER(CONCAT('%', :filter, '%')))")
+    Page<Vehiculo> searchByClienteId(@Param("idCliente") Long idCliente, @Param("filter") String filter, Pageable pageable);
 }

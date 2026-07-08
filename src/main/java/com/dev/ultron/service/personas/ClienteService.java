@@ -107,10 +107,14 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
      * Lista clientes de forma paginada y retorna un PageResponse DTO.
      */
     @Transactional(readOnly = true)
-    public com.dev.ultron.generic.PageResponse<ClienteOutput> listarClientesPaginado(int page, int size) {
-        org.springframework.data.domain.Page<Cliente> pagina = listarPaginado(
-            org.springframework.data.domain.PageRequest.of(page, size)
-        );
+    public com.dev.ultron.generic.PageResponse<ClienteOutput> listarClientesPaginado(int page, int size, String filter) {
+        org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<Cliente> pagina;
+        if (filter != null && !filter.trim().isEmpty()) {
+            pagina = clienteRepository.search(com.dev.ultron.generic.SearchNormalizer.normalizeFilter(filter), pageRequest);
+        } else {
+            pagina = listarPaginado(pageRequest);
+        }
         return new com.dev.ultron.generic.PageResponse<>(
             pagina.map(clienteMapper::toOutput)
         );

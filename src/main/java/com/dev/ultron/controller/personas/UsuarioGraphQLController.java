@@ -25,8 +25,8 @@ public class UsuarioGraphQLController {
     }
 
     @QueryMapping
-    public com.dev.ultron.generic.PageResponse<UsuarioOutput> listarUsuariosPaginado(@Argument int page, @Argument int size) {
-        return usuarioService.listarUsuariosPaginado(page, size);
+    public com.dev.ultron.generic.PageResponse<UsuarioOutput> listarUsuariosPaginado(@Argument int page, @Argument int size, @Argument String filter) {
+        return usuarioService.listarUsuariosPaginado(page, size, filter);
     }
 
     @QueryMapping

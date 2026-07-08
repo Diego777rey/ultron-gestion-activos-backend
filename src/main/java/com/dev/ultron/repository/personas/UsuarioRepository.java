@@ -43,4 +43,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
             WHERE u.id = :id
             """)
     Optional<Usuario> findByIdWithRolesAndFuncionario(Long id);
+
+    @Query(value = "SELECT u FROM Usuario u LEFT JOIN FETCH u.funcionario f LEFT JOIN FETCH f.persona p WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(p.apellido) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(p.documento) LIKE LOWER(CONCAT('%', :filter, '%'))", countQuery = "SELECT COUNT(u) FROM Usuario u LEFT JOIN u.funcionario f LEFT JOIN f.persona p WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(p.apellido) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(p.documento) LIKE LOWER(CONCAT('%', :filter, '%'))")
+    org.springframework.data.domain.Page<Usuario> search(@Param("filter") String filter, org.springframework.data.domain.Pageable pageable);
 }

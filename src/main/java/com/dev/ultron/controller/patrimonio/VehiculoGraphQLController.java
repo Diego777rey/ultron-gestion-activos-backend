@@ -33,16 +33,17 @@ public class VehiculoGraphQLController {
     }
 
     @QueryMapping
-    public PageResponse<VehiculoOutput> listarVehiculosPaginado(@Argument int page, @Argument int size) {
-        return vehiculoService.listarVehiculosPaginado(page, size);
+    public PageResponse<VehiculoOutput> listarVehiculosPaginado(@Argument int page, @Argument int size, @Argument String filter) {
+        return vehiculoService.listarVehiculosPaginado(page, size, filter);
     }
 
     @QueryMapping
     public PageResponse<VehiculoOutput> listarVehiculosPorClientePaginado(
             @Argument Long idCliente,
             @Argument int page,
-            @Argument int size) {
-        return vehiculoService.listarVehiculosPorClientePaginado(idCliente, page, size);
+            @Argument int size,
+            @Argument String filter) {
+        return vehiculoService.listarVehiculosPorClientePaginado(idCliente, page, size, filter);
     }
 
     @QueryMapping
