@@ -24,6 +24,30 @@ input CategoriaProductoInput {
     idCategoriaPadre: ID
 }
 
+# ---- Presentacion Producto ----
+
+type PresentacionProductoOutput {
+    id_presentacion_producto: ID
+    descripcion: String
+    tipo: String
+    cantidad: BigDecimal
+    codigoBarras: String
+    precio: BigDecimal
+    principal: Boolean
+    estado: Boolean
+}
+
+input PresentacionProductoInput {
+    idProducto: ID
+    descripcion: String!
+    tipo: String
+    cantidad: BigDecimal
+    codigoBarras: String
+    precio: BigDecimal!
+    principal: Boolean
+    estado: Boolean
+}
+
 # ---- Producto ----
 
 type ProductoOutput {
@@ -38,6 +62,7 @@ type ProductoOutput {
     ubicacion: String
     estado: Boolean
     categoriaProducto: CategoriaProductoOutput
+    presentaciones: [PresentacionProductoOutput!]
 }
 
 type ProductoPageResponse {
@@ -111,10 +136,15 @@ extend type Query {
     listarCategoriasProducto: [CategoriaProductoOutput!]!
     listarCategoriasProductoPaginado(page: Int!, size: Int!, filter: String): CategoriaProductoPageResponse!
     buscarCategoriaProductoPorId(id: ID!): CategoriaProductoOutput
+    listarCategoriasProductoRaiz: [CategoriaProductoOutput!]!
+    listarSubcategoriasProducto(idCategoriaPadre: ID!): [CategoriaProductoOutput!]!
 
     listarProductos: [ProductoOutput!]!
     listarProductosPaginado(page: Int!, size: Int!, filter: String): ProductoPageResponse!
     buscarProductoPorId(id: ID!): ProductoOutput
+
+    listarPresentacionesPorProducto(idProducto: ID!): [PresentacionProductoOutput!]!
+    buscarPresentacionProductoPorId(id: ID!): PresentacionProductoOutput
 
     listarCategoriasServicio: [CategoriaServicioOutput!]!
     listarCategoriasServicioPaginado(page: Int!, size: Int!, filter: String): CategoriaServicioPageResponse!
@@ -133,6 +163,10 @@ extend type Mutation {
     registrarProducto(input: ProductoInput!): ProductoOutput
     actualizarProducto(id: ID!, input: ProductoInput!): ProductoOutput
     eliminarProducto(id: ID!): Boolean
+
+    registrarPresentacionProducto(input: PresentacionProductoInput!): PresentacionProductoOutput
+    actualizarPresentacionProducto(id: ID!, input: PresentacionProductoInput!): PresentacionProductoOutput
+    eliminarPresentacionProducto(id: ID!): Boolean
 
     registrarCategoriaServicio(input: CategoriaServicioInput!): CategoriaServicioOutput
     actualizarCategoriaServicio(id: ID!, input: CategoriaServicioInput!): CategoriaServicioOutput
