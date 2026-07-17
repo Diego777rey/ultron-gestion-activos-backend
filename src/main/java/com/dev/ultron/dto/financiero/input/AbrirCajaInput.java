@@ -6,16 +6,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CajaInput implements Serializable {
-    private String nombre;
-    private BigDecimal saldoActual;
-    private Long idEmpresa;
-    private Long idResponsable;
-    private Boolean activa;
+public class AbrirCajaInput implements Serializable {
+    private Long idCaja;
+    private Long idMaletin;
+    private Long idPersona;
+    private List<ConteoDenominacionInput> conteos;
 }

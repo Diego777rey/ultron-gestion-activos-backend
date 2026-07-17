@@ -12,10 +12,11 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CajaInput implements Serializable {
+public class MaletinInput implements Serializable {
     private String nombre;
-    private BigDecimal saldoActual;
-    private Long idEmpresa;
+    private BigDecimal balancePyg;
+    private BigDecimal balanceUsd;
+    private BigDecimal balanceBrl;
     private Long idResponsable;
-    private Boolean activa;
+    private Boolean activo;
 }
