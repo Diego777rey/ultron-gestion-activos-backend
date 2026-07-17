@@ -1,0 +1,67 @@
+# =============================================================
+# Schema de Sectores y Zonas
+# =============================================================
+
+# ---- Sector ----
+
+type SectorOutput {
+    id_sector: ID
+    nombre: String
+    descripcion: String
+    estado: Boolean
+}
+
+type SectorPageResponse {
+    content: [SectorOutput!]!
+    pageInfo: PageInfo!
+}
+
+input SectorInput {
+    nombre: String!
+    descripcion: String
+    estado: Boolean
+}
+
+# ---- Zona ----
+
+type ZonaOutput {
+    id_zona: ID
+    nombre: String
+    descripcion: String
+    estado: Boolean
+    sector: SectorOutput
+}
+
+type ZonaPageResponse {
+    content: [ZonaOutput!]!
+    pageInfo: PageInfo!
+}
+
+input ZonaInput {
+    nombre: String!
+    descripcion: String
+    estado: Boolean
+    idSector: ID!
+}
+
+# ---- Queries & Mutations ----
+extend type Query {
+    listarSectores: [SectorOutput!]!
+    listarSectoresPaginado(page: Int!, size: Int!, filter: String): SectorPageResponse!
+    buscarSectorPorId(id: ID!): SectorOutput
+
+    listarZonas: [ZonaOutput!]!
+    listarZonasPaginado(page: Int!, size: Int!, filter: String): ZonaPageResponse!
+    buscarZonaPorId(id: ID!): ZonaOutput
+    listarZonasPorSector(idSector: ID!): [ZonaOutput!]!
+}
+
+extend type Mutation {
+    registrarSector(input: SectorInput!): SectorOutput
+    actualizarSector(id: ID!, input: SectorInput!): SectorOutput
+    eliminarSector(id: ID!): Boolean
+
+    registrarZona(input: ZonaInput!): ZonaOutput
+    actualizarZona(id: ID!, input: ZonaInput!): ZonaOutput
+    eliminarZona(id: ID!): Boolean
+}
