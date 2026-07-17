@@ -7,7 +7,6 @@ import com.dev.ultron.dto.inventario.mapper.CategoriaServicioMapper;
 import com.dev.ultron.repository.inventario.CategoriaServicioRepository;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
-import com.dev.ultron.generic.SearchNormalizer;
 import com.dev.ultron.generic.EntityNotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
@@ -62,16 +61,33 @@ public class CategoriaServicioService extends GenericCrudService<CategoriaServic
         return listarTodos().stream().map(mapper::toOutput).collect(Collectors.toList());
     }
 
+    /**
+     * Lista solo las categorias raiz (sin categoria padre) de forma paginada.
+     * Las subcategorias se consultan aparte con {@link #findSubcategorias(Long)}.
+     */
     @Transactional(readOnly = true)
     public PageResponse<CategoriaServicioOutput> findAllPaginated(int page, int size, String filter) {
         org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(page, size);
-        org.springframework.data.domain.Page<CategoriaServicio> pagina;
-        if (filter != null && !filter.trim().isEmpty()) {
-            pagina = repository.findAll(pageRequest);
-        } else {
-            pagina = listarPaginado(pageRequest);
-        }
+        org.springframework.data.domain.Page<CategoriaServicio> pagina = repository.findRaicesPaginado(pageRequest);
         return new PageResponse<>(pagina.map(mapper::toOutput));
+    }
+
+    /**
+     * Lista las categorias raiz (sin padre). Util para poblar selects de categoria.
+     */
+    @Transactional(readOnly = true)
+    public List<CategoriaServicioOutput> findRaices() {
+        return repository.findRaices()
+                .stream().map(mapper::toOutput).collect(Collectors.toList());
+    }
+
+    /**
+     * Lista las subcategorias de una categoria padre.
+     */
+    @Transactional(readOnly = true)
+    public List<CategoriaServicioOutput> findSubcategorias(Long idCategoriaPadre) {
+        return repository.findSubcategorias(idCategoriaPadre)
+                .stream().map(mapper::toOutput).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
