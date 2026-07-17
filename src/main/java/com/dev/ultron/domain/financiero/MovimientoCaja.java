@@ -46,4 +46,13 @@ public class MovimientoCaja implements Serializable {
     private Persona autorizador;
 
     private String referencia;
+    private String moneda;
+
+    @ManyToOne
+    @JoinColumn(name = "id_maletin")
+    private Maletin maletin;
+
+    @ManyToOne
+    @JoinColumn(name = "id_sesion_caja")
+    private SesionCaja sesionCaja;
 }

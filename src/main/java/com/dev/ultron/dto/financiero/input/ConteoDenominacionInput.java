@@ -12,10 +12,8 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CajaInput implements Serializable {
-    private String nombre;
-    private BigDecimal saldoActual;
-    private Long idEmpresa;
-    private Long idResponsable;
-    private Boolean activa;
+public class ConteoDenominacionInput implements Serializable {
+    private String moneda;
+    private BigDecimal valorDenominacion;
+    private Integer cantidad;
 }

@@ -1,0 +1,180 @@
+# =============================================================
+# Schema Financiero — Cajas, Maletines, Sesiones y Ventas POS
+# =============================================================
+
+type CajaOutput {
+    id_caja: ID
+    nombre: String
+    saldoActual: BigDecimal
+    idEmpresa: ID
+    responsable: PersonaOutput
+    activa: Boolean
+}
+
+type CajaPageResponse {
+    content: [CajaOutput!]!
+    pageInfo: PageInfo!
+}
+
+input CajaInput {
+    nombre: String!
+    saldoActual: BigDecimal
+    idEmpresa: ID
+    idResponsable: ID
+    activa: Boolean
+}
+
+type MaletinOutput {
+    id_maletin: ID
+    nombre: String
+    estado: String
+    balancePyg: BigDecimal
+    balanceUsd: BigDecimal
+    balanceBrl: BigDecimal
+    responsable: PersonaOutput
+    activo: Boolean
+}
+
+type MaletinPageResponse {
+    content: [MaletinOutput!]!
+    pageInfo: PageInfo!
+}
+
+input MaletinInput {
+    nombre: String!
+    balancePyg: BigDecimal
+    balanceUsd: BigDecimal
+    balanceBrl: BigDecimal
+    idResponsable: ID
+    activo: Boolean
+}
+
+type ConteoDenominacionOutput {
+    id_conteo: ID
+    tipo: String
+    moneda: String
+    valorDenominacion: BigDecimal
+    cantidad: Int
+}
+
+input ConteoDenominacionInput {
+    moneda: String!
+    valorDenominacion: BigDecimal!
+    cantidad: Int!
+}
+
+type SesionCajaOutput {
+    id_sesion_caja: ID
+    caja: CajaOutput
+    maletin: MaletinOutput
+    persona: PersonaOutput
+    estado: String
+    montoInicialPyg: BigDecimal
+    montoInicialUsd: BigDecimal
+    montoInicialBrl: BigDecimal
+    montoFinalPyg: BigDecimal
+    montoFinalUsd: BigDecimal
+    montoFinalBrl: BigDecimal
+    diferenciaPyg: BigDecimal
+    diferenciaUsd: BigDecimal
+    diferenciaBrl: BigDecimal
+    totalVentasPyg: BigDecimal
+    fechaApertura: String
+    fechaCierre: String
+    conteos: [ConteoDenominacionOutput!]
+}
+
+type SesionCajaPageResponse {
+    content: [SesionCajaOutput!]!
+    pageInfo: PageInfo!
+}
+
+input AbrirCajaInput {
+    idCaja: ID!
+    idMaletin: ID!
+    idPersona: ID
+    conteos: [ConteoDenominacionInput!]!
+}
+
+input CerrarCajaInput {
+    idSesionCaja: ID!
+    conteos: [ConteoDenominacionInput!]!
+}
+
+type DetalleVentaOutput {
+    id_detalle_venta: ID
+    idProducto: ID
+    productoNombre: String
+    idPresentacion: ID
+    presentacionDescripcion: String
+    cantidad: BigDecimal
+    precioUnitario: BigDecimal
+    subtotal: BigDecimal
+}
+
+type VentaOutput {
+    id_venta: ID
+    numero: String
+    fecha: String
+    idSesionCaja: ID
+    idCliente: ID
+    clienteNombre: String
+    subtotal: BigDecimal
+    descuento: BigDecimal
+    total: BigDecimal
+    estado: String
+    detalles: [DetalleVentaOutput!]
+}
+
+type VentaPageResponse {
+    content: [VentaOutput!]!
+    pageInfo: PageInfo!
+}
+
+input DetalleVentaInput {
+    idProducto: ID!
+    idPresentacion: ID
+    cantidad: BigDecimal!
+    precioUnitario: BigDecimal
+}
+
+input VentaInput {
+    idSesionCaja: ID!
+    idCliente: ID
+    descuento: BigDecimal
+    detalles: [DetalleVentaInput!]!
+}
+
+extend type Query {
+    listarCajas: [CajaOutput!]!
+    listarCajasPaginado(page: Int!, size: Int!, filter: String): CajaPageResponse!
+    buscarCajaPorId(id: ID!): CajaOutput
+
+    listarMaletines: [MaletinOutput!]!
+    listarMaletinesDisponibles: [MaletinOutput!]!
+    listarMaletinesPaginado(page: Int!, size: Int!, filter: String): MaletinPageResponse!
+    buscarMaletinPorId(id: ID!): MaletinOutput
+
+    sesionCajaAbierta(idCaja: ID): SesionCajaOutput
+    buscarSesionCajaPorId(id: ID!): SesionCajaOutput
+    listarSesionesCajaPaginado(page: Int!, size: Int!, filter: String): SesionCajaPageResponse!
+
+    listarVentas: [VentaOutput!]!
+    listarVentasPaginado(page: Int!, size: Int!, filter: String): VentaPageResponse!
+    buscarVentaPorId(id: ID!): VentaOutput
+}
+
+extend type Mutation {
+    registrarCaja(input: CajaInput!): CajaOutput
+    actualizarCaja(id: ID!, input: CajaInput!): CajaOutput
+    eliminarCaja(id: ID!): Boolean
+
+    registrarMaletin(input: MaletinInput!): MaletinOutput
+    actualizarMaletin(id: ID!, input: MaletinInput!): MaletinOutput
+    eliminarMaletin(id: ID!): Boolean
+
+    abrirCaja(input: AbrirCajaInput!): SesionCajaOutput
+    cerrarCaja(input: CerrarCajaInput!): SesionCajaOutput
+
+    registrarVenta(input: VentaInput!): VentaOutput
+}

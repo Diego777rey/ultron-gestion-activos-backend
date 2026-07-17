@@ -13,11 +13,13 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CajaOutput implements Serializable {
-    private Long id_caja;
+public class MaletinOutput implements Serializable {
+    private Long id_maletin;
     private String nombre;
-    private BigDecimal saldoActual;
-    private Long idEmpresa;
+    private String estado;
+    private BigDecimal balancePyg;
+    private BigDecimal balanceUsd;
+    private BigDecimal balanceBrl;
     private PersonaOutput responsable;
-    private Boolean activa;
+    private Boolean activo;
 }
