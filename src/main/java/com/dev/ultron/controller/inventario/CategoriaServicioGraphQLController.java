@@ -33,6 +33,16 @@ public class CategoriaServicioGraphQLController {
         return service.findById(id);
     }
 
+    @QueryMapping
+    public List<CategoriaServicioOutput> listarCategoriasServicioRaiz() {
+        return service.findRaices();
+    }
+
+    @QueryMapping
+    public List<CategoriaServicioOutput> listarSubcategoriasServicio(@Argument Long idCategoriaPadre) {
+        return service.findSubcategorias(idCategoriaPadre);
+    }
+
     @MutationMapping
     public CategoriaServicioOutput registrarCategoriaServicio(@Argument CategoriaServicioInput input) {
         return service.save(input);

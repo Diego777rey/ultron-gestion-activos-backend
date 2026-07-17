@@ -149,6 +149,8 @@ extend type Query {
     listarCategoriasServicio: [CategoriaServicioOutput!]!
     listarCategoriasServicioPaginado(page: Int!, size: Int!, filter: String): CategoriaServicioPageResponse!
     buscarCategoriaServicioPorId(id: ID!): CategoriaServicioOutput
+    listarCategoriasServicioRaiz: [CategoriaServicioOutput!]!
+    listarSubcategoriasServicio(idCategoriaPadre: ID!): [CategoriaServicioOutput!]!
 
     listarServicios: [ServicioOutput!]!
     listarServiciosPaginado(page: Int!, size: Int!, filter: String): ServicioPageResponse!
