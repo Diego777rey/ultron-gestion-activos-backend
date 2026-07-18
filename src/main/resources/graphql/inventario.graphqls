@@ -24,6 +24,28 @@ input CategoriaProductoInput {
     idCategoriaPadre: ID
 }
 
+# ---- Catálogo Presentacion ----
+
+type PresentacionOutput {
+    id_presentacion: ID
+    nombre: String
+    descripcion: String
+    cantidad: BigDecimal
+    estado: Boolean
+}
+
+type PresentacionPageResponse {
+    content: [PresentacionOutput!]!
+    pageInfo: PageInfo!
+}
+
+input PresentacionInput {
+    nombre: String!
+    descripcion: String
+    cantidad: BigDecimal
+    estado: Boolean
+}
+
 # ---- Presentacion Producto ----
 
 type PresentacionProductoOutput {
@@ -143,6 +165,10 @@ extend type Query {
     listarProductosPaginado(page: Int!, size: Int!, filter: String): ProductoPageResponse!
     buscarProductoPorId(id: ID!): ProductoOutput
 
+    listarPresentaciones: [PresentacionOutput!]!
+    listarPresentacionesPaginado(page: Int!, size: Int!, filter: String): PresentacionPageResponse!
+    buscarPresentacionPorId(id: ID!): PresentacionOutput
+
     listarPresentacionesPorProducto(idProducto: ID!): [PresentacionProductoOutput!]!
     buscarPresentacionProductoPorId(id: ID!): PresentacionProductoOutput
 
@@ -165,6 +191,10 @@ extend type Mutation {
     registrarProducto(input: ProductoInput!): ProductoOutput
     actualizarProducto(id: ID!, input: ProductoInput!): ProductoOutput
     eliminarProducto(id: ID!): Boolean
+
+    registrarPresentacion(input: PresentacionInput!): PresentacionOutput
+    actualizarPresentacion(id: ID!, input: PresentacionInput!): PresentacionOutput
+    eliminarPresentacion(id: ID!): Boolean
 
     registrarPresentacionProducto(input: PresentacionProductoInput!): PresentacionProductoOutput
     actualizarPresentacionProducto(id: ID!, input: PresentacionProductoInput!): PresentacionProductoOutput
