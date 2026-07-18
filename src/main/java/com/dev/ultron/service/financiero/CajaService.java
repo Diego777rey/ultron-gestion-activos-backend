@@ -2,6 +2,7 @@ package com.dev.ultron.service.financiero;
 
 import com.dev.ultron.domain.financiero.Caja;
 import com.dev.ultron.domain.personas.Persona;
+import com.dev.ultron.domain.sectores.Sector;
 import com.dev.ultron.dto.financiero.input.CajaInput;
 import com.dev.ultron.dto.financiero.mapper.CajaMapper;
 import com.dev.ultron.dto.financiero.output.CajaOutput;
@@ -10,6 +11,7 @@ import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.repository.financiero.CajaRepository;
 import com.dev.ultron.repository.personas.PersonaRepository;
+import com.dev.ultron.repository.sectores.SectorRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
@@ -25,11 +27,18 @@ public class CajaService extends GenericCrudService<Caja, Long> {
     private final CajaRepository repository;
     private final CajaMapper mapper;
     private final PersonaRepository personaRepository;
+    private final SectorRepository sectorRepository;
 
-    public CajaService(CajaRepository repository, CajaMapper mapper, PersonaRepository personaRepository) {
+    public CajaService(
+            CajaRepository repository,
+            CajaMapper mapper,
+            PersonaRepository personaRepository,
+            SectorRepository sectorRepository
+    ) {
         this.repository = repository;
         this.mapper = mapper;
         this.personaRepository = personaRepository;
+        this.sectorRepository = sectorRepository;
     }
 
     @Override
@@ -40,7 +49,8 @@ public class CajaService extends GenericCrudService<Caja, Long> {
     @Transactional
     public CajaOutput save(CajaInput input) {
         Persona responsable = resolveResponsable(input.getIdResponsable());
-        Caja entidad = mapper.toEntity(input, responsable);
+        Sector sector = resolveSector(input.getIdSector());
+        Caja entidad = mapper.toEntity(input, responsable, sector);
         if (entidad.getSaldo_actual() == null) {
             entidad.setSaldo_actual(BigDecimal.ZERO);
         }
@@ -56,7 +66,10 @@ public class CajaService extends GenericCrudService<Caja, Long> {
         Persona responsable = input.getIdResponsable() != null
                 ? resolveResponsable(input.getIdResponsable())
                 : entidad.getResponsable();
-        mapper.updateEntity(entidad, input, responsable);
+        Sector sector = input.getIdSector() != null
+                ? resolveSector(input.getIdSector())
+                : entidad.getSector();
+        mapper.updateEntity(entidad, input, responsable, sector);
         return mapper.toOutput(actualizar(entidad));
     }
 
@@ -81,5 +94,13 @@ public class CajaService extends GenericCrudService<Caja, Long> {
         }
         return personaRepository.findById(idResponsable)
                 .orElseThrow(() -> new EntityNotFoundException("Persona no encontrada con id: " + idResponsable));
+    }
+
+    private Sector resolveSector(Long idSector) {
+        if (idSector == null) {
+            throw new EntityNotFoundException("El sector es obligatorio para la caja");
+        }
+        return sectorRepository.findById(idSector)
+                .orElseThrow(() -> new EntityNotFoundException("Sector no encontrado con id: " + idSector));
     }
 }

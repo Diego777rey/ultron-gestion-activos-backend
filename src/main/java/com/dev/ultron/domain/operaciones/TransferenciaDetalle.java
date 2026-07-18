@@ -1,7 +1,6 @@
-package com.dev.ultron.domain.financiero;
+package com.dev.ultron.domain.operaciones;
 
-import com.dev.ultron.domain.personas.Persona;
-import com.dev.ultron.domain.sectores.Sector;
+import com.dev.ultron.domain.inventario.Producto;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -16,31 +15,27 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "maletin", schema = "financiero")
-public class Maletin implements Serializable {
+@Table(name = "transferencia_detalle", schema = "operaciones")
+public class TransferenciaDetalle implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id_maletin;
-
-    /** Código identificatorio del maletín (sobre físico). */
-    private String nombre;
-
-    private Boolean abierto;
+    private Long id_detalle;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_sector", nullable = false)
-    private Sector sector;
+    @JoinColumn(name = "id_transferencia", nullable = false)
+    private Transferencia transferencia;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_responsable")
-    private Persona responsable;
+    @JoinColumn(name = "id_producto", nullable = false)
+    private Producto producto;
 
-    private Boolean activo;
+    private BigDecimal cantidad;
 }

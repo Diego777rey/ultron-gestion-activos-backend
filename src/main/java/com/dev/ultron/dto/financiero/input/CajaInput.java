@@ -17,5 +17,6 @@ public class CajaInput implements Serializable {
     private BigDecimal saldoActual;
     private Long idEmpresa;
     private Long idResponsable;
+    private Long idSector;
     private Boolean activa;
 }

@@ -26,6 +26,16 @@ public interface SesionCajaRepository extends JpaRepository<SesionCaja, Long> {
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM SesionCaja s WHERE s.maletin.id_maletin = :idMaletin AND s.estado = :estado")
     boolean existsPorMaletinYEstado(@Param("idMaletin") Long idMaletin, @Param("estado") String estado);
 
+    @Query("SELECT s FROM SesionCaja s WHERE s.maletin.id_maletin = :idMaletin AND s.estado = 'ABIERTA'")
+    Optional<SesionCaja> findAbiertaPorMaletin(@Param("idMaletin") Long idMaletin);
+
+    @Query("""
+            SELECT s FROM SesionCaja s
+            WHERE s.maletin.id_maletin = :idMaletin
+            ORDER BY COALESCE(s.fechaCierre, s.fechaApertura) DESC
+            """)
+    List<SesionCaja> findUltimaPorMaletin(@Param("idMaletin") Long idMaletin, Pageable pageable);
+
     @Query("""
             SELECT s FROM SesionCaja s
             WHERE (:filter IS NULL OR :filter = ''

@@ -13,7 +13,10 @@ public interface CajaRepository extends JpaRepository<Caja, Long> {
 
     @Query("""
             SELECT c FROM Caja c
-            WHERE (:filter IS NULL OR :filter = '' OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :filter, '%')))
+            LEFT JOIN c.sector s
+            WHERE (:filter IS NULL OR :filter = ''
+                OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(s.nombre) LIKE LOWER(CONCAT('%', :filter, '%')))
             """)
     Page<Caja> buscar(@Param("filter") String filter, Pageable pageable);
 }

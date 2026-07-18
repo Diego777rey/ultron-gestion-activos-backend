@@ -7,14 +7,15 @@ import com.dev.ultron.dto.inventario.output.ProductoOutput;
 import com.dev.ultron.dto.inventario.mapper.ProductoMapper;
 import com.dev.ultron.repository.inventario.ProductoRepository;
 import com.dev.ultron.repository.inventario.CategoriaProductoRepository;
+import com.dev.ultron.service.operaciones.StockProductoSectorService;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
-import com.dev.ultron.generic.SearchNormalizer;
 import com.dev.ultron.generic.EntityNotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,11 +25,18 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
     private final ProductoRepository repository;
     private final ProductoMapper mapper;
     private final CategoriaProductoRepository categoriaProductoRepository;
+    private final StockProductoSectorService stockProductoSectorService;
 
-    public ProductoService(ProductoRepository repository, ProductoMapper mapper, CategoriaProductoRepository categoriaProductoRepository) {
+    public ProductoService(
+            ProductoRepository repository,
+            ProductoMapper mapper,
+            CategoriaProductoRepository categoriaProductoRepository,
+            StockProductoSectorService stockProductoSectorService
+    ) {
         this.repository = repository;
         this.mapper = mapper;
         this.categoriaProductoRepository = categoriaProductoRepository;
+        this.stockProductoSectorService = stockProductoSectorService;
     }
 
     @Override
@@ -41,7 +49,11 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
         CategoriaProducto categoria = categoriaProductoRepository.findById(input.getIdCategoriaProducto())
                 .orElseThrow(() -> new EntityNotFoundException("Categoria de Producto no encontrada con id: " + input.getIdCategoriaProducto()));
         Producto entidad = mapper.toEntity(input, categoria);
+        if (entidad.getStock() == null) {
+            entidad.setStock(BigDecimal.ZERO);
+        }
         entidad = guardar(entidad);
+        stockProductoSectorService.asegurarStockInicial(entidad, entidad.getStock());
         return mapper.toOutput(entidad);
     }
 
@@ -57,6 +69,7 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
         }
         mapper.updateEntity(entidad, input, categoria);
         entidad = actualizar(entidad);
+        stockProductoSectorService.resyncProductoStock(entidad.getId_producto());
         return mapper.toOutput(entidad);
     }
 

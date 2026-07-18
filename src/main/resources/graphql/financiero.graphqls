@@ -8,6 +8,7 @@ type CajaOutput {
     saldoActual: BigDecimal
     idEmpresa: ID
     responsable: PersonaOutput
+    sector: SectorOutput
     activa: Boolean
 }
 
@@ -21,18 +22,20 @@ input CajaInput {
     saldoActual: BigDecimal
     idEmpresa: ID
     idResponsable: ID
+    idSector: ID!
     activa: Boolean
 }
 
 type MaletinOutput {
     id_maletin: ID
     nombre: String
-    estado: String
-    balancePyg: BigDecimal
-    balanceUsd: BigDecimal
-    balanceBrl: BigDecimal
+    abierto: Boolean
+    sector: SectorOutput
     responsable: PersonaOutput
     activo: Boolean
+    idCajaActual: ID
+    ultimoMovimiento: String
+    ultimoResponsable: PersonaOutput
 }
 
 type MaletinPageResponse {
@@ -42,9 +45,7 @@ type MaletinPageResponse {
 
 input MaletinInput {
     nombre: String!
-    balancePyg: BigDecimal
-    balanceUsd: BigDecimal
-    balanceBrl: BigDecimal
+    idSector: ID!
     idResponsable: ID
     activo: Boolean
 }
@@ -151,7 +152,7 @@ extend type Query {
     buscarCajaPorId(id: ID!): CajaOutput
 
     listarMaletines: [MaletinOutput!]!
-    listarMaletinesDisponibles: [MaletinOutput!]!
+    listarMaletinesDisponibles(idSector: ID): [MaletinOutput!]!
     listarMaletinesPaginado(page: Int!, size: Int!, filter: String): MaletinPageResponse!
     buscarMaletinPorId(id: ID!): MaletinOutput
 

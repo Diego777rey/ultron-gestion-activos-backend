@@ -80,11 +80,15 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
         if (Boolean.FALSE.equals(maletin.getActivo())) {
             throw new IllegalArgumentException("El maletín seleccionado no está activo");
         }
-        if (!"CERRADO".equalsIgnoreCase(maletin.getEstado())) {
+        if (Boolean.TRUE.equals(maletin.getAbierto())) {
             throw new IllegalArgumentException("El maletín ya está abierto en otra sesión");
         }
         if (repository.existsPorMaletinYEstado(maletin.getId_maletin(), "ABIERTA")) {
             throw new IllegalArgumentException("El maletín ya está asociado a una sesión abierta");
+        }
+        if (caja.getSector() != null && maletin.getSector() != null
+                && !caja.getSector().getId_sector().equals(maletin.getSector().getId_sector())) {
+            throw new IllegalArgumentException("El maletín debe pertenecer al mismo sector que la caja");
         }
 
         Persona persona = null;
@@ -110,10 +114,10 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
         agregarConteos(sesion, "APERTURA", input.getConteos());
         sesion = guardar(sesion);
 
-        maletin.setEstado("ABIERTO");
-        maletin.setBalancePyg(sesion.getMontoInicialPyg());
-        maletin.setBalanceUsd(sesion.getMontoInicialUsd());
-        maletin.setBalanceBrl(sesion.getMontoInicialBrl());
+        maletin.setAbierto(true);
+        if (persona != null) {
+            maletin.setResponsable(persona);
+        }
         maletinRepository.save(maletin);
 
         caja.setSaldo_actual(sesion.getMontoInicialPyg());
@@ -169,10 +173,10 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
         sesion = actualizar(sesion);
 
         Maletin maletin = sesion.getMaletin();
-        maletin.setEstado("CERRADO");
-        maletin.setBalancePyg(finalPyg);
-        maletin.setBalanceUsd(finalUsd);
-        maletin.setBalanceBrl(finalBrl);
+        maletin.setAbierto(false);
+        if (sesion.getPersona() != null) {
+            maletin.setResponsable(sesion.getPersona());
+        }
         maletinRepository.save(maletin);
 
         Caja caja = sesion.getCaja();

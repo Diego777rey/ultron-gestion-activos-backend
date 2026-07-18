@@ -2,7 +2,6 @@ package com.dev.ultron.service.financiero;
 
 import com.dev.ultron.domain.financiero.DetalleVenta;
 import com.dev.ultron.domain.financiero.Ingreso;
-import com.dev.ultron.domain.financiero.Maletin;
 import com.dev.ultron.domain.financiero.MovimientoCaja;
 import com.dev.ultron.domain.financiero.SesionCaja;
 import com.dev.ultron.domain.financiero.Venta;
@@ -18,13 +17,13 @@ import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.repository.financiero.CajaRepository;
 import com.dev.ultron.repository.financiero.IngresoRepository;
-import com.dev.ultron.repository.financiero.MaletinRepository;
 import com.dev.ultron.repository.financiero.MovimientoCajaRepository;
 import com.dev.ultron.repository.financiero.SesionCajaRepository;
 import com.dev.ultron.repository.financiero.VentaRepository;
 import com.dev.ultron.repository.inventario.PresentacionProductoRepository;
 import com.dev.ultron.repository.inventario.ProductoRepository;
 import com.dev.ultron.repository.personas.ClienteRepository;
+import com.dev.ultron.service.operaciones.StockProductoSectorService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
@@ -46,8 +45,8 @@ public class VentaService extends GenericCrudService<Venta, Long> {
     private final ClienteRepository clienteRepository;
     private final MovimientoCajaRepository movimientoCajaRepository;
     private final IngresoRepository ingresoRepository;
-    private final MaletinRepository maletinRepository;
     private final CajaRepository cajaRepository;
+    private final StockProductoSectorService stockProductoSectorService;
 
     public VentaService(
             VentaRepository repository,
@@ -58,8 +57,8 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             ClienteRepository clienteRepository,
             MovimientoCajaRepository movimientoCajaRepository,
             IngresoRepository ingresoRepository,
-            MaletinRepository maletinRepository,
-            CajaRepository cajaRepository) {
+            CajaRepository cajaRepository,
+            StockProductoSectorService stockProductoSectorService) {
         this.repository = repository;
         this.mapper = mapper;
         this.sesionCajaRepository = sesionCajaRepository;
@@ -68,8 +67,8 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         this.clienteRepository = clienteRepository;
         this.movimientoCajaRepository = movimientoCajaRepository;
         this.ingresoRepository = ingresoRepository;
-        this.maletinRepository = maletinRepository;
         this.cajaRepository = cajaRepository;
+        this.stockProductoSectorService = stockProductoSectorService;
     }
 
     @Override
@@ -91,6 +90,11 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         if (!"ABIERTA".equalsIgnoreCase(sesion.getEstado())) {
             throw new IllegalArgumentException("No se puede vender: la sesión de caja no está abierta");
         }
+        if (sesion.getCaja() == null || sesion.getCaja().getSector() == null
+                || sesion.getCaja().getSector().getId_sector() == null) {
+            throw new IllegalArgumentException("La caja de la sesión no tiene sector asignado");
+        }
+        Long idSectorCaja = sesion.getCaja().getSector().getId_sector();
 
         Cliente cliente = null;
         if (input.getIdCliente() != null) {
@@ -146,11 +150,12 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             }
 
             BigDecimal stockADescontar = detInput.getCantidad().multiply(factor);
-            BigDecimal stockActual = producto.getStock() != null ? producto.getStock() : BigDecimal.ZERO;
-            if (stockActual.compareTo(stockADescontar) < 0) {
+            BigDecimal stockSector = stockProductoSectorService.getCantidad(producto.getId_producto(), idSectorCaja);
+            if (stockSector.compareTo(stockADescontar) < 0) {
                 throw new IllegalArgumentException(
                         "Stock insuficiente para " + producto.getNombre()
-                                + ". Disponible: " + stockActual + ", requerido: " + stockADescontar);
+                                + " en el sector de la caja. Disponible: " + stockSector
+                                + ", requerido: " + stockADescontar);
             }
 
             BigDecimal lineaSubtotal = precio.multiply(detInput.getCantidad());
@@ -166,8 +171,11 @@ public class VentaService extends GenericCrudService<Venta, Long> {
                     .build();
             venta.getDetalles().add(detalle);
 
-            producto.setStock(stockActual.subtract(stockADescontar));
-            productoRepository.save(producto);
+            stockProductoSectorService.ajustar(
+                    producto.getId_producto(),
+                    idSectorCaja,
+                    stockADescontar.negate()
+            );
         }
 
         if (descuento.compareTo(subtotal) > 0) {
@@ -182,10 +190,6 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         sesion.setTotalVentasPyg(nvl(sesion.getTotalVentasPyg()).add(total));
         sesionCajaRepository.save(sesion);
 
-        Maletin maletin = sesion.getMaletin();
-        maletin.setBalancePyg(nvl(maletin.getBalancePyg()).add(total));
-        maletinRepository.save(maletin);
-
         var caja = sesion.getCaja();
         caja.setSaldo_actual(nvl(caja.getSaldo_actual()).add(total));
         cajaRepository.save(caja);
@@ -198,7 +202,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
                 .fecha(LocalDateTime.now())
                 .persona(sesion.getPersona())
                 .moneda("PYG")
-                .maletin(maletin)
+                .maletin(sesion.getMaletin())
                 .sesionCaja(sesion)
                 .referencia(venta.getNumero())
                 .build();

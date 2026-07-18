@@ -24,8 +24,8 @@ public class MaletinGraphQLController {
     }
 
     @QueryMapping
-    public List<MaletinOutput> listarMaletinesDisponibles() {
-        return service.findDisponibles();
+    public List<MaletinOutput> listarMaletinesDisponibles(@Argument Long idSector) {
+        return service.findDisponibles(idSector);
     }
 
     @QueryMapping

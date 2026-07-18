@@ -1,0 +1,65 @@
+# =============================================================
+# Schema Operaciones — Stock por sector y Transferencias
+# =============================================================
+
+type StockProductoSectorOutput {
+    id_stock: ID
+    producto: ProductoOutput
+    sector: SectorOutput
+    cantidad: BigDecimal
+}
+
+type StockProductoSectorPageResponse {
+    content: [StockProductoSectorOutput!]!
+    pageInfo: PageInfo!
+}
+
+type TransferenciaDetalleOutput {
+    id_detalle: ID
+    producto: ProductoOutput
+    cantidad: BigDecimal
+}
+
+type TransferenciaOutput {
+    id_transferencia: ID
+    numero: String
+    sectorOrigen: SectorOutput
+    sectorDestino: SectorOutput
+    observacion: String
+    estado: String
+    fecha: String
+    persona: PersonaOutput
+    cantidadItems: Int
+    detalles: [TransferenciaDetalleOutput!]
+}
+
+type TransferenciaPageResponse {
+    content: [TransferenciaOutput!]!
+    pageInfo: PageInfo!
+}
+
+input TransferenciaDetalleInput {
+    idProducto: ID!
+    cantidad: BigDecimal!
+}
+
+input TransferenciaInput {
+    idSectorOrigen: ID!
+    idSectorDestino: ID!
+    idPersona: ID
+}
+
+extend type Query {
+    listarTransferenciasPaginado(page: Int!, size: Int!, filter: String): TransferenciaPageResponse!
+    buscarTransferenciaPorId(id: ID!): TransferenciaOutput
+    stockPorProductoSector(idProducto: ID!, idSector: ID!): BigDecimal!
+    listarStockPorSector(idSector: ID!, page: Int!, size: Int!, filter: String): StockProductoSectorPageResponse!
+}
+
+extend type Mutation {
+    registrarTransferencia(input: TransferenciaInput!): TransferenciaOutput
+    agregarProductoTransferencia(idTransferencia: ID!, input: TransferenciaDetalleInput!): TransferenciaOutput
+    eliminarProductoTransferencia(idTransferencia: ID!, idDetalle: ID!): TransferenciaOutput
+    conferirTransferencia(id: ID!): TransferenciaOutput
+    recepcionarTransferencia(id: ID!): TransferenciaOutput
+}
