@@ -17,4 +17,15 @@ public class TransferenciaDetalleOutput implements Serializable {
     private Long id_detalle;
     private ProductoOutput producto;
     private BigDecimal cantidad;
+    private String estado;
+    private String motivoRechazo;
+    private String motivoRechazoDetalle;
+
+    // Campos de presentación y precio (calculados en backend)
+    private Long idPresentacionProducto;
+    private String presentacionDescripcion;
+    private BigDecimal cantidadPresentacion;
+    private BigDecimal precioVenta;
+    /** cantidad * cantidadPresentacion */
+    private BigDecimal cantidadTotal;
 }

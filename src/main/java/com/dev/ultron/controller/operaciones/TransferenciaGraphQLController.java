@@ -73,6 +73,29 @@ public class TransferenciaGraphQLController {
     }
 
     @MutationMapping
+    public TransferenciaOutput aceptarProductoTransferencia(
+            @Argument Long idTransferencia,
+            @Argument Long idDetalle
+    ) {
+        return transferenciaService.aceptarProducto(idTransferencia, idDetalle);
+    }
+
+    @MutationMapping
+    public TransferenciaOutput rechazarProductoTransferencia(
+            @Argument Long idTransferencia,
+            @Argument Long idDetalle,
+            @Argument String motivo,
+            @Argument String detalle
+    ) {
+        return transferenciaService.rechazarProducto(idTransferencia, idDetalle, motivo, detalle);
+    }
+
+    @MutationMapping
+    public TransferenciaOutput avanzarEtapaTransferencia(@Argument Long id) {
+        return transferenciaService.avanzarEtapa(id);
+    }
+
+    @MutationMapping
     public TransferenciaOutput conferirTransferencia(@Argument Long id) {
         return transferenciaService.conferir(id);
     }
