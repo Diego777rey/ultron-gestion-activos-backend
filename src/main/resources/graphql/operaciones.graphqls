@@ -18,6 +18,14 @@ type TransferenciaDetalleOutput {
     id_detalle: ID
     producto: ProductoOutput
     cantidad: BigDecimal
+    estado: String
+    motivoRechazo: String
+    motivoRechazoDetalle: String
+    idPresentacionProducto: ID
+    presentacionDescripcion: String
+    cantidadPresentacion: BigDecimal
+    precioVenta: BigDecimal
+    cantidadTotal: BigDecimal
 }
 
 type TransferenciaOutput {
@@ -40,6 +48,7 @@ type TransferenciaPageResponse {
 
 input TransferenciaDetalleInput {
     idProducto: ID!
+    idPresentacionProducto: ID
     cantidad: BigDecimal!
 }
 
@@ -60,6 +69,14 @@ extend type Mutation {
     registrarTransferencia(input: TransferenciaInput!): TransferenciaOutput
     agregarProductoTransferencia(idTransferencia: ID!, input: TransferenciaDetalleInput!): TransferenciaOutput
     eliminarProductoTransferencia(idTransferencia: ID!, idDetalle: ID!): TransferenciaOutput
+    aceptarProductoTransferencia(idTransferencia: ID!, idDetalle: ID!): TransferenciaOutput
+    rechazarProductoTransferencia(
+        idTransferencia: ID!
+        idDetalle: ID!
+        motivo: String!
+        detalle: String
+    ): TransferenciaOutput
+    avanzarEtapaTransferencia(id: ID!): TransferenciaOutput
     conferirTransferencia(id: ID!): TransferenciaOutput
     recepcionarTransferencia(id: ID!): TransferenciaOutput
 }

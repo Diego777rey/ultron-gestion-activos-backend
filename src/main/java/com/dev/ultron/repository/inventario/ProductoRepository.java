@@ -16,7 +16,12 @@ public interface ProductoRepository extends JpaRepository<Producto, Long>, JpaSp
             SELECT p FROM Producto p
             WHERE (:filter IS NULL OR :filter = ''
                 OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(p.codigo) LIKE LOWER(CONCAT('%', :filter, '%')))
+                OR LOWER(p.codigo) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR EXISTS (
+                    SELECT 1 FROM p.presentaciones pr
+                    WHERE pr.codigoBarras IS NOT NULL
+                      AND LOWER(pr.codigoBarras) LIKE LOWER(CONCAT('%', :filter, '%'))
+                ))
             ORDER BY p.nombre ASC
             """)
     Page<Producto> buscar(@Param("filter") String filter, Pageable pageable);

@@ -1,6 +1,8 @@
 package com.dev.ultron.domain.operaciones;
 
+import com.dev.ultron.domain.inventario.PresentacionProducto;
 import com.dev.ultron.domain.inventario.Producto;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -37,5 +39,21 @@ public class TransferenciaDetalle implements Serializable {
     @JoinColumn(name = "id_producto", nullable = false)
     private Producto producto;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_presentacion_producto")
+    private PresentacionProducto presentacionProducto;
+
     private BigDecimal cantidad;
+
+    /** PENDIENTE | VERIFICADO | RECHAZADO */
+    @Builder.Default
+    @Column(nullable = false, length = 30)
+    private String estado = "PENDIENTE";
+
+    /** AVERIADO | VENCIDO | ENVIADO_MAL | OTRO */
+    @Column(name = "motivo_rechazo", length = 30)
+    private String motivoRechazo;
+
+    @Column(name = "motivo_rechazo_detalle", length = 255)
+    private String motivoRechazoDetalle;
 }
