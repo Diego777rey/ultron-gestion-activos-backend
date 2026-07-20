@@ -63,6 +63,7 @@ extend type Query {
     buscarTransferenciaPorId(id: ID!): TransferenciaOutput
     stockPorProductoSector(idProducto: ID!, idSector: ID!): BigDecimal!
     listarStockPorSector(idSector: ID!, page: Int!, size: Int!, filter: String): StockProductoSectorPageResponse!
+    listarStockPorProducto(idProducto: ID!): [StockProductoSectorOutput!]!
 }
 
 extend type Mutation {

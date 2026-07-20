@@ -25,6 +25,12 @@ public interface StockProductoSectorRepository extends JpaRepository<StockProduc
     );
 
     @Query("""
+            SELECT s FROM StockProductoSector s
+            WHERE s.producto.id_producto = :idProducto
+            """)
+    java.util.List<StockProductoSector> findByProducto(@Param("idProducto") Long idProducto);
+
+    @Query("""
             SELECT COALESCE(SUM(s.cantidad), 0) FROM StockProductoSector s
             WHERE s.producto.id_producto = :idProducto
             """)

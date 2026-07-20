@@ -1,0 +1,75 @@
+# =============================================================
+# Schema de Orden de Trabajo - CRUD + flujo de etapas
+# =============================================================
+
+type OrdenTrabajoOutput {
+    id_orden_trabajo: ID
+    numero_orden: String
+    etapa: String
+    cliente: ClienteOutput
+    vehiculo: VehiculoOutput
+    mecanico: FuncionarioOutput
+    sector: SectorOutput
+    responsable: UsuarioOutput
+    descripcion_falla: String
+    fecha_inicio_estimada: String
+    fecha_fin_estimada: String
+    fecha_creacion: String
+    fecha_finalizacion: String
+    presupuesto_aprobado: Boolean
+    total_presupuesto: BigDecimal
+    observaciones: String
+    caja: CajaOutput
+    detalles: [OrdenTrabajoDetalleOutput]
+}
+
+type OrdenTrabajoDetalleOutput {
+    id_detalle: ID
+    tipo: String
+    id_producto: ID
+    nombre_producto: String
+    id_servicio: ID
+    nombre_servicio: String
+    descripcion: String
+    cantidad: BigDecimal
+    precio_unitario: BigDecimal
+    subtotal: BigDecimal
+    etapa_origen: String
+}
+
+type OrdenTrabajoPageResponse {
+    content: [OrdenTrabajoOutput!]!
+    pageInfo: PageInfo!
+}
+
+input OrdenTrabajoInput {
+    id_sector: ID
+    id_responsable: ID
+    id_cliente: ID
+    id_vehiculo: ID
+    id_mecanico: ID
+    descripcion_falla: String
+    fecha_inicio_estimada: String
+    fecha_fin_estimada: String
+    presupuesto_aprobado: Boolean
+    observaciones: String
+    id_caja: ID
+}
+
+input OrdenTrabajoDetalleInput {
+    tipo: String!
+    id_producto: ID
+    id_servicio: ID
+    descripcion: String
+    cantidad: BigDecimal
+    precio_unitario: BigDecimal
+}
+
+extend type Mutation {
+    crearOrdenTrabajo(input: OrdenTrabajoInput!): OrdenTrabajoOutput
+    actualizarOrdenTrabajo(id: ID!, input: OrdenTrabajoInput!): OrdenTrabajoOutput
+    cambiarEtapaOrdenTrabajo(id: ID!, etapa: String!): OrdenTrabajoOutput
+    agregarDetalleOrdenTrabajo(idOrden: ID!, input: OrdenTrabajoDetalleInput!): OrdenTrabajoOutput
+    eliminarDetalleOrdenTrabajo(idOrden: ID!, idDetalle: ID!): OrdenTrabajoOutput
+    eliminarOrdenTrabajo(id: ID!): Boolean
+}

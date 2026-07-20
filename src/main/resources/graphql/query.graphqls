@@ -36,6 +36,12 @@ type Query {
     listarVehiculosPaginado(page: Int!, size: Int!, filter: String): VehiculoPageResponse!
     listarVehiculosPorClientePaginado(idCliente: ID!, page: Int!, size: Int!, filter: String): VehiculoPageResponse!
     buscarVehiculoPorId(id: ID!): VehiculoOutput
+
+    # ---- Taller: Órdenes de Trabajo ----
+    listarOrdenesTrabajoPaginado(page: Int!, size: Int!, filter: String): OrdenTrabajoPageResponse!
+    buscarOrdenTrabajoPorId(id: ID!): OrdenTrabajoOutput
+    listarOrdenesPorClientePaginado(idCliente: ID!, page: Int!, size: Int!): OrdenTrabajoPageResponse!
+    listarOrdenesPorVehiculoPaginado(idVehiculo: ID!, page: Int!, size: Int!): OrdenTrabajoPageResponse!
 }
 
 # Tipo base de Mutation - se extiende desde cada módulo
