@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.dev</groupId>
 	<artifactId>ultron</artifactId>
-	<version>1.13.0</version>
+	<version>1.14.0</version>
 	<name>ultron</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
