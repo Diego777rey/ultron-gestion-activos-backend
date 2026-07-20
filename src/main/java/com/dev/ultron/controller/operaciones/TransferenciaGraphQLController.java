@@ -51,6 +51,11 @@ public class TransferenciaGraphQLController {
         return stockService.listarPorSector(idSector, page, size, filter);
     }
 
+    @QueryMapping
+    public java.util.List<StockProductoSectorOutput> listarStockPorProducto(@Argument Long idProducto) {
+        return stockService.listarPorProducto(idProducto);
+    }
+
     @MutationMapping
     public TransferenciaOutput registrarTransferencia(@Argument TransferenciaInput input) {
         return transferenciaService.registrar(input);

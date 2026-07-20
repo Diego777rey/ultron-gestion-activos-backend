@@ -67,6 +67,13 @@ public class StockProductoSectorService {
                         .build());
     }
 
+    @Transactional(readOnly = true)
+    public java.util.List<StockProductoSectorOutput> listarPorProducto(Long idProducto) {
+        return repository.findByProducto(idProducto).stream()
+                .map(mapper::toOutput)
+                .toList();
+    }
+
     /**
      * Lista todos los productos con su stock en el sector (0 si no hay fila).
      * Incluye stock cero o negativo para poder transferir.
