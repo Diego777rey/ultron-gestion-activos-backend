@@ -1,6 +1,7 @@
 package com.dev.ultron.service.taller;
 
 import com.dev.ultron.domain.financiero.Caja;
+import com.dev.ultron.domain.financiero.SesionCaja;
 import com.dev.ultron.domain.inventario.Producto;
 import com.dev.ultron.domain.inventario.Servicio;
 import com.dev.ultron.domain.patrimonio.Vehiculo;
@@ -10,6 +11,8 @@ import com.dev.ultron.domain.personas.Usuario;
 import com.dev.ultron.domain.sectores.Sector;
 import com.dev.ultron.domain.taller.OrdenTrabajo;
 import com.dev.ultron.domain.taller.OrdenTrabajoDetalle;
+import com.dev.ultron.dto.financiero.mapper.CajaMapper;
+import com.dev.ultron.dto.financiero.output.CajaOutput;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoDetalleInput;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoInput;
 import com.dev.ultron.dto.taller.mapper.OrdenTrabajoMapper;
@@ -18,9 +21,11 @@ import com.dev.ultron.generic.EntityNotFoundException;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.generic.SearchNormalizer;
+import com.dev.ultron.repository.financiero.CajaRepository;
+import com.dev.ultron.repository.financiero.SesionCajaRepository;
 import com.dev.ultron.repository.taller.OrdenTrabajoRepository;
-import com.dev.ultron.service.personas.ClienteService;
 import com.dev.ultron.service.patrimonio.VehiculoService;
+import com.dev.ultron.service.personas.ClienteService;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,26 +36,26 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Servicio de Orden de Trabajo que extiende el CRUD genérico.
- * Gestiona el flujo de trabajo de las órdenes: recepción → diagnóstico → en proceso → finalizada → facturado.
+ * Gestiona el flujo: recepción → diagnóstico → en proceso → finalizada → facturado.
  */
 @Service
 public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> {
 
     private final OrdenTrabajoRepository ordenTrabajoRepository;
     private final OrdenTrabajoMapper ordenTrabajoMapper;
-
-    // Repositorios de entidades relacionadas (inyectados por Spring)
     private final ClienteService clienteService;
     private final VehiculoService vehiculoService;
+    private final SesionCajaRepository sesionCajaRepository;
+    private final CajaMapper cajaMapper;
 
-    // Repositorios JPA simples para resolver relaciones por ID
     private final org.springframework.data.jpa.repository.JpaRepository<Funcionario, Long> funcionarioRepo;
     private final org.springframework.data.jpa.repository.JpaRepository<Sector, Long> sectorRepo;
     private final org.springframework.data.jpa.repository.JpaRepository<Usuario, Long> usuarioRepo;
-    private final org.springframework.data.jpa.repository.JpaRepository<Caja, Long> cajaRepo;
+    private final CajaRepository cajaRepo;
     private final org.springframework.data.jpa.repository.JpaRepository<Producto, Long> productoRepo;
     private final org.springframework.data.jpa.repository.JpaRepository<Servicio, Long> servicioRepo;
 
@@ -59,16 +64,20 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
             OrdenTrabajoMapper ordenTrabajoMapper,
             ClienteService clienteService,
             VehiculoService vehiculoService,
+            SesionCajaRepository sesionCajaRepository,
+            CajaMapper cajaMapper,
             com.dev.ultron.repository.personas.FuncionarioRepository funcionarioRepo,
             com.dev.ultron.repository.sectores.SectorRepository sectorRepo,
             com.dev.ultron.repository.personas.UsuarioRepository usuarioRepo,
-            com.dev.ultron.repository.financiero.CajaRepository cajaRepo,
+            CajaRepository cajaRepo,
             com.dev.ultron.repository.inventario.ProductoRepository productoRepo,
             com.dev.ultron.repository.inventario.ServicioRepository servicioRepo) {
         this.ordenTrabajoRepository = ordenTrabajoRepository;
         this.ordenTrabajoMapper = ordenTrabajoMapper;
         this.clienteService = clienteService;
         this.vehiculoService = vehiculoService;
+        this.sesionCajaRepository = sesionCajaRepository;
+        this.cajaMapper = cajaMapper;
         this.funcionarioRepo = funcionarioRepo;
         this.sectorRepo = sectorRepo;
         this.usuarioRepo = usuarioRepo;
@@ -113,6 +122,30 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
         return new PageResponse<>(pagina.map(ordenTrabajoMapper::toOutput));
     }
 
+    @Transactional(readOnly = true)
+    public List<OrdenTrabajoOutput> listarAgendaMecanico(Long idMecanico, String fechaDesde, String fechaHasta) {
+        LocalDateTime desde = LocalDateTime.parse(fechaDesde.contains("T") ? fechaDesde : fechaDesde + "T00:00:00");
+        LocalDateTime hasta = LocalDateTime.parse(fechaHasta.contains("T") ? fechaHasta : fechaHasta + "T23:59:59");
+        return ordenTrabajoMapper.toOutputList(
+                ordenTrabajoRepository.findAgendaMecanico(idMecanico, desde, hasta));
+    }
+
+    @Transactional(readOnly = true)
+    public List<CajaOutput> listarCajasConSesionAbierta() {
+        return sesionCajaRepository.listarPorEstado("ABIERTA", PageRequest.of(0, 200)).stream()
+                .map(SesionCaja::getCaja)
+                .filter(Objects::nonNull)
+                .collect(java.util.stream.Collectors.toMap(
+                        Caja::getId_caja,
+                        c -> c,
+                        (a, b) -> a,
+                        java.util.LinkedHashMap::new))
+                .values()
+                .stream()
+                .map(cajaMapper::toOutput)
+                .toList();
+    }
+
     // ==================== CREAR ORDEN ====================
 
     @Transactional
@@ -124,32 +157,7 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
                 .totalPresupuesto(BigDecimal.ZERO)
                 .build();
 
-        // Resolver relaciones opcionales
-        if (input.id_sector() != null) {
-            orden.setSector(sectorRepo.findById(input.id_sector())
-                    .orElseThrow(() -> new EntityNotFoundException("Sector no encontrado: " + input.id_sector())));
-        }
-        if (input.id_responsable() != null) {
-            orden.setResponsable(usuarioRepo.findById(input.id_responsable())
-                    .orElseThrow(() -> new EntityNotFoundException("Usuario responsable no encontrado: " + input.id_responsable())));
-        }
-        if (input.id_cliente() != null) {
-            orden.setCliente(clienteService.buscarPorIdOrThrow(input.id_cliente()));
-        }
-        if (input.id_vehiculo() != null) {
-            orden.setVehiculo(vehiculoService.buscarPorIdOrThrow(input.id_vehiculo()));
-        }
-        if (input.id_mecanico() != null) {
-            orden.setMecanico(funcionarioRepo.findById(input.id_mecanico())
-                    .orElseThrow(() -> new EntityNotFoundException("Mecánico no encontrado: " + input.id_mecanico())));
-        }
-        if (input.descripcion_falla() != null) {
-            orden.setDescripcionFalla(input.descripcion_falla().toUpperCase());
-        }
-        if (input.observaciones() != null) {
-            orden.setObservaciones(input.observaciones().toUpperCase());
-        }
-
+        aplicarInput(orden, input, true);
         orden = guardar(orden);
         return ordenTrabajoMapper.toOutput(orden);
     }
@@ -159,45 +167,7 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
     @Transactional
     public OrdenTrabajoOutput actualizarOrdenTrabajo(Long id, OrdenTrabajoInput input) {
         OrdenTrabajo orden = buscarPorIdOrThrow(id);
-
-        if (input.id_cliente() != null) {
-            orden.setCliente(clienteService.buscarPorIdOrThrow(input.id_cliente()));
-        }
-        if (input.id_vehiculo() != null) {
-            orden.setVehiculo(vehiculoService.buscarPorIdOrThrow(input.id_vehiculo()));
-        }
-        if (input.id_mecanico() != null) {
-            orden.setMecanico(funcionarioRepo.findById(input.id_mecanico())
-                    .orElseThrow(() -> new EntityNotFoundException("Mecánico no encontrado: " + input.id_mecanico())));
-        }
-        if (input.id_sector() != null) {
-            orden.setSector(sectorRepo.findById(input.id_sector())
-                    .orElseThrow(() -> new EntityNotFoundException("Sector no encontrado: " + input.id_sector())));
-        }
-        if (input.id_responsable() != null) {
-            orden.setResponsable(usuarioRepo.findById(input.id_responsable())
-                    .orElseThrow(() -> new EntityNotFoundException("Usuario responsable no encontrado: " + input.id_responsable())));
-        }
-        if (input.descripcion_falla() != null) {
-            orden.setDescripcionFalla(input.descripcion_falla().toUpperCase());
-        }
-        if (input.fecha_inicio_estimada() != null) {
-            orden.setFechaInicioEstimada(LocalDateTime.parse(input.fecha_inicio_estimada()));
-        }
-        if (input.fecha_fin_estimada() != null) {
-            orden.setFechaFinEstimada(LocalDateTime.parse(input.fecha_fin_estimada()));
-        }
-        if (input.presupuesto_aprobado() != null) {
-            orden.setPresupuestoAprobado(input.presupuesto_aprobado());
-        }
-        if (input.observaciones() != null) {
-            orden.setObservaciones(input.observaciones().toUpperCase());
-        }
-        if (input.id_caja() != null) {
-            orden.setCaja(cajaRepo.findById(input.id_caja())
-                    .orElseThrow(() -> new EntityNotFoundException("Caja no encontrada: " + input.id_caja())));
-        }
-
+        aplicarInput(orden, input, false);
         orden = actualizar(orden);
         return ordenTrabajoMapper.toOutput(orden);
     }
@@ -207,14 +177,45 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
     @Transactional
     public OrdenTrabajoOutput cambiarEtapa(Long id, String nuevaEtapa) {
         OrdenTrabajo orden = buscarPorIdOrThrow(id);
-        validarTransicionEtapa(orden.getEtapa(), nuevaEtapa);
+        String destino = nuevaEtapa.toUpperCase();
+        validarTransicionEtapa(orden.getEtapa(), destino);
+        validarRequisitosEtapa(orden, destino);
 
-        orden.setEtapa(nuevaEtapa.toUpperCase());
-
-        if ("FINALIZADA".equalsIgnoreCase(nuevaEtapa)) {
+        orden.setEtapa(destino);
+        if ("FINALIZADA".equals(destino)) {
             orden.setFechaFinalizacion(LocalDateTime.now());
         }
 
+        orden = actualizar(orden);
+        return ordenTrabajoMapper.toOutput(orden);
+    }
+
+    @Transactional
+    public OrdenTrabajoOutput enviarOrdenACaja(Long idOrden, Long idCaja) {
+        OrdenTrabajo orden = buscarPorIdOrThrow(idOrden);
+        if (!"EN_PROCESO".equalsIgnoreCase(orden.getEtapa())) {
+            throw new IllegalArgumentException(
+                    "Solo se puede enviar a caja una orden en etapa EN_PROCESO. Etapa actual: " + orden.getEtapa());
+        }
+        Caja caja = exigirCajaConSesionAbierta(idCaja);
+        orden.setCaja(caja);
+        orden.setEtapa("FINALIZADA");
+        orden.setFechaFinalizacion(LocalDateTime.now());
+        orden = actualizar(orden);
+        return ordenTrabajoMapper.toOutput(orden);
+    }
+
+    @Transactional
+    public OrdenTrabajoOutput marcarOrdenFacturada(Long idOrden) {
+        OrdenTrabajo orden = buscarPorIdOrThrow(idOrden);
+        if (!"FINALIZADA".equalsIgnoreCase(orden.getEtapa())) {
+            throw new IllegalArgumentException(
+                    "Solo se puede facturar una orden FINALIZADA. Etapa actual: " + orden.getEtapa());
+        }
+        if (orden.getCaja() == null) {
+            throw new IllegalArgumentException("La orden debe tener una caja asignada para facturar");
+        }
+        orden.setEtapa("FACTURADO");
         orden = actualizar(orden);
         return ordenTrabajoMapper.toOutput(orden);
     }
@@ -224,6 +225,11 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
     @Transactional
     public OrdenTrabajoOutput agregarDetalle(Long idOrden, OrdenTrabajoDetalleInput input) {
         OrdenTrabajo orden = buscarPorIdOrThrow(idOrden);
+        String etapa = orden.getEtapa();
+        if (!"DIAGNOSTICO".equalsIgnoreCase(etapa) && !"EN_PROCESO".equalsIgnoreCase(etapa)) {
+            throw new IllegalArgumentException(
+                    "Solo se pueden agregar detalles en DIAGNOSTICO o EN_PROCESO. Etapa actual: " + etapa);
+        }
 
         OrdenTrabajoDetalle detalle = OrdenTrabajoDetalle.builder()
                 .ordenTrabajo(orden)
@@ -261,7 +267,8 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
                 detalle.setPrecioUnitario(servicio.getPrecio());
             }
         } else {
-            throw new IllegalArgumentException("Tipo de detalle inválido: " + input.tipo() + ". Debe ser PRODUCTO o SERVICIO.");
+            throw new IllegalArgumentException(
+                    "Tipo de detalle inválido: " + input.tipo() + ". Debe ser PRODUCTO o SERVICIO.");
         }
 
         detalle.setSubtotal(detalle.getCantidad().multiply(detalle.getPrecioUnitario()));
@@ -274,6 +281,11 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
     @Transactional
     public OrdenTrabajoOutput eliminarDetalle(Long idOrden, Long idDetalle) {
         OrdenTrabajo orden = buscarPorIdOrThrow(idOrden);
+        String etapa = orden.getEtapa();
+        if (!"DIAGNOSTICO".equalsIgnoreCase(etapa) && !"EN_PROCESO".equalsIgnoreCase(etapa)) {
+            throw new IllegalArgumentException(
+                    "Solo se pueden eliminar detalles en DIAGNOSTICO o EN_PROCESO. Etapa actual: " + etapa);
+        }
         boolean removed = orden.getDetalles().removeIf(d -> d.getId_detalle().equals(idDetalle));
         if (!removed) {
             throw new EntityNotFoundException("Detalle no encontrado con ID: " + idDetalle);
@@ -293,6 +305,74 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
 
     // ==================== MÉTODOS PRIVADOS ====================
 
+    private void aplicarInput(OrdenTrabajo orden, OrdenTrabajoInput input, boolean creando) {
+        Cliente cliente = orden.getCliente();
+        Vehiculo vehiculo = orden.getVehiculo();
+
+        if (input.id_sector() != null) {
+            orden.setSector(sectorRepo.findById(input.id_sector())
+                    .orElseThrow(() -> new EntityNotFoundException("Sector no encontrado: " + input.id_sector())));
+        }
+        if (input.id_responsable() != null) {
+            orden.setResponsable(usuarioRepo.findById(input.id_responsable())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Usuario responsable no encontrado: " + input.id_responsable())));
+        }
+        if (input.id_cliente() != null) {
+            cliente = clienteService.buscarPorIdOrThrow(input.id_cliente());
+            orden.setCliente(cliente);
+        }
+        if (input.id_vehiculo() != null) {
+            vehiculo = vehiculoService.buscarPorIdOrThrow(input.id_vehiculo());
+            orden.setVehiculo(vehiculo);
+        }
+        if (input.id_mecanico() != null) {
+            orden.setMecanico(funcionarioRepo.findById(input.id_mecanico())
+                    .orElseThrow(() -> new EntityNotFoundException("Mecánico no encontrado: " + input.id_mecanico())));
+        }
+        if (input.descripcion_falla() != null) {
+            orden.setDescripcionFalla(input.descripcion_falla().toUpperCase());
+        }
+        if (input.fecha_inicio_estimada() != null && !input.fecha_inicio_estimada().isBlank()) {
+            orden.setFechaInicioEstimada(parseDateTime(input.fecha_inicio_estimada()));
+        }
+        if (input.fecha_fin_estimada() != null && !input.fecha_fin_estimada().isBlank()) {
+            orden.setFechaFinEstimada(parseDateTime(input.fecha_fin_estimada()));
+        }
+        if (input.presupuesto_aprobado() != null) {
+            orden.setPresupuestoAprobado(input.presupuesto_aprobado());
+        }
+        if (input.observaciones() != null) {
+            orden.setObservaciones(input.observaciones().toUpperCase());
+        }
+        if (input.id_caja() != null) {
+            orden.setCaja(exigirCajaConSesionAbierta(input.id_caja()));
+        }
+
+        if (creando || input.id_cliente() != null || input.id_vehiculo() != null) {
+            validarVehiculoPerteneceACliente(orden.getCliente(), orden.getVehiculo());
+        }
+    }
+
+    private void validarVehiculoPerteneceACliente(Cliente cliente, Vehiculo vehiculo) {
+        if (cliente == null || vehiculo == null) {
+            return;
+        }
+        if (vehiculo.getCliente() == null
+                || !Objects.equals(vehiculo.getCliente().getId_cliente(), cliente.getId_cliente())) {
+            throw new IllegalArgumentException("El vehículo no pertenece al cliente seleccionado");
+        }
+    }
+
+    private Caja exigirCajaConSesionAbierta(Long idCaja) {
+        Caja caja = cajaRepo.findById(idCaja)
+                .orElseThrow(() -> new EntityNotFoundException("Caja no encontrada: " + idCaja));
+        if (!sesionCajaRepository.existsPorCajaYEstado(idCaja, "ABIERTA")) {
+            throw new IllegalArgumentException("La caja no tiene una sesión abierta: " + idCaja);
+        }
+        return caja;
+    }
+
     private String generarNumeroOrden() {
         Long numero = ordenTrabajoRepository.obtenerSiguienteNumero();
         return String.format("OT-%04d", numero);
@@ -306,7 +386,6 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
     }
 
     private void validarTransicionEtapa(String etapaActual, String nuevaEtapa) {
-        // Definir transiciones válidas
         boolean valida = switch (etapaActual) {
             case "RECEPCION" -> "DIAGNOSTICO".equalsIgnoreCase(nuevaEtapa);
             case "DIAGNOSTICO" -> "EN_PROCESO".equalsIgnoreCase(nuevaEtapa);
@@ -318,5 +397,56 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
             throw new IllegalArgumentException(
                     "Transición de etapa inválida: " + etapaActual + " → " + nuevaEtapa);
         }
+    }
+
+    private void validarRequisitosEtapa(OrdenTrabajo orden, String nuevaEtapa) {
+        switch (nuevaEtapa) {
+            case "DIAGNOSTICO" -> {
+                if (orden.getCliente() == null) {
+                    throw new IllegalArgumentException("Debe asignar un cliente antes de pasar a Diagnóstico");
+                }
+                if (orden.getVehiculo() == null) {
+                    throw new IllegalArgumentException("Debe asignar un vehículo antes de pasar a Diagnóstico");
+                }
+                if (orden.getMecanico() == null) {
+                    throw new IllegalArgumentException("Debe asignar un mecánico antes de pasar a Diagnóstico");
+                }
+                if (orden.getDescripcionFalla() == null || orden.getDescripcionFalla().isBlank()) {
+                    throw new IllegalArgumentException("Debe registrar la descripción de la falla");
+                }
+                validarVehiculoPerteneceACliente(orden.getCliente(), orden.getVehiculo());
+            }
+            case "EN_PROCESO" -> {
+                if (orden.getDetalles() == null || orden.getDetalles().isEmpty()) {
+                    throw new IllegalArgumentException("El presupuesto debe tener al menos un ítem");
+                }
+                if (!orden.isPresupuestoAprobado()) {
+                    throw new IllegalArgumentException("El presupuesto debe estar aprobado por el cliente");
+                }
+            }
+            case "FINALIZADA" -> {
+                if (orden.getCaja() == null) {
+                    throw new IllegalArgumentException(
+                            "Debe asignar una caja abierta antes de finalizar (use enviarOrdenACaja)");
+                }
+                if (!sesionCajaRepository.existsPorCajaYEstado(orden.getCaja().getId_caja(), "ABIERTA")) {
+                    throw new IllegalArgumentException("La caja asignada no tiene sesión abierta");
+                }
+            }
+            case "FACTURADO" -> {
+                if (orden.getCaja() == null) {
+                    throw new IllegalArgumentException("La orden debe tener una caja asignada para facturar");
+                }
+            }
+            default -> {
+            }
+        }
+    }
+
+    private LocalDateTime parseDateTime(String value) {
+        if (value.contains("T")) {
+            return LocalDateTime.parse(value.length() > 19 ? value.substring(0, 19) : value);
+        }
+        return LocalDateTime.parse(value + "T00:00:00");
     }
 }

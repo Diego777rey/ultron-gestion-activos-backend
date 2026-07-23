@@ -1,0 +1,43 @@
+# =============================================================
+# Schema Solicitud de Repuesto (taller)
+# =============================================================
+
+type SolicitudRepuestoDetalleOutput {
+    id_detalle: ID
+    id_producto: ID
+    nombre_producto: String
+    codigo_producto: String
+    cantidad: BigDecimal
+}
+
+type SolicitudRepuestoOutput {
+    id_solicitud_repuesto: ID
+    id_orden_trabajo: ID
+    numero_orden: String
+    sector_origen: SectorOutput
+    sector_destino: SectorOutput
+    estado: String
+    observacion: String
+    motivo_rechazo: String
+    fecha: String
+    id_transferencia: ID
+    numero_transferencia: String
+    detalles: [SolicitudRepuestoDetalleOutput]
+}
+
+input SolicitudRepuestoDetalleInput {
+    id_producto: ID!
+    cantidad: BigDecimal!
+}
+
+input SolicitudRepuestoInput {
+    id_sector_origen: ID!
+    observacion: String
+    detalles: [SolicitudRepuestoDetalleInput!]!
+}
+
+extend type Mutation {
+    crearSolicitudRepuesto(idOrden: ID!, input: SolicitudRepuestoInput!): SolicitudRepuestoOutput
+    aprobarSolicitudRepuesto(id: ID!): SolicitudRepuestoOutput
+    rechazarSolicitudRepuesto(id: ID!, motivo: String!): SolicitudRepuestoOutput
+}

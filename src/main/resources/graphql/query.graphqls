@@ -42,6 +42,10 @@ type Query {
     buscarOrdenTrabajoPorId(id: ID!): OrdenTrabajoOutput
     listarOrdenesPorClientePaginado(idCliente: ID!, page: Int!, size: Int!): OrdenTrabajoPageResponse!
     listarOrdenesPorVehiculoPaginado(idVehiculo: ID!, page: Int!, size: Int!): OrdenTrabajoPageResponse!
+    listarAgendaMecanico(idMecanico: ID!, fechaDesde: String!, fechaHasta: String!): [OrdenTrabajoOutput!]!
+    listarCajasConSesionAbierta: [CajaOutput!]!
+    listarSolicitudesRepuestoPorOrden(idOrden: ID!): [SolicitudRepuestoOutput!]!
+    buscarSolicitudRepuestoPorId(id: ID!): SolicitudRepuestoOutput
 }
 
 # Tipo base de Mutation - se extiende desde cada módulo
