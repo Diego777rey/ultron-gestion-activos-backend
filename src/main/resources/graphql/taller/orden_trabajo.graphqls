@@ -71,5 +71,7 @@ extend type Mutation {
     cambiarEtapaOrdenTrabajo(id: ID!, etapa: String!): OrdenTrabajoOutput
     agregarDetalleOrdenTrabajo(idOrden: ID!, input: OrdenTrabajoDetalleInput!): OrdenTrabajoOutput
     eliminarDetalleOrdenTrabajo(idOrden: ID!, idDetalle: ID!): OrdenTrabajoOutput
+    enviarOrdenACaja(idOrden: ID!, idCaja: ID!): OrdenTrabajoOutput
+    marcarOrdenFacturada(idOrden: ID!): OrdenTrabajoOutput
     eliminarOrdenTrabajo(id: ID!): Boolean
 }

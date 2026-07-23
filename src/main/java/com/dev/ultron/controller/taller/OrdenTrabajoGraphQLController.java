@@ -1,5 +1,6 @@
 package com.dev.ultron.controller.taller;
 
+import com.dev.ultron.dto.financiero.output.CajaOutput;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoDetalleInput;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoInput;
 import com.dev.ultron.dto.taller.output.OrdenTrabajoOutput;
@@ -11,10 +12,10 @@ import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
+import java.util.List;
+
 /**
  * Controller GraphQL para el módulo de Orden de Trabajo.
- * Expone las operaciones de consulta y mutación para gestionar
- * el flujo completo de las órdenes de trabajo del taller.
  */
 @Controller
 public class OrdenTrabajoGraphQLController {
@@ -50,6 +51,17 @@ public class OrdenTrabajoGraphQLController {
         return ordenTrabajoService.listarOrdenesPorVehiculoPaginado(idVehiculo, page, size);
     }
 
+    @QueryMapping
+    public List<OrdenTrabajoOutput> listarAgendaMecanico(
+            @Argument Long idMecanico, @Argument String fechaDesde, @Argument String fechaHasta) {
+        return ordenTrabajoService.listarAgendaMecanico(idMecanico, fechaDesde, fechaHasta);
+    }
+
+    @QueryMapping
+    public List<CajaOutput> listarCajasConSesionAbierta() {
+        return ordenTrabajoService.listarCajasConSesionAbierta();
+    }
+
     // ==================== MUTATIONS ====================
 
     @MutationMapping
@@ -77,6 +89,16 @@ public class OrdenTrabajoGraphQLController {
     public OrdenTrabajoOutput eliminarDetalleOrdenTrabajo(
             @Argument Long idOrden, @Argument Long idDetalle) {
         return ordenTrabajoService.eliminarDetalle(idOrden, idDetalle);
+    }
+
+    @MutationMapping
+    public OrdenTrabajoOutput enviarOrdenACaja(@Argument Long idOrden, @Argument Long idCaja) {
+        return ordenTrabajoService.enviarOrdenACaja(idOrden, idCaja);
+    }
+
+    @MutationMapping
+    public OrdenTrabajoOutput marcarOrdenFacturada(@Argument Long idOrden) {
+        return ordenTrabajoService.marcarOrdenFacturada(idOrden);
     }
 
     @MutationMapping
