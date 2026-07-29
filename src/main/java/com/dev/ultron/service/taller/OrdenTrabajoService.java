@@ -16,6 +16,7 @@ import com.dev.ultron.dto.financiero.output.CajaOutput;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoDetalleInput;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoInput;
 import com.dev.ultron.dto.taller.mapper.OrdenTrabajoMapper;
+import com.dev.ultron.dto.taller.output.OrdenTrabajoDetalleOutput;
 import com.dev.ultron.dto.taller.output.OrdenTrabajoOutput;
 import com.dev.ultron.generic.EntityNotFoundException;
 import com.dev.ultron.generic.GenericCrudService;
@@ -23,6 +24,7 @@ import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.generic.SearchNormalizer;
 import com.dev.ultron.repository.financiero.CajaRepository;
 import com.dev.ultron.repository.financiero.SesionCajaRepository;
+import com.dev.ultron.repository.taller.OrdenTrabajoDetalleRepository;
 import com.dev.ultron.repository.taller.OrdenTrabajoRepository;
 import com.dev.ultron.service.patrimonio.VehiculoService;
 import com.dev.ultron.service.personas.ClienteService;
@@ -46,6 +48,7 @@ import java.util.Objects;
 public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> {
 
     private final OrdenTrabajoRepository ordenTrabajoRepository;
+    private final OrdenTrabajoDetalleRepository ordenTrabajoDetalleRepository;
     private final OrdenTrabajoMapper ordenTrabajoMapper;
     private final ClienteService clienteService;
     private final VehiculoService vehiculoService;
@@ -61,6 +64,7 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
 
     public OrdenTrabajoService(
             OrdenTrabajoRepository ordenTrabajoRepository,
+            OrdenTrabajoDetalleRepository ordenTrabajoDetalleRepository,
             OrdenTrabajoMapper ordenTrabajoMapper,
             ClienteService clienteService,
             VehiculoService vehiculoService,
@@ -73,6 +77,7 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
             com.dev.ultron.repository.inventario.ProductoRepository productoRepo,
             com.dev.ultron.repository.inventario.ServicioRepository servicioRepo) {
         this.ordenTrabajoRepository = ordenTrabajoRepository;
+        this.ordenTrabajoDetalleRepository = ordenTrabajoDetalleRepository;
         this.ordenTrabajoMapper = ordenTrabajoMapper;
         this.clienteService = clienteService;
         this.vehiculoService = vehiculoService;
@@ -120,6 +125,14 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
     public PageResponse<OrdenTrabajoOutput> listarOrdenesPorVehiculoPaginado(Long idVehiculo, int page, int size) {
         Page<OrdenTrabajo> pagina = ordenTrabajoRepository.findByVehiculoId(idVehiculo, PageRequest.of(page, size));
         return new PageResponse<>(pagina.map(ordenTrabajoMapper::toOutput));
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<OrdenTrabajoDetalleOutput> listarDetallesPaginado(Long idOrden, int page, int size) {
+        buscarPorIdOrThrow(idOrden);
+        Page<OrdenTrabajoDetalle> pagina =
+                ordenTrabajoDetalleRepository.findByOrdenTrabajoId(idOrden, PageRequest.of(page, size));
+        return new PageResponse<>(pagina.map(ordenTrabajoMapper::toDetalleOutput));
     }
 
     @Transactional(readOnly = true)

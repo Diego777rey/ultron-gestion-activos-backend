@@ -3,6 +3,7 @@ package com.dev.ultron.controller.taller;
 import com.dev.ultron.dto.financiero.output.CajaOutput;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoDetalleInput;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoInput;
+import com.dev.ultron.dto.taller.output.OrdenTrabajoDetalleOutput;
 import com.dev.ultron.dto.taller.output.OrdenTrabajoOutput;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.service.taller.OrdenTrabajoService;
@@ -49,6 +50,12 @@ public class OrdenTrabajoGraphQLController {
     public PageResponse<OrdenTrabajoOutput> listarOrdenesPorVehiculoPaginado(
             @Argument Long idVehiculo, @Argument int page, @Argument int size) {
         return ordenTrabajoService.listarOrdenesPorVehiculoPaginado(idVehiculo, page, size);
+    }
+
+    @QueryMapping
+    public PageResponse<OrdenTrabajoDetalleOutput> listarDetallesOrdenTrabajoPaginado(
+            @Argument Long idOrden, @Argument int page, @Argument int size) {
+        return ordenTrabajoService.listarDetallesPaginado(idOrden, page, size);
     }
 
     @QueryMapping

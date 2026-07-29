@@ -42,6 +42,11 @@ type OrdenTrabajoPageResponse {
     pageInfo: PageInfo!
 }
 
+type OrdenTrabajoDetallePageResponse {
+    content: [OrdenTrabajoDetalleOutput!]!
+    pageInfo: PageInfo!
+}
+
 input OrdenTrabajoInput {
     id_sector: ID
     id_responsable: ID
