@@ -18,8 +18,6 @@ public interface VentaMapper {
 
     @Mapping(target = "idProducto", source = "producto.id_producto")
     @Mapping(target = "productoNombre", source = "producto.nombre")
-    @Mapping(target = "idPresentacion", source = "presentacion.id_presentacion_producto")
-    @Mapping(target = "presentacionDescripcion", source = "presentacion.descripcion")
     DetalleVentaOutput toDetalleOutput(DetalleVenta entity);
 
     default String resolveClienteNombre(Venta entity) {

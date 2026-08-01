@@ -12,14 +12,14 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(config = MapStructConfig.class, uses = {CategoriaProductoMapper.class, PresentacionProductoMapper.class})
+@Mapper(config = MapStructConfig.class, uses = {CategoriaProductoMapper.class})
 public interface ProductoMapper extends BaseMapper<Producto, ProductoInput, ProductoOutput> {
 
     @Mapping(target = "id_producto", ignore = true)
-    @Mapping(target = "presentaciones", ignore = true)
     @Mapping(target = "codigo", source = "input.codigo", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "nombre", source = "input.nombre", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "descripcion", source = "input.descripcion", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "codigoBarras", source = "input.codigoBarras")
     @Mapping(target = "estado", source = "input.estado")
     @Mapping(target = "ubicacion", source = "input.ubicacion", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "categoriaProducto", source = "categoria")
@@ -27,10 +27,10 @@ public interface ProductoMapper extends BaseMapper<Producto, ProductoInput, Prod
 
     @BeanMapping(nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id_producto", ignore = true)
-    @Mapping(target = "presentaciones", ignore = true)
     @Mapping(target = "codigo", source = "input.codigo", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "nombre", source = "input.nombre", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "descripcion", source = "input.descripcion", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "codigoBarras", source = "input.codigoBarras")
     @Mapping(target = "estado", source = "input.estado")
     @Mapping(target = "ubicacion", source = "input.ubicacion", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "categoriaProducto", source = "categoria")

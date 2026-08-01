@@ -83,7 +83,7 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
         org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(page, size);
         org.springframework.data.domain.Page<Producto> pagina;
         if (filter != null && !filter.trim().isEmpty()) {
-            pagina = repository.findAll(pageRequest);
+            pagina = repository.buscar(filter.trim(), pageRequest);
         } else {
             pagina = listarPaginado(pageRequest);
         }
