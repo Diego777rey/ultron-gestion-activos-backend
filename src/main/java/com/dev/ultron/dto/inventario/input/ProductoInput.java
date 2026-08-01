@@ -8,6 +8,7 @@ public class ProductoInput {
     private String codigo;
     private String nombre;
     private String descripcion;
+    private String codigoBarras;
     private BigDecimal precioCompra;
     private BigDecimal precioVenta;
     private BigDecimal stock;

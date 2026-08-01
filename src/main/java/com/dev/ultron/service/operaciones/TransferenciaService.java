@@ -1,6 +1,5 @@
 package com.dev.ultron.service.operaciones;
 
-import com.dev.ultron.domain.inventario.PresentacionProducto;
 import com.dev.ultron.domain.inventario.Producto;
 import com.dev.ultron.domain.operaciones.Transferencia;
 import com.dev.ultron.domain.operaciones.TransferenciaDetalle;
@@ -13,7 +12,6 @@ import com.dev.ultron.dto.operaciones.output.TransferenciaOutput;
 import com.dev.ultron.generic.EntityNotFoundException;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
-import com.dev.ultron.repository.inventario.PresentacionProductoRepository;
 import com.dev.ultron.repository.inventario.ProductoRepository;
 import com.dev.ultron.repository.operaciones.TransferenciaRepository;
 import com.dev.ultron.repository.personas.PersonaRepository;
@@ -64,7 +62,6 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
     private final SectorRepository sectorRepository;
     private final ProductoRepository productoRepository;
     private final PersonaRepository personaRepository;
-    private final PresentacionProductoRepository presentacionProductoRepository;
     private final StockProductoSectorService stockService;
 
     public TransferenciaService(
@@ -73,7 +70,6 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
             SectorRepository sectorRepository,
             ProductoRepository productoRepository,
             PersonaRepository personaRepository,
-            PresentacionProductoRepository presentacionProductoRepository,
             StockProductoSectorService stockService
     ) {
         this.repository = repository;
@@ -81,7 +77,6 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
         this.sectorRepository = sectorRepository;
         this.productoRepository = productoRepository;
         this.personaRepository = personaRepository;
-        this.presentacionProductoRepository = presentacionProductoRepository;
         this.stockService = stockService;
     }
 
@@ -128,7 +123,6 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
 
     /**
      * Agrega un producto solo en etapa CREACION y descuenta stock del origen.
-     * Si se indica una presentación, el stock descontado es cantidad * cantidadPresentacion.
      */
     @Transactional
     public TransferenciaOutput agregarProducto(Long idTransferencia, TransferenciaDetalleInput input) {
@@ -146,45 +140,25 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
             throw new IllegalArgumentException("La cantidad debe ser mayor a cero");
         }
 
-        // Validar unicidad: mismo producto + misma presentación
-        final Long idPres = input.getIdPresentacionProducto();
         boolean yaExiste = transferencia.getDetalles().stream()
                 .anyMatch(d -> d.getProducto() != null
-                        && input.getIdProducto().equals(d.getProducto().getId_producto())
-                        && idPresentacionIgual(d.getPresentacionProducto(), idPres));
+                        && input.getIdProducto().equals(d.getProducto().getId_producto()));
         if (yaExiste) {
-            throw new IllegalArgumentException("El producto con esa presentación ya está en la transferencia");
+            throw new IllegalArgumentException("El producto ya está en la transferencia");
         }
 
         Producto producto = productoRepository.findById(input.getIdProducto())
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con id: " + input.getIdProducto()));
 
-        // Buscar presentación si se indicó
-        PresentacionProducto presentacion = null;
-        BigDecimal cantidadPresentacion = BigDecimal.ONE;
-        if (idPres != null) {
-            presentacion = presentacionProductoRepository.findById(idPres)
-                    .orElseThrow(() -> new EntityNotFoundException("Presentación no encontrada con id: " + idPres));
-            // Verificar que la presentación pertenece al producto
-            if (!producto.getId_producto().equals(presentacion.getProducto().getId_producto())) {
-                throw new IllegalArgumentException("La presentación no pertenece al producto indicado");
-            }
-            cantidadPresentacion = presentacion.getCantidad() != null ? presentacion.getCantidad() : BigDecimal.ONE;
-        }
-
-        // Stock a descontar = cantidad ingresada * cantidad de la presentación
-        BigDecimal cantidadTotalDescontar = input.getCantidad().multiply(cantidadPresentacion);
-
         stockService.ajustar(
                 producto.getId_producto(),
                 transferencia.getSectorOrigen().getId_sector(),
-                cantidadTotalDescontar.negate()
+                input.getCantidad().negate()
         );
 
         TransferenciaDetalle detalle = TransferenciaDetalle.builder()
                 .transferencia(transferencia)
                 .producto(producto)
-                .presentacionProducto(presentacion)
                 .cantidad(input.getCantidad())
                 .estado(DETALLE_PENDIENTE)
                 .build();
@@ -210,12 +184,12 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
 
         TransferenciaDetalle detalle = encontrarDetalle(transferencia, idDetalle);
         Producto producto = detalle.getProducto();
-        BigDecimal cantidadTotal = calcularCantidadTotalDetalle(detalle);
+        BigDecimal cantidad = detalle.getCantidad() != null ? detalle.getCantidad() : BigDecimal.ZERO;
 
         stockService.ajustar(
                 producto.getId_producto(),
                 transferencia.getSectorOrigen().getId_sector(),
-                cantidadTotal
+                cantidad
         );
 
         boolean removed = transferencia.getDetalles().removeIf(d -> idDetalle.equals(d.getId_detalle()));
@@ -241,10 +215,11 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
         }
 
         if (DETALLE_RECHAZADO.equals(estadoActual)) {
+            BigDecimal cantidad = detalle.getCantidad() != null ? detalle.getCantidad() : BigDecimal.ZERO;
             stockService.ajustar(
                     detalle.getProducto().getId_producto(),
                     transferencia.getSectorOrigen().getId_sector(),
-                    calcularCantidadTotalDetalle(detalle).negate()
+                    cantidad.negate()
             );
             stockService.resyncProductoStock(detalle.getProducto().getId_producto());
         }
@@ -285,10 +260,11 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
 
         String estadoActual = normalizeDetalleEstado(detalle.getEstado());
         if (!DETALLE_RECHAZADO.equals(estadoActual)) {
+            BigDecimal cantidad = detalle.getCantidad() != null ? detalle.getCantidad() : BigDecimal.ZERO;
             stockService.ajustar(
                     detalle.getProducto().getId_producto(),
                     transferencia.getSectorOrigen().getId_sector(),
-                    calcularCantidadTotalDetalle(detalle)
+                    cantidad
             );
             stockService.resyncProductoStock(detalle.getProducto().getId_producto());
         }
@@ -408,8 +384,8 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
                 continue;
             }
             Producto producto = detalle.getProducto();
-            BigDecimal cantidadTotal = calcularCantidadTotalDetalle(detalle);
-            stockService.ajustar(producto.getId_producto(), destino.getId_sector(), cantidadTotal);
+            BigDecimal cantidad = detalle.getCantidad() != null ? detalle.getCantidad() : BigDecimal.ZERO;
+            stockService.ajustar(producto.getId_producto(), destino.getId_sector(), cantidad);
             productosAfectados.add(producto.getId_producto());
             recepcionados++;
         }
@@ -467,32 +443,4 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
         return prefix + String.format("%04d", seq);
     }
 
-    /**
-     * Calcula la cantidad total de unidades para un detalle considerando la presentación.
-     * Si no hay presentación, la cantidad total es igual a la cantidad.
-     */
-    private BigDecimal calcularCantidadTotalDetalle(TransferenciaDetalle detalle) {
-        BigDecimal cantidad = detalle.getCantidad();
-        if (cantidad == null) {
-            return BigDecimal.ZERO;
-        }
-        PresentacionProducto pp = detalle.getPresentacionProducto();
-        BigDecimal cantidadPres = (pp != null && pp.getCantidad() != null) ? pp.getCantidad() : BigDecimal.ONE;
-        return cantidad.multiply(cantidadPres);
-    }
-
-    /**
-     * Compara si la presentación del detalle es igual al id indicado.
-     * Ambos null se consideran iguales.
-     */
-    private boolean idPresentacionIgual(PresentacionProducto pp, Long idPresentacion) {
-        Long actual = pp != null ? pp.getId_presentacion_producto() : null;
-        if (actual == null && idPresentacion == null) {
-            return true;
-        }
-        if (actual == null || idPresentacion == null) {
-            return false;
-        }
-        return actual.equals(idPresentacion);
-    }
 }

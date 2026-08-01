@@ -21,11 +21,7 @@ type TransferenciaDetalleOutput {
     estado: String
     motivoRechazo: String
     motivoRechazoDetalle: String
-    idPresentacionProducto: ID
-    presentacionDescripcion: String
-    cantidadPresentacion: BigDecimal
     precioVenta: BigDecimal
-    cantidadTotal: BigDecimal
 }
 
 type TransferenciaOutput {
@@ -48,7 +44,6 @@ type TransferenciaPageResponse {
 
 input TransferenciaDetalleInput {
     idProducto: ID!
-    idPresentacionProducto: ID
     cantidad: BigDecimal!
 }
 

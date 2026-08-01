@@ -1,17 +1,13 @@
 package com.dev.ultron.domain.inventario;
 
 import java.math.BigDecimal;
-import java.util.List;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.persistence.FetchType;
 import lombok.AllArgsConstructor;
@@ -35,6 +31,7 @@ public class Producto implements Serializable {
     private String codigo;
     private String nombre;
     private String descripcion;
+    private String codigoBarras;
     private BigDecimal precioCompra;
     private BigDecimal precioVenta;
     private BigDecimal stock;
@@ -45,8 +42,4 @@ public class Producto implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_categoria_producto", nullable = false)
     private CategoriaProducto categoriaProducto;
-
-    @OneToMany(mappedBy = "producto", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("id_presentacion_producto ASC")
-    private List<PresentacionProducto> presentaciones;
 }

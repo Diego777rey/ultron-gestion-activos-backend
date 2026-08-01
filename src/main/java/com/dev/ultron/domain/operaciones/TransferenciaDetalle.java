@@ -1,6 +1,5 @@
 package com.dev.ultron.domain.operaciones;
 
-import com.dev.ultron.domain.inventario.PresentacionProducto;
 import com.dev.ultron.domain.inventario.Producto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,10 +37,6 @@ public class TransferenciaDetalle implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_producto", nullable = false)
     private Producto producto;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_presentacion_producto")
-    private PresentacionProducto presentacionProducto;
 
     private BigDecimal cantidad;
 

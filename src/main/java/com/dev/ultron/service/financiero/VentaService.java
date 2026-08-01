@@ -5,7 +5,6 @@ import com.dev.ultron.domain.financiero.Ingreso;
 import com.dev.ultron.domain.financiero.MovimientoCaja;
 import com.dev.ultron.domain.financiero.SesionCaja;
 import com.dev.ultron.domain.financiero.Venta;
-import com.dev.ultron.domain.inventario.PresentacionProducto;
 import com.dev.ultron.domain.inventario.Producto;
 import com.dev.ultron.domain.personas.Cliente;
 import com.dev.ultron.dto.financiero.input.DetalleVentaInput;
@@ -20,7 +19,6 @@ import com.dev.ultron.repository.financiero.IngresoRepository;
 import com.dev.ultron.repository.financiero.MovimientoCajaRepository;
 import com.dev.ultron.repository.financiero.SesionCajaRepository;
 import com.dev.ultron.repository.financiero.VentaRepository;
-import com.dev.ultron.repository.inventario.PresentacionProductoRepository;
 import com.dev.ultron.repository.inventario.ProductoRepository;
 import com.dev.ultron.repository.personas.ClienteRepository;
 import com.dev.ultron.service.operaciones.StockProductoSectorService;
@@ -41,7 +39,6 @@ public class VentaService extends GenericCrudService<Venta, Long> {
     private final VentaMapper mapper;
     private final SesionCajaRepository sesionCajaRepository;
     private final ProductoRepository productoRepository;
-    private final PresentacionProductoRepository presentacionProductoRepository;
     private final ClienteRepository clienteRepository;
     private final MovimientoCajaRepository movimientoCajaRepository;
     private final IngresoRepository ingresoRepository;
@@ -53,7 +50,6 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             VentaMapper mapper,
             SesionCajaRepository sesionCajaRepository,
             ProductoRepository productoRepository,
-            PresentacionProductoRepository presentacionProductoRepository,
             ClienteRepository clienteRepository,
             MovimientoCajaRepository movimientoCajaRepository,
             IngresoRepository ingresoRepository,
@@ -63,7 +59,6 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         this.mapper = mapper;
         this.sesionCajaRepository = sesionCajaRepository;
         this.productoRepository = productoRepository;
-        this.presentacionProductoRepository = presentacionProductoRepository;
         this.clienteRepository = clienteRepository;
         this.movimientoCajaRepository = movimientoCajaRepository;
         this.ingresoRepository = ingresoRepository;
@@ -130,26 +125,11 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             Producto producto = productoRepository.findById(detInput.getIdProducto())
                     .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con id: " + detInput.getIdProducto()));
 
-            PresentacionProducto presentacion = null;
-            BigDecimal factor = BigDecimal.ONE;
             BigDecimal precio = detInput.getPrecioUnitario() != null
                     ? detInput.getPrecioUnitario()
                     : producto.getPrecioVenta();
 
-            if (detInput.getIdPresentacion() != null) {
-                presentacion = presentacionProductoRepository.findById(detInput.getIdPresentacion())
-                        .orElseThrow(() -> new EntityNotFoundException(
-                                "Presentación no encontrada con id: " + detInput.getIdPresentacion()));
-                if (!presentacion.getProducto().getId_producto().equals(producto.getId_producto())) {
-                    throw new IllegalArgumentException("La presentación no pertenece al producto indicado");
-                }
-                factor = presentacion.getCantidad() != null ? presentacion.getCantidad() : BigDecimal.ONE;
-                if (detInput.getPrecioUnitario() == null) {
-                    precio = presentacion.getPrecio();
-                }
-            }
-
-            BigDecimal stockADescontar = detInput.getCantidad().multiply(factor);
+            BigDecimal stockADescontar = detInput.getCantidad();
             BigDecimal stockSector = stockProductoSectorService.getCantidad(producto.getId_producto(), idSectorCaja);
             if (stockSector.compareTo(stockADescontar) < 0) {
                 throw new IllegalArgumentException(
@@ -164,7 +144,6 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             DetalleVenta detalle = DetalleVenta.builder()
                     .venta(venta)
                     .producto(producto)
-                    .presentacion(presentacion)
                     .cantidad(detInput.getCantidad())
                     .precioUnitario(precio)
                     .subtotal(lineaSubtotal)
