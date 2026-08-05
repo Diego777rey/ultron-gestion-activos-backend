@@ -1,6 +1,31 @@
 # =============================================================
-# Schema de Orden de Trabajo - CRUD + flujo de etapas
+# Schema de Orden de Trabajo - CRUD + flujo de etapas (piezas anidadas)
 # =============================================================
+
+type OrdenRecepcionOutput {
+    descripcion_falla: String
+}
+
+type OrdenEstadoVehiculoOutput {
+    falla_mecanica: Boolean
+    falla_electrica: Boolean
+    estado_llantas: Boolean
+    estado_pintura: Boolean
+    estado_rayones: Boolean
+    estado_golpes: Boolean
+    estado_vidrios: Boolean
+    nivel_combustible: String
+    kilometraje: Int
+    observaciones_estado: String
+}
+
+type OrdenDiagnosticoOutput {
+    fecha_inicio_estimada: String
+    fecha_fin_estimada: String
+    presupuesto_aprobado: Boolean
+    total_presupuesto: BigDecimal
+    observaciones: String
+}
 
 type OrdenTrabajoOutput {
     id_orden_trabajo: ID
@@ -11,15 +36,12 @@ type OrdenTrabajoOutput {
     mecanico: FuncionarioOutput
     sector: SectorOutput
     responsable: UsuarioOutput
-    descripcion_falla: String
-    fecha_inicio_estimada: String
-    fecha_fin_estimada: String
     fecha_creacion: String
     fecha_finalizacion: String
-    presupuesto_aprobado: Boolean
-    total_presupuesto: BigDecimal
-    observaciones: String
     caja: CajaOutput
+    recepcion: OrdenRecepcionOutput
+    estado_vehiculo: OrdenEstadoVehiculoOutput
+    diagnostico: OrdenDiagnosticoOutput
     detalles: [OrdenTrabajoDetalleOutput]
 }
 
@@ -42,18 +64,40 @@ type OrdenTrabajoPageResponse {
     pageInfo: PageInfo!
 }
 
+input OrdenRecepcionInput {
+    descripcion_falla: String
+}
+
+input OrdenEstadoVehiculoInput {
+    falla_mecanica: Boolean
+    falla_electrica: Boolean
+    estado_llantas: Boolean
+    estado_pintura: Boolean
+    estado_rayones: Boolean
+    estado_golpes: Boolean
+    estado_vidrios: Boolean
+    nivel_combustible: String
+    kilometraje: Int
+    observaciones_estado: String
+}
+
+input OrdenDiagnosticoInput {
+    fecha_inicio_estimada: String
+    fecha_fin_estimada: String
+    presupuesto_aprobado: Boolean
+    observaciones: String
+}
+
 input OrdenTrabajoInput {
     id_sector: ID
     id_responsable: ID
     id_cliente: ID
     id_vehiculo: ID
     id_mecanico: ID
-    descripcion_falla: String
-    fecha_inicio_estimada: String
-    fecha_fin_estimada: String
-    presupuesto_aprobado: Boolean
-    observaciones: String
     id_caja: ID
+    recepcion: OrdenRecepcionInput
+    estado_vehiculo: OrdenEstadoVehiculoInput
+    diagnostico: OrdenDiagnosticoInput
 }
 
 input OrdenTrabajoDetalleInput {

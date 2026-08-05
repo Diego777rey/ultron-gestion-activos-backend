@@ -1,7 +1,13 @@
 package com.dev.ultron.dto.taller.mapper;
 
+import com.dev.ultron.domain.taller.OrdenDiagnostico;
+import com.dev.ultron.domain.taller.OrdenEstadoVehiculo;
+import com.dev.ultron.domain.taller.OrdenRecepcion;
 import com.dev.ultron.domain.taller.OrdenTrabajo;
 import com.dev.ultron.domain.taller.OrdenTrabajoDetalle;
+import com.dev.ultron.dto.taller.output.OrdenDiagnosticoOutput;
+import com.dev.ultron.dto.taller.output.OrdenEstadoVehiculoOutput;
+import com.dev.ultron.dto.taller.output.OrdenRecepcionOutput;
 import com.dev.ultron.dto.taller.output.OrdenTrabajoDetalleOutput;
 import com.dev.ultron.dto.taller.output.OrdenTrabajoOutput;
 import com.dev.ultron.dto.personas.mapper.ClienteMapper;
@@ -31,17 +37,35 @@ public interface OrdenTrabajoMapper {
 
     @Mapping(target = "id_orden_trabajo", source = "id_orden_trabajo")
     @Mapping(target = "numero_orden", source = "numeroOrden")
-    @Mapping(target = "descripcion_falla", source = "descripcionFalla")
-    @Mapping(target = "fecha_inicio_estimada", source = "fechaInicioEstimada", qualifiedByName = "formatDateTime")
-    @Mapping(target = "fecha_fin_estimada", source = "fechaFinEstimada", qualifiedByName = "formatDateTime")
     @Mapping(target = "fecha_creacion", source = "fechaCreacion", qualifiedByName = "formatDateTime")
     @Mapping(target = "fecha_finalizacion", source = "fechaFinalizacion", qualifiedByName = "formatDateTime")
-    @Mapping(target = "presupuesto_aprobado", source = "presupuestoAprobado")
-    @Mapping(target = "total_presupuesto", source = "totalPresupuesto")
+    @Mapping(target = "recepcion", source = "recepcion")
+    @Mapping(target = "estado_vehiculo", source = "estadoVehiculo")
+    @Mapping(target = "diagnostico", source = "diagnostico")
     @Mapping(target = "detalles", source = "detalles")
     OrdenTrabajoOutput toOutput(OrdenTrabajo ordenTrabajo);
 
     List<OrdenTrabajoOutput> toOutputList(List<OrdenTrabajo> ordenes);
+
+    @Mapping(target = "descripcion_falla", source = "descripcionFalla")
+    OrdenRecepcionOutput toRecepcionOutput(OrdenRecepcion recepcion);
+
+    @Mapping(target = "falla_mecanica", source = "fallaMecanica")
+    @Mapping(target = "falla_electrica", source = "fallaElectrica")
+    @Mapping(target = "estado_llantas", source = "estadoLlantas")
+    @Mapping(target = "estado_pintura", source = "estadoPintura")
+    @Mapping(target = "estado_rayones", source = "estadoRayones")
+    @Mapping(target = "estado_golpes", source = "estadoGolpes")
+    @Mapping(target = "estado_vidrios", source = "estadoVidrios")
+    @Mapping(target = "nivel_combustible", source = "nivelCombustible")
+    @Mapping(target = "observaciones_estado", source = "observacionesEstado")
+    OrdenEstadoVehiculoOutput toEstadoVehiculoOutput(OrdenEstadoVehiculo estado);
+
+    @Mapping(target = "fecha_inicio_estimada", source = "fechaInicioEstimada", qualifiedByName = "formatDateTime")
+    @Mapping(target = "fecha_fin_estimada", source = "fechaFinEstimada", qualifiedByName = "formatDateTime")
+    @Mapping(target = "presupuesto_aprobado", source = "presupuestoAprobado")
+    @Mapping(target = "total_presupuesto", source = "totalPresupuesto")
+    OrdenDiagnosticoOutput toDiagnosticoOutput(OrdenDiagnostico diagnostico);
 
     @Mapping(target = "id_detalle", source = "id_detalle")
     @Mapping(target = "id_producto", expression = "java(detalle.getProducto() != null ? detalle.getProducto().getId_producto() : null)")

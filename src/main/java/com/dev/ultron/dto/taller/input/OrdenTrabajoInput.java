@@ -3,7 +3,7 @@ package com.dev.ultron.dto.taller.input;
 import java.io.Serializable;
 
 /**
- * Input para crear/actualizar una orden de trabajo.
+ * Input para crear/actualizar una orden de trabajo (core + piezas anidadas).
  */
 public record OrdenTrabajoInput(
         Long id_sector,
@@ -11,11 +11,9 @@ public record OrdenTrabajoInput(
         Long id_cliente,
         Long id_vehiculo,
         Long id_mecanico,
-        String descripcion_falla,
-        String fecha_inicio_estimada,
-        String fecha_fin_estimada,
-        Boolean presupuesto_aprobado,
-        String observaciones,
-        Long id_caja
+        Long id_caja,
+        OrdenRecepcionInput recepcion,
+        OrdenEstadoVehiculoInput estado_vehiculo,
+        OrdenDiagnosticoInput diagnostico
 ) implements Serializable {
 }
