@@ -33,10 +33,11 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
 
     @Query("""
             SELECT ot FROM OrdenTrabajo ot
+            LEFT JOIN ot.diagnostico d
             WHERE ot.mecanico.id_funcionario = :idMecanico
-              AND COALESCE(ot.fechaInicioEstimada, ot.fechaCreacion) >= :desde
-              AND COALESCE(ot.fechaInicioEstimada, ot.fechaCreacion) <= :hasta
-            ORDER BY COALESCE(ot.fechaInicioEstimada, ot.fechaCreacion)
+              AND COALESCE(d.fechaInicioEstimada, ot.fechaCreacion) >= :desde
+              AND COALESCE(d.fechaInicioEstimada, ot.fechaCreacion) <= :hasta
+            ORDER BY COALESCE(d.fechaInicioEstimada, ot.fechaCreacion)
             """)
     List<OrdenTrabajo> findAgendaMecanico(
             @Param("idMecanico") Long idMecanico,

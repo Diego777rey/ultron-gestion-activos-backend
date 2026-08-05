@@ -11,7 +11,9 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -57,37 +59,62 @@ public class OrdenTrabajo implements Serializable {
     @JoinColumn(name = "id_responsable")
     private Usuario responsable;
 
-    @Column(name = "descripcion_falla")
-    private String descripcionFalla;
-
-    @Column(name = "fecha_inicio_estimada")
-    private LocalDateTime fechaInicioEstimada;
-
-    @Column(name = "fecha_fin_estimada")
-    private LocalDateTime fechaFinEstimada;
-
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
 
     @Column(name = "fecha_finalizacion")
     private LocalDateTime fechaFinalizacion;
 
-    @Column(name = "presupuesto_aprobado", nullable = false)
-    private boolean presupuestoAprobado;
-
-    @Column(name = "total_presupuesto", nullable = false)
-    private BigDecimal totalPresupuesto;
-
-    private String observaciones;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_caja")
     private Caja caja;
 
+    @OneToOne(mappedBy = "ordenTrabajo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private OrdenRecepcion recepcion;
+
+    @OneToOne(mappedBy = "ordenTrabajo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private OrdenEstadoVehiculo estadoVehiculo;
+
+    @OneToOne(mappedBy = "ordenTrabajo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private OrdenDiagnostico diagnostico;
+
     @OneToMany(mappedBy = "ordenTrabajo", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id_detalle ASC")
     @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<OrdenTrabajoDetalle> detalles = new ArrayList<>();
+
+    public OrdenRecepcion ensureRecepcion() {
+        if (recepcion == null) {
+            recepcion = OrdenRecepcion.builder().ordenTrabajo(this).build();
+        }
+        return recepcion;
+    }
+
+    public OrdenEstadoVehiculo ensureEstadoVehiculo() {
+        if (estadoVehiculo == null) {
+            estadoVehiculo = OrdenEstadoVehiculo.builder().ordenTrabajo(this).build();
+        }
+        return estadoVehiculo;
+    }
+
+    public OrdenDiagnostico ensureDiagnostico() {
+        if (diagnostico == null) {
+            diagnostico = OrdenDiagnostico.builder()
+                    .ordenTrabajo(this)
+                    .presupuestoAprobado(false)
+                    .totalPresupuesto(BigDecimal.ZERO)
+                    .build();
+        }
+        return diagnostico;
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -96,9 +123,6 @@ public class OrdenTrabajo implements Serializable {
         }
         if (etapa == null) {
             etapa = "RECEPCION";
-        }
-        if (totalPresupuesto == null) {
-            totalPresupuesto = BigDecimal.ZERO;
         }
     }
 }

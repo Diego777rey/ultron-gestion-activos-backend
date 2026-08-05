@@ -12,7 +12,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -28,14 +27,11 @@ public class OrdenTrabajoOutput implements Serializable {
     private FuncionarioOutput mecanico;
     private SectorOutput sector;
     private UsuarioOutput responsable;
-    private String descripcion_falla;
-    private String fecha_inicio_estimada;
-    private String fecha_fin_estimada;
     private String fecha_creacion;
     private String fecha_finalizacion;
-    private Boolean presupuesto_aprobado;
-    private BigDecimal total_presupuesto;
-    private String observaciones;
     private CajaOutput caja;
+    private OrdenRecepcionOutput recepcion;
+    private OrdenEstadoVehiculoOutput estado_vehiculo;
+    private OrdenDiagnosticoOutput diagnostico;
     private List<OrdenTrabajoDetalleOutput> detalles;
 }
