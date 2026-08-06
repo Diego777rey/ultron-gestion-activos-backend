@@ -10,6 +10,10 @@ public record OrdenEstadoVehiculoInput(
         Boolean estado_rayones,
         Boolean estado_golpes,
         Boolean estado_vidrios,
+        Boolean perdida_aceite,
+        Boolean luces_danadas,
+        Boolean espejos_danados,
+        Boolean accesorios_faltantes,
         String nivel_combustible,
         Integer kilometraje,
         String observaciones_estado

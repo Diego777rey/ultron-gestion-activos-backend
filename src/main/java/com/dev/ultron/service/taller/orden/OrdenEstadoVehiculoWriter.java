@@ -36,6 +36,18 @@ public class OrdenEstadoVehiculoWriter {
         if (input.estado_vidrios() != null) {
             estado.setEstadoVidrios(input.estado_vidrios());
         }
+        if (input.perdida_aceite() != null) {
+            estado.setPerdidaAceite(input.perdida_aceite());
+        }
+        if (input.luces_danadas() != null) {
+            estado.setLucesDanadas(input.luces_danadas());
+        }
+        if (input.espejos_danados() != null) {
+            estado.setEspejosDanados(input.espejos_danados());
+        }
+        if (input.accesorios_faltantes() != null) {
+            estado.setAccesoriosFaltantes(input.accesorios_faltantes());
+        }
         if (input.nivel_combustible() != null) {
             String nivel = input.nivel_combustible().isBlank()
                     ? null

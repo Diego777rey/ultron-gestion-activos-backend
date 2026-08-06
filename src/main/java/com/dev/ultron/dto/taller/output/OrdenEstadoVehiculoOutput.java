@@ -19,6 +19,10 @@ public class OrdenEstadoVehiculoOutput implements Serializable {
     private Boolean estado_rayones;
     private Boolean estado_golpes;
     private Boolean estado_vidrios;
+    private Boolean perdida_aceite;
+    private Boolean luces_danadas;
+    private Boolean espejos_danados;
+    private Boolean accesorios_faltantes;
     private String nivel_combustible;
     private Integer kilometraje;
     private String observaciones_estado;
