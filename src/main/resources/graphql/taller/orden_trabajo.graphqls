@@ -14,6 +14,10 @@ type OrdenEstadoVehiculoOutput {
     estado_rayones: Boolean
     estado_golpes: Boolean
     estado_vidrios: Boolean
+    perdida_aceite: Boolean
+    luces_danadas: Boolean
+    espejos_danados: Boolean
+    accesorios_faltantes: Boolean
     nivel_combustible: String
     kilometraje: Int
     observaciones_estado: String
@@ -76,6 +80,10 @@ input OrdenEstadoVehiculoInput {
     estado_rayones: Boolean
     estado_golpes: Boolean
     estado_vidrios: Boolean
+    perdida_aceite: Boolean
+    luces_danadas: Boolean
+    espejos_danados: Boolean
+    accesorios_faltantes: Boolean
     nivel_combustible: String
     kilometraje: Int
     observaciones_estado: String

@@ -57,6 +57,22 @@ public class OrdenEstadoVehiculo implements Serializable {
     @Builder.Default
     private boolean estadoVidrios = false;
 
+    @Column(name = "perdida_aceite", nullable = false)
+    @Builder.Default
+    private boolean perdidaAceite = false;
+
+    @Column(name = "luces_danadas", nullable = false)
+    @Builder.Default
+    private boolean lucesDanadas = false;
+
+    @Column(name = "espejos_danados", nullable = false)
+    @Builder.Default
+    private boolean espejosDanados = false;
+
+    @Column(name = "accesorios_faltantes", nullable = false)
+    @Builder.Default
+    private boolean accesoriosFaltantes = false;
+
     @Column(name = "nivel_combustible")
     private String nivelCombustible;
 

@@ -57,6 +57,10 @@ public interface OrdenTrabajoMapper {
     @Mapping(target = "estado_rayones", source = "estadoRayones")
     @Mapping(target = "estado_golpes", source = "estadoGolpes")
     @Mapping(target = "estado_vidrios", source = "estadoVidrios")
+    @Mapping(target = "perdida_aceite", source = "perdidaAceite")
+    @Mapping(target = "luces_danadas", source = "lucesDanadas")
+    @Mapping(target = "espejos_danados", source = "espejosDanados")
+    @Mapping(target = "accesorios_faltantes", source = "accesoriosFaltantes")
     @Mapping(target = "nivel_combustible", source = "nivelCombustible")
     @Mapping(target = "observaciones_estado", source = "observacionesEstado")
     OrdenEstadoVehiculoOutput toEstadoVehiculoOutput(OrdenEstadoVehiculo estado);
