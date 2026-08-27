@@ -1,0 +1,41 @@
+Ultron Gestion de Activos — servidor 24/7
+=========================================
+
+Requisitos
+----------
+- Java 25 o superior (Temurin: https://adoptium.net/)
+
+Linux
+-----
+1. Descomprimir este zip.
+2. sudo ./install-linux.sh
+
+El servicio systemd "ultron" arranca al iniciar el equipo y se reinicia
+solo si cae. Instalacion por defecto: /opt/ultron
+
+  sudo systemctl status ultron
+  sudo journalctl -u ultron -f
+
+Para desinstalar: sudo ./uninstall-linux.sh
+
+Windows
+-------
+1. Descomprimir este zip.
+2. PowerShell como Administrador:
+     Set-ExecutionPolicy -Scope Process Bypass
+     .\install-windows.ps1
+
+El servicio de Windows "ultron" arranca al iniciar el equipo
+(inicio automatico con retraso).
+Instalacion por defecto: C:\Ultron
+
+  Get-Service ultron
+  Restart-Service ultron
+
+Para desinstalar (Administrador): .\uninstall-windows.ps1
+
+Variables opcionales
+--------------------
+ULTRON_INSTALL_DIR   directorio de instalacion
+ULTRON_SERVICE_USER  usuario Linux del servicio (default: ultron-server)
+JAVA_HOME            JDK/JRE a usar

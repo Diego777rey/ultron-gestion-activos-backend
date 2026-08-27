@@ -1,0 +1,24 @@
+[Unit]
+Description=Ultron Gestion de Activos
+Documentation=https://github.com/Diego777rey/ultron-gestion-activos-backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ultron
+Group=ultron
+WorkingDirectory=/opt/ultron
+ExecStart=__JAVA_BIN__ -Xms256m -Xmx1024m -Dfile.encoding=UTF-8 -Dlogging.file.name=logs/ultron.log -jar /opt/ultron/ultron.jar
+Restart=always
+RestartSec=10
+TimeoutStopSec=60
+SuccessExitStatus=143
+KillSignal=SIGTERM
+LimitNOFILE=65535
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ultron
+
+[Install]
+WantedBy=multi-user.target

@@ -14,6 +14,8 @@
 3. Commitear, pushear y abrir PR hacia `main`.
 4. Esperar CI en verde y mergear.
 5. El workflow de release versiona automaticamente segun el prefijo de la rama.
+6. El mismo workflow publica el JAR del servidor y un zip con instaladores
+   para Linux (systemd) y Windows (servicio WinSW) que arrancan al iniciar el equipo.
 
 ## Convencion de ramas
 
@@ -33,7 +35,11 @@
 - Version inicial: `1.0.0`
 - Version independiente de otros repositorios
 - Tags en formato `vX.Y.Z`
-- Releases publicados automaticamente en GitHub
+- Releases publicados automaticamente en GitHub, con:
+  - `ultron-X.Y.Z.jar`
+  - `ultron-server-X.Y.Z.zip` (JAR + instaladores para servicio 24/7)
+- El zip instala un servicio que arranca al encender Windows o Linux.
+  Ver `packaging/INSTALL.txt`. Requiere Java 25+.
 
 ## Ejemplos
 

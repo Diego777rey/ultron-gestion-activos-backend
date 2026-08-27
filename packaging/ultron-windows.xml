@@ -1,0 +1,14 @@
+<service>
+  <id>ultron</id>
+  <name>Ultron Gestion de Activos</name>
+  <description>Servidor backend Ultron. Arranca automaticamente al iniciar Windows.</description>
+  <executable>__JAVA_BIN__</executable>
+  <arguments>-Xms256m -Xmx1024m -Dfile.encoding=UTF-8 -Dlogging.file.name=logs/ultron.log -jar "%BASE%\ultron.jar"</arguments>
+  <workingdirectory>%BASE%</workingdirectory>
+  <logpath>%BASE%\logs</logpath>
+  <logmode>rotate</logmode>
+  <onfailure action="restart" delay="10 sec"/>
+  <resetfailure>1 hour</resetfailure>
+  <startmode>Automatic</startmode>
+  <delayedAutoStart>true</delayedAutoStart>
+</service>
