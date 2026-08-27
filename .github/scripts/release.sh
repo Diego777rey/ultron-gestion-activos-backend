@@ -4,14 +4,29 @@ set -euo pipefail
 PROJECT_TYPE="${PROJECT_TYPE:-maven}"
 SKIP_RELEASE_MARKER="[skip release]"
 
-if [[ "${GITHUB_EVENT_NAME:-}" == "push" && "$(git log -1 --pretty=%B)" == *"${SKIP_RELEASE_MARKER}"* ]]; then
-  echo "Commit marcado con ${SKIP_RELEASE_MARKER}. Se omite el release."
+emit_output() {
+  local released="$1"
+  local version="${2:-}"
+  if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+    echo "released=${released}" >> "${GITHUB_OUTPUT}"
+    if [[ -n "${version}" ]]; then
+      echo "version=${version}" >> "${GITHUB_OUTPUT}"
+    fi
+  fi
+}
+
+skip_release() {
+  echo "$1"
+  emit_output false
   exit 0
+}
+
+if [[ "${GITHUB_EVENT_NAME:-}" == "push" && "$(git log -1 --pretty=%B)" == *"${SKIP_RELEASE_MARKER}"* ]]; then
+  skip_release "Commit marcado con ${SKIP_RELEASE_MARKER}. Se omite el release."
 fi
 
 if [[ "$(git log -1 --pretty=%an)" == "github-actions[bot]" ]]; then
-  echo "Commit del bot de Actions. Se omite el release."
-  exit 0
+  skip_release "Commit del bot de Actions. Se omite el release."
 fi
 
 read_current_version() {
@@ -71,6 +86,7 @@ create_initial_release() {
 
   if git rev-parse "${tag}" >/dev/null 2>&1; then
     echo "El tag ${tag} ya existe."
+    emit_output false
     return 0
   fi
 
@@ -78,6 +94,7 @@ create_initial_release() {
   gh release create "${tag}" \
     --title "${tag}" \
     --notes "Release inicial ${tag}."
+  emit_output true "${version}"
 }
 
 BRANCH=""
@@ -91,8 +108,7 @@ if ! git tag -l 'v*' | grep -q .; then
 fi
 
 if [[ -z "${BRANCH}" ]]; then
-  echo "No hay PR asociado al commit. Se omite el versionado."
-  exit 0
+  skip_release "No hay PR asociado al commit. Se omite el versionado."
 fi
 
 echo "Rama del PR mergeado: ${BRANCH}"
@@ -109,11 +125,9 @@ elif [[ "${BRANCH}" =~ ^fix/ ]]; then
 elif [[ "${BRANCH}" =~ ^(refactor|test)/ ]]; then
   BUMP_TYPE="patch"
 elif [[ "${BRANCH}" =~ ^(docs|chore|style)/ ]]; then
-  echo "La rama ${BRANCH} no genera bump de version."
-  exit 0
+  skip_release "La rama ${BRANCH} no genera bump de version."
 else
-  echo "Prefijo de rama no reconocido: ${BRANCH}. Se omite el versionado."
-  exit 0
+  skip_release "Prefijo de rama no reconocido: ${BRANCH}. Se omite el versionado."
 fi
 
 CURRENT_VERSION="$(read_current_version)"
@@ -123,14 +137,12 @@ if [[ -z "${NEW_VERSION}" ]]; then
 fi
 
 if [[ "${CURRENT_VERSION}" == "${NEW_VERSION}" ]]; then
-  echo "La version ya es ${NEW_VERSION}."
-  exit 0
+  skip_release "La version ya es ${NEW_VERSION}."
 fi
 
 TAG="v${NEW_VERSION}"
 if git rev-parse "${TAG}" >/dev/null 2>&1; then
-  echo "El tag ${TAG} ya existe."
-  exit 0
+  skip_release "El tag ${TAG} ya existe."
 fi
 
 PR_TITLE="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" --jq '.[0].title // empty' 2>/dev/null || true)"
@@ -160,4 +172,5 @@ gh release create "${TAG}" \
   --title "${TAG}" \
   --notes "${RELEASE_NOTES}"
 
+emit_output true "${NEW_VERSION}"
 echo "Release ${TAG} publicado."
