@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 /**
  * Escribe la pieza de diagnóstico / presupuesto de la orden.
@@ -26,6 +27,10 @@ public class OrdenDiagnosticoWriter {
         if (input.fecha_fin_estimada() != null && !input.fecha_fin_estimada().isBlank()) {
             diagnostico.setFechaFinEstimada(parseDateTime(input.fecha_fin_estimada()));
         }
+        if (input.duracion_estimada_dias() != null) {
+            diagnostico.setDuracionEstimadaDias(
+                    input.duracion_estimada_dias() > 0 ? input.duracion_estimada_dias() : null);
+        }
         if (input.presupuesto_aprobado() != null) {
             diagnostico.setPresupuestoAprobado(input.presupuesto_aprobado());
         }
@@ -33,6 +38,7 @@ public class OrdenDiagnosticoWriter {
             diagnostico.setObservaciones(
                     input.observaciones().isBlank() ? null : input.observaciones().toUpperCase());
         }
+        sincronizarPlazos(diagnostico);
     }
 
     public void recalcularTotalPresupuesto(OrdenTrabajo orden) {
@@ -40,6 +46,25 @@ public class OrdenDiagnosticoWriter {
                 .map(OrdenTrabajoDetalle::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         orden.ensureDiagnostico().setTotalPresupuesto(total);
+    }
+
+    /**
+     * Completa fecha de fin o duración cuando el otro dato ya está cargado.
+     * Los días son calendario inclusivos: inicio = fin ⇒ 1 día.
+     */
+    void sincronizarPlazos(OrdenDiagnostico diagnostico) {
+        LocalDateTime inicio = diagnostico.getFechaInicioEstimada();
+        LocalDateTime fin = diagnostico.getFechaFinEstimada();
+        Integer dias = diagnostico.getDuracionEstimadaDias();
+
+        if (inicio != null && dias != null && dias > 0 && fin == null) {
+            diagnostico.setFechaFinEstimada(inicio.plusDays(dias - 1L));
+            return;
+        }
+        if (inicio != null && fin != null && dias == null) {
+            long calculados = ChronoUnit.DAYS.between(inicio.toLocalDate(), fin.toLocalDate()) + 1;
+            diagnostico.setDuracionEstimadaDias((int) Math.max(calculados, 1));
+        }
     }
 
     private LocalDateTime parseDateTime(String value) {
