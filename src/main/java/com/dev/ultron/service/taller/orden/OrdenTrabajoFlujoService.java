@@ -70,9 +70,6 @@ public class OrdenTrabajoFlujoService {
             throw new IllegalArgumentException(
                     "Solo se puede facturar una orden FINALIZADA. Etapa actual: " + orden.getEtapa());
         }
-        if (orden.getCaja() == null) {
-            throw new IllegalArgumentException("La orden debe tener una caja asignada para facturar");
-        }
         orden.setEtapa("FACTURADO");
         return ordenTrabajoMapper.toOutput(ordenTrabajoRepository.save(orden));
     }
