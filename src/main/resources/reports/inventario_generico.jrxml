@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Plantilla genérica de inventario (productos o servicios).
+  Editable en Jaspersoft Studio 6.20+. Campos alimentados por ReporteFila.
+-->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="inventario_generico"
+              pageWidth="842"
+              pageHeight="595"
+              orientation="Landscape"
+              columnWidth="802"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="18"
+              bottomMargin="18"
+              whenNoDataType="AllSectionsNoDetail"
+              uuid="7c2e9a14-6b3f-4d8a-9e21-0f8c4b1a6d55">
+
+    <property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+    <property name="com.jaspersoft.studio.unit." value="pixel"/>
+
+    <style name="Default" isDefault="true" fontName="DejaVu Sans" fontSize="8" hTextAlign="Left" vTextAlign="Middle"/>
+    <style name="Titulo" fontName="DejaVu Sans" fontSize="16" isBold="true" forecolor="#F4F7FB"/>
+    <style name="Subtitulo" fontName="DejaVu Sans" fontSize="9" forecolor="#C5D0DC"/>
+    <style name="Meta" fontName="DejaVu Sans" fontSize="8" forecolor="#A8B6C4"/>
+    <style name="ColHeader" fontName="DejaVu Sans" fontSize="8" isBold="true" forecolor="#F4F7FB" hTextAlign="Left" vTextAlign="Middle"/>
+    <style name="Celda" fontName="DejaVu Sans" fontSize="8" forecolor="#1B2430" hTextAlign="Left" vTextAlign="Middle"/>
+    <style name="CeldaNumero" style="Celda" hTextAlign="Right"/>
+    <style name="Pie" fontName="DejaVu Sans" fontSize="7" forecolor="#6B7785"/>
+
+    <parameter name="TITULO" class="java.lang.String"/>
+    <parameter name="SUBTITULO" class="java.lang.String"/>
+    <parameter name="SISTEMA" class="java.lang.String"/>
+    <parameter name="FECHA_GENERACION" class="java.lang.String"/>
+    <parameter name="COLUMNA_EXTRA" class="java.lang.String"/>
+    <parameter name="CANTIDAD" class="java.lang.Integer"/>
+    <parameter name="FILTRO" class="java.lang.String"/>
+
+    <field name="numero" class="java.lang.Integer"/>
+    <field name="codigo" class="java.lang.String"/>
+    <field name="nombre" class="java.lang.String"/>
+    <field name="descripcion" class="java.lang.String"/>
+    <field name="categoria" class="java.lang.String"/>
+    <field name="subcategoria" class="java.lang.String"/>
+    <field name="precio" class="java.lang.String"/>
+    <field name="extra" class="java.lang.String"/>
+    <field name="estado" class="java.lang.String"/>
+
+    <variable name="TOTAL_REGISTROS" class="java.lang.Integer" calculation="Count">
+        <variableExpression><![CDATA[$F{numero}]]></variableExpression>
+    </variable>
+
+    <background>
+        <band splitType="Stretch"/>
+    </background>
+
+    <title>
+        <band height="62" splitType="Stretch">
+            <rectangle radius="4">
+                <reportElement x="0" y="0" width="802" height="58" backcolor="#1A2332" forecolor="#1A2332" uuid="b3d1e8c0-4a72-4f1e-91aa-2c7e0b5d9f10"/>
+                <graphicElement>
+                    <pen lineWidth="0.0"/>
+                </graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement style="Meta" x="16" y="8" width="220" height="14" uuid="11a9c2e4-8b70-4d3f-a6c1-7e4f0d2b91aa"/>
+                <textElement>
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[ULTRON]]></text>
+            </staticText>
+            <textField>
+                <reportElement style="Titulo" x="16" y="22" width="520" height="22" uuid="c8e4a1d6-2f90-4b7c-8e3a-5d1c9f0b74e2"/>
+                <textFieldExpression><![CDATA[$P{TITULO}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement style="Subtitulo" x="16" y="42" width="520" height="12" uuid="a0d7b5c3-1e84-4f26-9c58-3b2a7e91d046"/>
+                <textFieldExpression><![CDATA[$P{SUBTITULO}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement style="Meta" x="540" y="12" width="246" height="14" uuid="e4b9c7a1-6d32-4e80-bf15-8a0c3d5e7194"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$P{SISTEMA}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement style="Meta" x="540" y="28" width="246" height="14" uuid="9f2c8d10-5a47-4b91-ae33-0c6e1d8b4527"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA["Generado: " + $P{FECHA_GENERACION}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <pageHeader>
+        <band height="18" splitType="Stretch">
+            <textField isBlankWhenNull="true">
+                <reportElement style="Pie" x="0" y="2" width="802" height="14" uuid="d1a6e3b8-4c29-4f70-9e12-7b5a0c8d3641">
+                    <printWhenExpression><![CDATA[$P{FILTRO} != null && !$P{FILTRO}.trim().isEmpty()]]></printWhenExpression>
+                </reportElement>
+                <textFieldExpression><![CDATA["Filtro aplicado: " + $P{FILTRO}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageHeader>
+
+    <columnHeader>
+        <band height="22" splitType="Stretch">
+            <rectangle>
+                <reportElement x="0" y="0" width="802" height="22" backcolor="#2C3E50" forecolor="#2C3E50" uuid="5e8a2c14-9b06-4d3f-a721-8f4c0e6b1935"/>
+                <graphicElement>
+                    <pen lineWidth="0.0"/>
+                </graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement style="ColHeader" x="4" y="0" width="32" height="22" uuid="a1c3d5e7-9012-4b34-8c56-7d89e0f12345"/>
+                <text><![CDATA[N°]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="ColHeader" x="36" y="0" width="95" height="22" uuid="b2d4e6f8-0123-4c45-9d67-8e90f1a23456"/>
+                <text><![CDATA[CÓDIGO]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="ColHeader" x="131" y="0" width="200" height="22" uuid="c3e5f709-1234-4d56-ae78-9f01a2b34567"/>
+                <text><![CDATA[NOMBRE]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="ColHeader" x="331" y="0" width="130" height="22" uuid="d4f6081a-2345-4e67-bf89-0a12b3c45678"/>
+                <text><![CDATA[CATEGORÍA]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="ColHeader" x="461" y="0" width="130" height="22" uuid="e507192b-3456-4f78-c09a-1b23c4d56789"/>
+                <text><![CDATA[SUBCATEGORÍA]]></text>
+            </staticText>
+            <staticText>
+                <reportElement style="ColHeader" x="591" y="0" width="80" height="22" uuid="f6182a3c-4567-4089-d1ab-2c34d5e67890"/>
+                <textElement textAlignment="Right"/>
+                <text><![CDATA[PRECIO]]></text>
+            </staticText>
+            <textField>
+                <reportElement style="ColHeader" x="671" y="0" width="72" height="22" uuid="07293b4d-5678-4190-e2bc-3d45e6f78901"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$P{COLUMNA_EXTRA}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement style="ColHeader" x="743" y="0" width="55" height="22" uuid="183a4c5e-6789-42a1-f3cd-4e56f7089a12"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[ESTADO]]></text>
+            </staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="18" splitType="Prevent">
+            <rectangle>
+                <reportElement x="0" y="0" width="802" height="18" backcolor="#EEF2F6" forecolor="#EEF2F6" uuid="294b5d6f-7890-43b2-04de-5f670819ab23">
+                    <printWhenExpression><![CDATA[$V{REPORT_COUNT} % 2 == 0]]></printWhenExpression>
+                </reportElement>
+                <graphicElement>
+                    <pen lineWidth="0.0"/>
+                </graphicElement>
+            </rectangle>
+            <textField isBlankWhenNull="true">
+                <reportElement style="CeldaNumero" x="4" y="0" width="32" height="18" uuid="3a5c6e70-8901-44c3-15ef-6078192abc34"/>
+                <textFieldExpression><![CDATA[$F{numero}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Celda" x="36" y="0" width="95" height="18" uuid="4b6d7f81-9012-45d4-26f0-71892a3bcd45"/>
+                <textFieldExpression><![CDATA[$F{codigo}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Celda" x="131" y="0" width="200" height="18" uuid="5c7e8092-0123-46e5-3701-829a3b4cde56"/>
+                <textFieldExpression><![CDATA[$F{nombre}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Celda" x="331" y="0" width="130" height="18" uuid="6d8f91a3-1234-47f6-4812-93ab4c5def67"/>
+                <textFieldExpression><![CDATA[$F{categoria}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Celda" x="461" y="0" width="130" height="18" uuid="7e90a2b4-2345-4807-5923-a4bc5d6ef078"/>
+                <textFieldExpression><![CDATA[$F{subcategoria}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="CeldaNumero" x="591" y="0" width="80" height="18" uuid="8f01b3c5-3456-4918-6a34-b5cd6e7f0189"/>
+                <textFieldExpression><![CDATA[$F{precio}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="CeldaNumero" x="671" y="0" width="72" height="18" uuid="9012c4d6-4567-4a29-7b45-c6de7f80219a"/>
+                <textFieldExpression><![CDATA[$F{extra}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Celda" x="743" y="0" width="55" height="18" uuid="a123d5e7-5678-4b3a-8c56-d7ef809132ab"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[$F{estado}]]></textFieldExpression>
+            </textField>
+            <line>
+                <reportElement x="0" y="17" width="802" height="1" forecolor="#D5DDE5" uuid="b234e6f8-6789-4c4b-9d67-e8f091a243bc"/>
+                <graphicElement>
+                    <pen lineWidth="0.4" lineColor="#D5DDE5"/>
+                </graphicElement>
+            </line>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="22" splitType="Stretch">
+            <textField>
+                <reportElement style="Pie" x="0" y="6" width="400" height="14" uuid="c345f709-789a-4d5c-ae78-f901a2b354cd"/>
+                <textFieldExpression><![CDATA[$P{SISTEMA} + "  ·  Documento interno"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement style="Pie" x="502" y="6" width="240" height="14" uuid="d456081a-89ab-4e6d-bf89-0a12b3c465de"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER} + " de "]]></textFieldExpression>
+            </textField>
+            <textField evaluationTime="Report">
+                <reportElement style="Pie" x="742" y="6" width="60" height="14" uuid="e567192b-9abc-4f7e-c09a-1b23c4d576ef"/>
+                <textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+    <summary>
+        <band height="24" splitType="Stretch">
+            <textField>
+                <reportElement style="Celda" x="0" y="6" width="802" height="14" uuid="f6782a3c-abcd-408f-d1ab-2c34d5e687f1"/>
+                <textFieldExpression><![CDATA["Total de registros: " + ($P{CANTIDAD} != null ? $P{CANTIDAD} : $V{REPORT_COUNT})]]></textFieldExpression>
+            </textField>
+        </band>
+    </summary>
+
+    <noData>
+        <band height="40">
+            <staticText>
+                <reportElement style="Celda" x="0" y="10" width="802" height="20" uuid="f6782a3c-abcd-408f-d1ab-2c34d5e687f0"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[No hay registros para el criterio indicado.]]></text>
+            </staticText>
+        </band>
+    </noData>
+</jasperReport>

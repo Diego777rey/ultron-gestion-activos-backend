@@ -46,4 +46,45 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
 
     @Query(value = "SELECT NEXTVAL('taller.orden_trabajo_numero_seq')", nativeQuery = true)
     Long obtenerSiguienteNumero();
+
+    @Query("""
+            SELECT DISTINCT ot FROM OrdenTrabajo ot
+            LEFT JOIN FETCH ot.cliente c
+            LEFT JOIN FETCH c.persona
+            LEFT JOIN FETCH ot.vehiculo
+            LEFT JOIN FETCH ot.sector
+            LEFT JOIN FETCH ot.recepcion
+            LEFT JOIN FETCH ot.diagnostico
+            ORDER BY ot.fechaCreacion DESC
+            """)
+    java.util.List<OrdenTrabajo> findAllParaReporte();
+
+    @Query("""
+            SELECT DISTINCT ot FROM OrdenTrabajo ot
+            LEFT JOIN FETCH ot.cliente c
+            LEFT JOIN FETCH c.persona p
+            LEFT JOIN FETCH ot.vehiculo v
+            LEFT JOIN FETCH ot.sector
+            LEFT JOIN FETCH ot.recepcion
+            LEFT JOIN FETCH ot.diagnostico
+            WHERE LOWER(ot.numeroOrden) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(ot.etapa) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(p.apellido) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(v.chapa) LIKE LOWER(CONCAT('%', :filter, '%'))
+            ORDER BY ot.fechaCreacion DESC
+            """)
+    java.util.List<OrdenTrabajo> buscarParaReporte(@Param("filter") String filter);
+
+    @Query("""
+            SELECT ot FROM OrdenTrabajo ot
+            LEFT JOIN FETCH ot.cliente c
+            LEFT JOIN FETCH c.persona
+            LEFT JOIN FETCH ot.vehiculo
+            LEFT JOIN FETCH ot.sector
+            LEFT JOIN FETCH ot.recepcion
+            LEFT JOIN FETCH ot.diagnostico
+            WHERE ot.id_orden_trabajo = :id
+            """)
+    java.util.Optional<OrdenTrabajo> findParaReporte(@Param("id") Long id);
 }
