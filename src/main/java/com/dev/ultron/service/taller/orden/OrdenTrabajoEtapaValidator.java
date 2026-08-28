@@ -12,13 +12,9 @@ import org.springframework.stereotype.Component;
 public class OrdenTrabajoEtapaValidator {
 
     private final OrdenTrabajoActoresWriter actoresWriter;
-    private final OrdenTrabajoCajaResolver cajaResolver;
 
-    public OrdenTrabajoEtapaValidator(
-            OrdenTrabajoActoresWriter actoresWriter,
-            OrdenTrabajoCajaResolver cajaResolver) {
+    public OrdenTrabajoEtapaValidator(OrdenTrabajoActoresWriter actoresWriter) {
         this.actoresWriter = actoresWriter;
-        this.cajaResolver = cajaResolver;
     }
 
     public void validarTransicion(String etapaActual, String nuevaEtapa) {
@@ -39,8 +35,6 @@ public class OrdenTrabajoEtapaValidator {
         switch (nuevaEtapa) {
             case "DIAGNOSTICO" -> validarParaDiagnostico(orden);
             case "EN_PROCESO" -> validarParaEnProceso(orden);
-            case "FINALIZADA" -> validarParaFinalizada(orden);
-            case "FACTURADO" -> validarParaFacturado(orden);
             default -> {
             }
         }
@@ -90,22 +84,6 @@ public class OrdenTrabajoEtapaValidator {
         if (!(tieneInicio && tieneFin) && !tieneDuracion) {
             throw new IllegalArgumentException(
                     "Debe indicar fecha de inicio y fin estimadas, o el tiempo que llevará el trabajo");
-        }
-    }
-
-    private void validarParaFinalizada(OrdenTrabajo orden) {
-        if (orden.getCaja() == null) {
-            throw new IllegalArgumentException(
-                    "Debe asignar una caja abierta antes de finalizar (use enviarOrdenACaja)");
-        }
-        if (!cajaResolver.tieneSesionAbierta(orden.getCaja().getId_caja())) {
-            throw new IllegalArgumentException("La caja asignada no tiene sesión abierta");
-        }
-    }
-
-    private void validarParaFacturado(OrdenTrabajo orden) {
-        if (orden.getCaja() == null) {
-            throw new IllegalArgumentException("La orden debe tener una caja asignada para facturar");
         }
     }
 }
