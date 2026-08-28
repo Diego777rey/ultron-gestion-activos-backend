@@ -29,6 +29,7 @@ type OrdenDiagnosticoHallazgoOutput {
     gravedad: String
     sistema: String
     descripcion: String
+    etapa_origen: String
 }
 
 type OrdenDiagnosticoOutput {

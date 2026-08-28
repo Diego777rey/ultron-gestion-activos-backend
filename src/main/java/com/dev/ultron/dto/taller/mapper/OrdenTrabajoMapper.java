@@ -76,6 +76,7 @@ public interface OrdenTrabajoMapper {
     OrdenDiagnosticoOutput toDiagnosticoOutput(OrdenDiagnostico diagnostico);
 
     @Mapping(target = "id_hallazgo", source = "id_hallazgo")
+    @Mapping(target = "etapa_origen", source = "etapaOrigen")
     OrdenDiagnosticoHallazgoOutput toHallazgoOutput(OrdenDiagnosticoHallazgo hallazgo);
 
     @Mapping(target = "id_detalle", source = "id_detalle")

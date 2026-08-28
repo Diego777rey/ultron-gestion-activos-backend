@@ -21,6 +21,7 @@ import com.dev.ultron.repository.sectores.SectorRepository;
 import com.dev.ultron.repository.taller.OrdenTrabajoRepository;
 import com.dev.ultron.repository.taller.SolicitudRepuestoRepository;
 import com.dev.ultron.service.operaciones.TransferenciaService;
+import com.dev.ultron.service.taller.orden.OrdenTrabajoDetalleService;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,7 @@ public class SolicitudRepuestoService extends GenericCrudService<SolicitudRepues
     private final ProductoRepository productoRepository;
     private final TransferenciaService transferenciaService;
     private final TransferenciaRepository transferenciaRepository;
+    private final OrdenTrabajoDetalleService detalleService;
 
     public SolicitudRepuestoService(
             SolicitudRepuestoRepository repository,
@@ -46,7 +48,8 @@ public class SolicitudRepuestoService extends GenericCrudService<SolicitudRepues
             SectorRepository sectorRepository,
             ProductoRepository productoRepository,
             TransferenciaService transferenciaService,
-            TransferenciaRepository transferenciaRepository) {
+            TransferenciaRepository transferenciaRepository,
+            OrdenTrabajoDetalleService detalleService) {
         this.repository = repository;
         this.mapper = mapper;
         this.ordenTrabajoRepository = ordenTrabajoRepository;
@@ -54,6 +57,7 @@ public class SolicitudRepuestoService extends GenericCrudService<SolicitudRepues
         this.productoRepository = productoRepository;
         this.transferenciaService = transferenciaService;
         this.transferenciaRepository = transferenciaRepository;
+        this.detalleService = detalleService;
     }
 
     @Override
@@ -107,6 +111,7 @@ public class SolicitudRepuestoService extends GenericCrudService<SolicitudRepues
                 .observacion(input.observacion() != null ? input.observacion().toUpperCase() : null)
                 .build();
 
+        boolean ajustoPresupuesto = false;
         for (SolicitudRepuestoDetalleInput detInput : input.detalles()) {
             if (detInput == null || detInput.id_producto() == null) {
                 throw new IllegalArgumentException("Cada detalle debe indicar un producto");
@@ -123,9 +128,16 @@ public class SolicitudRepuestoService extends GenericCrudService<SolicitudRepues
                     .cantidad(detInput.cantidad())
                     .build();
             solicitud.getDetalles().add(detalle);
+            if (detalleService.incorporarProductoSiAusente(orden, producto, detInput.cantidad())) {
+                ajustoPresupuesto = true;
+            }
         }
 
-        return mapper.toOutput(guardar(solicitud));
+        SolicitudRepuesto guardada = guardar(solicitud);
+        if (ajustoPresupuesto) {
+            ordenTrabajoRepository.save(orden);
+        }
+        return mapper.toOutput(guardada);
     }
 
     @Transactional
