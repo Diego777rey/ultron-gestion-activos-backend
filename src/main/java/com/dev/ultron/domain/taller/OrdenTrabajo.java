@@ -91,6 +91,13 @@ public class OrdenTrabajo implements Serializable {
     @EqualsAndHashCode.Exclude
     private List<OrdenTrabajoDetalle> detalles = new ArrayList<>();
 
+    @OneToMany(mappedBy = "ordenTrabajo", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id_hallazgo ASC")
+    @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<OrdenDiagnosticoHallazgo> hallazgos = new ArrayList<>();
+
     public OrdenRecepcion ensureRecepcion() {
         if (recepcion == null) {
             recepcion = OrdenRecepcion.builder().ordenTrabajo(this).build();

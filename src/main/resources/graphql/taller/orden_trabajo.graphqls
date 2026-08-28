@@ -23,9 +23,18 @@ type OrdenEstadoVehiculoOutput {
     observaciones_estado: String
 }
 
+type OrdenDiagnosticoHallazgoOutput {
+    id_hallazgo: ID
+    tipo: String
+    gravedad: String
+    sistema: String
+    descripcion: String
+}
+
 type OrdenDiagnosticoOutput {
     fecha_inicio_estimada: String
     fecha_fin_estimada: String
+    duracion_estimada_dias: Int
     presupuesto_aprobado: Boolean
     total_presupuesto: BigDecimal
     observaciones: String
@@ -47,6 +56,7 @@ type OrdenTrabajoOutput {
     estado_vehiculo: OrdenEstadoVehiculoOutput
     diagnostico: OrdenDiagnosticoOutput
     detalles: [OrdenTrabajoDetalleOutput]
+    hallazgos: [OrdenDiagnosticoHallazgoOutput]
 }
 
 type OrdenTrabajoDetalleOutput {
@@ -92,8 +102,16 @@ input OrdenEstadoVehiculoInput {
 input OrdenDiagnosticoInput {
     fecha_inicio_estimada: String
     fecha_fin_estimada: String
+    duracion_estimada_dias: Int
     presupuesto_aprobado: Boolean
     observaciones: String
+}
+
+input OrdenDiagnosticoHallazgoInput {
+    tipo: String!
+    gravedad: String
+    sistema: String
+    descripcion: String!
 }
 
 input OrdenTrabajoInput {
@@ -123,6 +141,8 @@ extend type Mutation {
     cambiarEtapaOrdenTrabajo(id: ID!, etapa: String!): OrdenTrabajoOutput
     agregarDetalleOrdenTrabajo(idOrden: ID!, input: OrdenTrabajoDetalleInput!): OrdenTrabajoOutput
     eliminarDetalleOrdenTrabajo(idOrden: ID!, idDetalle: ID!): OrdenTrabajoOutput
+    agregarHallazgoOrdenTrabajo(idOrden: ID!, input: OrdenDiagnosticoHallazgoInput!): OrdenTrabajoOutput
+    eliminarHallazgoOrdenTrabajo(idOrden: ID!, idHallazgo: ID!): OrdenTrabajoOutput
     enviarOrdenACaja(idOrden: ID!, idCaja: ID!): OrdenTrabajoOutput
     marcarOrdenFacturada(idOrden: ID!): OrdenTrabajoOutput
     eliminarOrdenTrabajo(id: ID!): Boolean

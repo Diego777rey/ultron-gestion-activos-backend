@@ -2,6 +2,7 @@ package com.dev.ultron.service.taller;
 
 import com.dev.ultron.domain.taller.OrdenTrabajo;
 import com.dev.ultron.dto.financiero.output.CajaOutput;
+import com.dev.ultron.dto.taller.input.OrdenDiagnosticoHallazgoInput;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoDetalleInput;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoInput;
 import com.dev.ultron.dto.taller.mapper.OrdenTrabajoMapper;
@@ -10,6 +11,7 @@ import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.generic.SearchNormalizer;
 import com.dev.ultron.repository.taller.OrdenTrabajoRepository;
+import com.dev.ultron.service.taller.orden.OrdenDiagnosticoHallazgoService;
 import com.dev.ultron.service.taller.orden.OrdenTrabajoCajaResolver;
 import com.dev.ultron.service.taller.orden.OrdenTrabajoDetalleService;
 import com.dev.ultron.service.taller.orden.OrdenTrabajoFlujoService;
@@ -35,6 +37,7 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
     private final OrdenTrabajoInputApplier inputApplier;
     private final OrdenTrabajoFlujoService flujoService;
     private final OrdenTrabajoDetalleService detalleService;
+    private final OrdenDiagnosticoHallazgoService hallazgoService;
     private final OrdenTrabajoCajaResolver cajaResolver;
 
     public OrdenTrabajoService(
@@ -43,12 +46,14 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
             OrdenTrabajoInputApplier inputApplier,
             OrdenTrabajoFlujoService flujoService,
             OrdenTrabajoDetalleService detalleService,
+            OrdenDiagnosticoHallazgoService hallazgoService,
             OrdenTrabajoCajaResolver cajaResolver) {
         this.ordenTrabajoRepository = ordenTrabajoRepository;
         this.ordenTrabajoMapper = ordenTrabajoMapper;
         this.inputApplier = inputApplier;
         this.flujoService = flujoService;
         this.detalleService = detalleService;
+        this.hallazgoService = hallazgoService;
         this.cajaResolver = cajaResolver;
     }
 
@@ -146,6 +151,14 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
 
     public OrdenTrabajoOutput eliminarDetalle(Long idOrden, Long idDetalle) {
         return detalleService.eliminarDetalle(idOrden, idDetalle);
+    }
+
+    public OrdenTrabajoOutput agregarHallazgo(Long idOrden, OrdenDiagnosticoHallazgoInput input) {
+        return hallazgoService.agregarHallazgo(idOrden, input);
+    }
+
+    public OrdenTrabajoOutput eliminarHallazgo(Long idOrden, Long idHallazgo) {
+        return hallazgoService.eliminarHallazgo(idOrden, idHallazgo);
     }
 
     private String generarNumeroOrden() {

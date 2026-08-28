@@ -1,10 +1,12 @@
 package com.dev.ultron.dto.taller.mapper;
 
 import com.dev.ultron.domain.taller.OrdenDiagnostico;
+import com.dev.ultron.domain.taller.OrdenDiagnosticoHallazgo;
 import com.dev.ultron.domain.taller.OrdenEstadoVehiculo;
 import com.dev.ultron.domain.taller.OrdenRecepcion;
 import com.dev.ultron.domain.taller.OrdenTrabajo;
 import com.dev.ultron.domain.taller.OrdenTrabajoDetalle;
+import com.dev.ultron.dto.taller.output.OrdenDiagnosticoHallazgoOutput;
 import com.dev.ultron.dto.taller.output.OrdenDiagnosticoOutput;
 import com.dev.ultron.dto.taller.output.OrdenEstadoVehiculoOutput;
 import com.dev.ultron.dto.taller.output.OrdenRecepcionOutput;
@@ -43,6 +45,7 @@ public interface OrdenTrabajoMapper {
     @Mapping(target = "estado_vehiculo", source = "estadoVehiculo")
     @Mapping(target = "diagnostico", source = "diagnostico")
     @Mapping(target = "detalles", source = "detalles")
+    @Mapping(target = "hallazgos", source = "hallazgos")
     OrdenTrabajoOutput toOutput(OrdenTrabajo ordenTrabajo);
 
     List<OrdenTrabajoOutput> toOutputList(List<OrdenTrabajo> ordenes);
@@ -67,9 +70,13 @@ public interface OrdenTrabajoMapper {
 
     @Mapping(target = "fecha_inicio_estimada", source = "fechaInicioEstimada", qualifiedByName = "formatDateTime")
     @Mapping(target = "fecha_fin_estimada", source = "fechaFinEstimada", qualifiedByName = "formatDateTime")
+    @Mapping(target = "duracion_estimada_dias", source = "duracionEstimadaDias")
     @Mapping(target = "presupuesto_aprobado", source = "presupuestoAprobado")
     @Mapping(target = "total_presupuesto", source = "totalPresupuesto")
     OrdenDiagnosticoOutput toDiagnosticoOutput(OrdenDiagnostico diagnostico);
+
+    @Mapping(target = "id_hallazgo", source = "id_hallazgo")
+    OrdenDiagnosticoHallazgoOutput toHallazgoOutput(OrdenDiagnosticoHallazgo hallazgo);
 
     @Mapping(target = "id_detalle", source = "id_detalle")
     @Mapping(target = "id_producto", expression = "java(detalle.getProducto() != null ? detalle.getProducto().getId_producto() : null)")

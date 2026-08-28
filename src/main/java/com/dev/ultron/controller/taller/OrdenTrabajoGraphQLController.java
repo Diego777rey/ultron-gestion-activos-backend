@@ -1,6 +1,7 @@
 package com.dev.ultron.controller.taller;
 
 import com.dev.ultron.dto.financiero.output.CajaOutput;
+import com.dev.ultron.dto.taller.input.OrdenDiagnosticoHallazgoInput;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoDetalleInput;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoInput;
 import com.dev.ultron.dto.taller.output.OrdenTrabajoOutput;
@@ -89,6 +90,18 @@ public class OrdenTrabajoGraphQLController {
     public OrdenTrabajoOutput eliminarDetalleOrdenTrabajo(
             @Argument Long idOrden, @Argument Long idDetalle) {
         return ordenTrabajoService.eliminarDetalle(idOrden, idDetalle);
+    }
+
+    @MutationMapping
+    public OrdenTrabajoOutput agregarHallazgoOrdenTrabajo(
+            @Argument Long idOrden, @Argument OrdenDiagnosticoHallazgoInput input) {
+        return ordenTrabajoService.agregarHallazgo(idOrden, input);
+    }
+
+    @MutationMapping
+    public OrdenTrabajoOutput eliminarHallazgoOrdenTrabajo(
+            @Argument Long idOrden, @Argument Long idHallazgo) {
+        return ordenTrabajoService.eliminarHallazgo(idOrden, idHallazgo);
     }
 
     @MutationMapping
