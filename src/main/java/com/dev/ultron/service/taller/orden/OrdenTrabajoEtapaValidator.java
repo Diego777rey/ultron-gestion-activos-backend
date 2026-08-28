@@ -1,5 +1,6 @@
 package com.dev.ultron.service.taller.orden;
 
+import com.dev.ultron.domain.taller.OrdenDiagnostico;
 import com.dev.ultron.domain.taller.OrdenTrabajo;
 
 import org.springframework.stereotype.Component;
@@ -65,13 +66,30 @@ public class OrdenTrabajoEtapaValidator {
     }
 
     private void validarParaEnProceso(OrdenTrabajo orden) {
+        if (orden.getHallazgos() == null || orden.getHallazgos().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Debe registrar al menos un fallo o defecto encontrado en el diagnóstico");
+        }
         if (orden.getDetalles() == null || orden.getDetalles().isEmpty()) {
             throw new IllegalArgumentException("El presupuesto debe tener al menos un ítem");
         }
-        boolean aprobado = orden.getDiagnostico() != null
-                && orden.getDiagnostico().isPresupuestoAprobado();
+        var diagnostico = orden.getDiagnostico();
+        boolean aprobado = diagnostico != null && diagnostico.isPresupuestoAprobado();
         if (!aprobado) {
             throw new IllegalArgumentException("El presupuesto debe estar aprobado por el cliente");
+        }
+        validarPlazos(diagnostico);
+    }
+
+    private void validarPlazos(OrdenDiagnostico diagnostico) {
+        boolean tieneInicio = diagnostico != null && diagnostico.getFechaInicioEstimada() != null;
+        boolean tieneFin = diagnostico != null && diagnostico.getFechaFinEstimada() != null;
+        boolean tieneDuracion = diagnostico != null
+                && diagnostico.getDuracionEstimadaDias() != null
+                && diagnostico.getDuracionEstimadaDias() > 0;
+        if (!(tieneInicio && tieneFin) && !tieneDuracion) {
+            throw new IllegalArgumentException(
+                    "Debe indicar fecha de inicio y fin estimadas, o el tiempo que llevará el trabajo");
         }
     }
 

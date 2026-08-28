@@ -37,6 +37,9 @@ public class OrdenDiagnostico implements Serializable {
     @Column(name = "fecha_fin_estimada")
     private LocalDateTime fechaFinEstimada;
 
+    @Column(name = "duracion_estimada_dias")
+    private Integer duracionEstimadaDias;
+
     @Column(name = "presupuesto_aprobado", nullable = false)
     @Builder.Default
     private boolean presupuestoAprobado = false;

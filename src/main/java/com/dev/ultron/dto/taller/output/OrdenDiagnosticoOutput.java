@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 public class OrdenDiagnosticoOutput implements Serializable {
     private String fecha_inicio_estimada;
     private String fecha_fin_estimada;
+    private Integer duracion_estimada_dias;
     private Boolean presupuesto_aprobado;
     private BigDecimal total_presupuesto;
     private String observaciones;

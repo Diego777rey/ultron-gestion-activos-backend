@@ -34,4 +34,5 @@ public class OrdenTrabajoOutput implements Serializable {
     private OrdenEstadoVehiculoOutput estado_vehiculo;
     private OrdenDiagnosticoOutput diagnostico;
     private List<OrdenTrabajoDetalleOutput> detalles;
+    private List<OrdenDiagnosticoHallazgoOutput> hallazgos;
 }
