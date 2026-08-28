@@ -17,4 +17,5 @@ public class OrdenDiagnosticoHallazgoOutput implements Serializable {
     private String gravedad;
     private String sistema;
     private String descripcion;
+    private String etapa_origen;
 }

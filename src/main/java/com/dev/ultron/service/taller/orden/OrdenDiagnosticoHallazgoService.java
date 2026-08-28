@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -44,12 +45,19 @@ public class OrdenDiagnosticoHallazgoService {
             orden.setHallazgos(new ArrayList<>());
         }
 
+        String tipo = input.tipo().trim().toUpperCase();
+        if ("EN_PROCESO".equalsIgnoreCase(orden.getEtapa()) && !"DEFECTO".equals(tipo)) {
+            throw new IllegalArgumentException(
+                    "En En Proceso solo se puede registrar un defecto descubierto durante el trabajo");
+        }
+
         OrdenDiagnosticoHallazgo hallazgo = OrdenDiagnosticoHallazgo.builder()
                 .ordenTrabajo(orden)
-                .tipo(input.tipo().trim().toUpperCase())
+                .tipo(tipo)
                 .gravedad(resolverGravedad(input.gravedad()))
                 .sistema(normalizarTexto(input.sistema()))
                 .descripcion(input.descripcion().trim().toUpperCase())
+                .etapaOrigen(orden.getEtapa())
                 .build();
 
         orden.getHallazgos().add(hallazgo);
@@ -61,10 +69,19 @@ public class OrdenDiagnosticoHallazgoService {
         OrdenTrabajo orden = buscarPorIdOrThrow(idOrden);
         exigirEtapaEditable(orden.getEtapa());
 
-        boolean removed = orden.getHallazgos().removeIf(h -> h.getId_hallazgo().equals(idHallazgo));
-        if (!removed) {
-            throw new EntityNotFoundException("Hallazgo no encontrado con ID: " + idHallazgo);
+        OrdenDiagnosticoHallazgo hallazgo = (orden.getHallazgos() == null ? List.<OrdenDiagnosticoHallazgo>of() : orden.getHallazgos())
+                .stream()
+                .filter(h -> h.getId_hallazgo().equals(idHallazgo))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Hallazgo no encontrado con ID: " + idHallazgo));
+
+        if ("EN_PROCESO".equalsIgnoreCase(orden.getEtapa())
+                && !"EN_PROCESO".equalsIgnoreCase(hallazgo.getEtapaOrigen())) {
+            throw new IllegalArgumentException(
+                    "No se pueden eliminar hallazgos del diagnóstico durante En Proceso");
         }
+
+        orden.getHallazgos().remove(hallazgo);
         return ordenTrabajoMapper.toOutput(ordenTrabajoRepository.save(orden));
     }
 

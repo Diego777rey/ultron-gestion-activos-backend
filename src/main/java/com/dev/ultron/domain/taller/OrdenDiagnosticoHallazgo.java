@@ -40,10 +40,17 @@ public class OrdenDiagnosticoHallazgo implements Serializable {
     @Column(nullable = false)
     private String descripcion;
 
+    @Column(name = "etapa_origen", nullable = false)
+    @Builder.Default
+    private String etapaOrigen = "DIAGNOSTICO";
+
     @PrePersist
     protected void onCreate() {
         if (gravedad == null || gravedad.isBlank()) {
             gravedad = "MEDIA";
+        }
+        if (etapaOrigen == null || etapaOrigen.isBlank()) {
+            etapaOrigen = "DIAGNOSTICO";
         }
     }
 }

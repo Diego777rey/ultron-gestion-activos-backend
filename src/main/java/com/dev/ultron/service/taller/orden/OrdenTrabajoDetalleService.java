@@ -46,6 +46,7 @@ public class OrdenTrabajoDetalleService {
     public OrdenTrabajoOutput agregarDetalle(Long idOrden, OrdenTrabajoDetalleInput input) {
         OrdenTrabajo orden = buscarPorIdOrThrow(idOrden);
         exigirEtapaEditable(orden.getEtapa());
+        validarAltaEnProceso(orden, input);
 
         OrdenTrabajoDetalle detalle = OrdenTrabajoDetalle.builder()
                 .ordenTrabajo(orden)
@@ -76,12 +77,50 @@ public class OrdenTrabajoDetalleService {
         OrdenTrabajo orden = buscarPorIdOrThrow(idOrden);
         exigirEtapaEditable(orden.getEtapa());
 
-        boolean removed = orden.getDetalles().removeIf(d -> d.getId_detalle().equals(idDetalle));
-        if (!removed) {
-            throw new EntityNotFoundException("Detalle no encontrado con ID: " + idDetalle);
+        OrdenTrabajoDetalle detalle = orden.getDetalles().stream()
+                .filter(d -> d.getId_detalle().equals(idDetalle))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("Detalle no encontrado con ID: " + idDetalle));
+
+        if ("EN_PROCESO".equalsIgnoreCase(orden.getEtapa())
+                && !"EN_PROCESO".equalsIgnoreCase(detalle.getEtapaOrigen())) {
+            throw new IllegalArgumentException(
+                    "No se pueden quitar ítems del diagnóstico durante En Proceso");
         }
+
+        orden.getDetalles().remove(detalle);
         diagnosticoWriter.recalcularTotalPresupuesto(orden);
         return ordenTrabajoMapper.toOutput(ordenTrabajoRepository.save(orden));
+    }
+
+    /**
+     * Suma al presupuesto un producto solicitado que no estaba en diagnóstico.
+     * @return true si se agregó una línea nueva
+     */
+    public boolean incorporarProductoSiAusente(OrdenTrabajo orden, Producto producto, BigDecimal cantidad) {
+        boolean yaCargado = orden.getDetalles().stream()
+                .anyMatch(d -> "PRODUCTO".equalsIgnoreCase(d.getTipo())
+                        && d.getProducto() != null
+                        && d.getProducto().getId_producto().equals(producto.getId_producto()));
+        if (yaCargado) {
+            return false;
+        }
+
+        BigDecimal cant = cantidad != null ? cantidad : BigDecimal.ONE;
+        BigDecimal precio = producto.getPrecioVenta() != null ? producto.getPrecioVenta() : BigDecimal.ZERO;
+        OrdenTrabajoDetalle detalle = OrdenTrabajoDetalle.builder()
+                .ordenTrabajo(orden)
+                .tipo("PRODUCTO")
+                .producto(producto)
+                .descripcion(producto.getNombre() != null ? producto.getNombre().toUpperCase() : null)
+                .cantidad(cant)
+                .precioUnitario(precio)
+                .subtotal(cant.multiply(precio))
+                .etapaOrigen(orden.getEtapa() != null ? orden.getEtapa() : "EN_PROCESO")
+                .build();
+        orden.getDetalles().add(detalle);
+        diagnosticoWriter.recalcularTotalPresupuesto(orden);
+        return true;
     }
 
     private void aplicarProducto(OrdenTrabajoDetalle detalle, OrdenTrabajoDetalleInput input) {
@@ -112,6 +151,29 @@ public class OrdenTrabajoDetalleService {
         if (input.precio_unitario() == null) {
             detalle.setPrecioUnitario(servicio.getPrecio());
         }
+    }
+
+    private void validarAltaEnProceso(OrdenTrabajo orden, OrdenTrabajoDetalleInput input) {
+        if (!"EN_PROCESO".equalsIgnoreCase(orden.getEtapa())) {
+            return;
+        }
+        if ("PRODUCTO".equalsIgnoreCase(input.tipo())) {
+            throw new IllegalArgumentException(
+                    "En En Proceso los productos se agregan solos al solicitar un repuesto que no estaba en el diagnóstico");
+        }
+        if ("SERVICIO".equalsIgnoreCase(input.tipo()) && !tieneDefectoNuevo(orden)) {
+            throw new IllegalArgumentException(
+                    "Solo se puede agregar un servicio extra si se descubrió un defecto nuevo durante el trabajo");
+        }
+    }
+
+    private boolean tieneDefectoNuevo(OrdenTrabajo orden) {
+        if (orden.getHallazgos() == null) {
+            return false;
+        }
+        return orden.getHallazgos().stream()
+                .anyMatch(h -> "DEFECTO".equalsIgnoreCase(h.getTipo())
+                        && "EN_PROCESO".equalsIgnoreCase(h.getEtapaOrigen()));
     }
 
     private void exigirEtapaEditable(String etapa) {
