@@ -25,6 +25,11 @@ type SolicitudRepuestoOutput {
     detalles: [SolicitudRepuestoDetalleOutput]
 }
 
+type SolicitudRepuestoPageResponse {
+    content: [SolicitudRepuestoOutput!]!
+    pageInfo: PageInfo!
+}
+
 input SolicitudRepuestoDetalleInput {
     id_producto: ID!
     cantidad: BigDecimal!
