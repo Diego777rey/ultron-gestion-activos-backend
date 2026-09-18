@@ -15,6 +15,8 @@ import com.dev.ultron.dto.taller.mapper.SolicitudRepuestoMapper;
 import com.dev.ultron.dto.taller.output.SolicitudRepuestoOutput;
 import com.dev.ultron.generic.EntityNotFoundException;
 import com.dev.ultron.generic.GenericCrudService;
+import com.dev.ultron.generic.PageResponse;
+import com.dev.ultron.generic.SearchNormalizer;
 import com.dev.ultron.repository.inventario.ProductoRepository;
 import com.dev.ultron.repository.operaciones.TransferenciaRepository;
 import com.dev.ultron.repository.sectores.SectorRepository;
@@ -22,6 +24,9 @@ import com.dev.ultron.repository.taller.OrdenTrabajoRepository;
 import com.dev.ultron.repository.taller.SolicitudRepuestoRepository;
 import com.dev.ultron.service.operaciones.TransferenciaService;
 import com.dev.ultron.service.taller.orden.OrdenTrabajoDetalleService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,6 +73,18 @@ public class SolicitudRepuestoService extends GenericCrudService<SolicitudRepues
     @Transactional(readOnly = true)
     public List<SolicitudRepuestoOutput> listarPorOrden(Long idOrden) {
         return mapper.toOutputList(repository.findByOrdenId(idOrden));
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<SolicitudRepuestoOutput> listarPaginado(int page, int size, String filter) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fecha"));
+        Page<SolicitudRepuesto> pagina;
+        if (filter != null && !filter.trim().isEmpty()) {
+            pagina = repository.search(SearchNormalizer.normalizeFilter(filter), pageRequest);
+        } else {
+            pagina = repository.findAll(pageRequest);
+        }
+        return new PageResponse<>(pagina.map(mapper::toOutput));
     }
 
     @Transactional(readOnly = true)
@@ -163,6 +180,8 @@ public class SolicitudRepuestoService extends GenericCrudService<SolicitudRepues
                     .build();
             transferenciaService.agregarProducto(idTransferencia, detInput);
         }
+
+        transferenciaService.avanzarEtapa(idTransferencia);
 
         Transferencia transferencia = transferenciaRepository.findById(idTransferencia)
                 .orElseThrow(() -> new EntityNotFoundException(

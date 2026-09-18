@@ -2,6 +2,7 @@ package com.dev.ultron.controller.taller;
 
 import com.dev.ultron.dto.taller.input.SolicitudRepuestoInput;
 import com.dev.ultron.dto.taller.output.SolicitudRepuestoOutput;
+import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.service.taller.SolicitudRepuestoService;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -22,6 +23,12 @@ public class SolicitudRepuestoGraphQLController {
     @QueryMapping
     public List<SolicitudRepuestoOutput> listarSolicitudesRepuestoPorOrden(@Argument Long idOrden) {
         return service.listarPorOrden(idOrden);
+    }
+
+    @QueryMapping
+    public PageResponse<SolicitudRepuestoOutput> listarSolicitudesRepuestoPaginado(
+            @Argument int page, @Argument int size, @Argument String filter) {
+        return service.listarPaginado(page, size, filter);
     }
 
     @QueryMapping

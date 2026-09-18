@@ -45,6 +45,7 @@ type Query {
     listarAgendaMecanico(idMecanico: ID!, fechaDesde: String!, fechaHasta: String!): [OrdenTrabajoOutput!]!
     listarCajasConSesionAbierta: [CajaOutput!]!
     listarSolicitudesRepuestoPorOrden(idOrden: ID!): [SolicitudRepuestoOutput!]!
+    listarSolicitudesRepuestoPaginado(page: Int!, size: Int!, filter: String): SolicitudRepuestoPageResponse!
     buscarSolicitudRepuestoPorId(id: ID!): SolicitudRepuestoOutput
 }
 

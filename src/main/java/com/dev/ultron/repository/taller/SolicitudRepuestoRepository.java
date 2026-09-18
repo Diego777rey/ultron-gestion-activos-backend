@@ -1,6 +1,8 @@
 package com.dev.ultron.repository.taller;
 
 import com.dev.ultron.domain.taller.SolicitudRepuesto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +19,16 @@ public interface SolicitudRepuestoRepository extends JpaRepository<SolicitudRepu
             ORDER BY s.fecha DESC
             """)
     List<SolicitudRepuesto> findByOrdenId(@Param("idOrden") Long idOrden);
+
+    @Query("""
+            SELECT s FROM SolicitudRepuesto s
+            WHERE LOWER(s.ordenTrabajo.numeroOrden) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(s.estado) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(s.sectorOrigen.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(s.sectorDestino.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(COALESCE(s.observacion, '')) LIKE LOWER(CONCAT('%', :filter, '%'))
+            """)
+    Page<SolicitudRepuesto> search(@Param("filter") String filter, Pageable pageable);
 
     @Query("""
             SELECT DISTINCT s FROM SolicitudRepuesto s
