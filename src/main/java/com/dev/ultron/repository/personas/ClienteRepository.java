@@ -16,7 +16,14 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     @org.springframework.data.jpa.repository.Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Cliente c WHERE c.persona.documento = :documento")
     boolean existsByPersonaDocumento(@org.springframework.data.repository.query.Param("documento") String documento);
 
-    @org.springframework.data.jpa.repository.Query("SELECT c FROM Cliente c WHERE LOWER(c.persona.nombre) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(c.persona.apellido) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(c.persona.documento) LIKE LOWER(CONCAT('%', :filter, '%')) OR LOWER(c.ruc) LIKE LOWER(CONCAT('%', :filter, '%'))")
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT c FROM Cliente c
+            WHERE LOWER(c.persona.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(c.persona.apellido) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(CONCAT(c.persona.nombre, ' ', c.persona.apellido)) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(c.persona.documento) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(c.ruc) LIKE LOWER(CONCAT('%', :filter, '%'))
+            """)
     org.springframework.data.domain.Page<Cliente> search(@org.springframework.data.repository.query.Param("filter") String filter, org.springframework.data.domain.Pageable pageable);
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"persona"})
@@ -28,6 +35,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
             SELECT c FROM Cliente c
             WHERE LOWER(c.persona.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(c.persona.apellido) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(CONCAT(c.persona.nombre, ' ', c.persona.apellido)) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(c.persona.documento) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(c.ruc) LIKE LOWER(CONCAT('%', :filter, '%'))
             ORDER BY c.persona.nombre, c.persona.apellido
