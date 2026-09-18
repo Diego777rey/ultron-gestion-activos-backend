@@ -24,7 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class JasperReportService {
 
-    static final String PLANTILLA_INVENTARIO = "reports/inventario_generico.jrxml";
+    public static final String PLANTILLA_INVENTARIO = "reports/inventario_generico.jrxml";
+    public static final String PLANTILLA_ORDEN_DETALLE = "reports/orden_trabajo_detalle.jrxml";
 
     private final ConcurrentHashMap<String, JasperReport> compilados = new ConcurrentHashMap<>();
 

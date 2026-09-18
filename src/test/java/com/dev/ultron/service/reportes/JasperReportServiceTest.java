@@ -1,6 +1,7 @@
 package com.dev.ultron.service.reportes;
 
 import com.dev.ultron.dto.reportes.output.ReporteFila;
+import com.dev.ultron.dto.reportes.output.ReporteOtDetalleFila;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -34,6 +35,42 @@ class JasperReportServiceTest {
                         "SISTEMA", "Ultron System",
                         "FECHA_GENERACION", "28/08/2026 19:00:00",
                         "COLUMNA_EXTRA", "STOCK",
+                        "CANTIDAD", filas.size(),
+                        "FILTRO", ""
+                ),
+                filas
+        );
+
+        assertThat(pdf).isNotEmpty();
+        assertThat(pdf).startsWith("%PDF".getBytes());
+    }
+
+    @Test
+    void compilaYExportaPlantillaDetalleOrden() {
+        JasperReportService service = new JasperReportService();
+        List<ReporteOtDetalleFila> filas = List.of(
+                ReporteOtDetalleFila.builder()
+                        .numeroOrden("OT-001")
+                        .etapa("DIAGNOSTICO")
+                        .fecha("18/09/2026 10:00:00")
+                        .presupuesto("250.000 GS")
+                        .encabezado("Cliente: Juan Pérez\nVehículo: Toyota Corolla\nFalla: Ruido en motor")
+                        .tipoLinea("SERVICIO")
+                        .nombreLinea("Diagnóstico general")
+                        .cantidad("1")
+                        .precio("250.000 GS")
+                        .subtotal("250.000 GS")
+                        .build()
+        );
+
+        byte[] pdf = service.exportarPdf(
+                JasperReportService.PLANTILLA_ORDEN_DETALLE,
+                Map.of(
+                        "TITULO", "Detalle de órdenes de trabajo",
+                        "SUBTITULO", "Vista completa",
+                        "SISTEMA", "Ultron System",
+                        "FECHA_GENERACION", "18/09/2026 19:00:00",
+                        "COLUMNA_EXTRA", "",
                         "CANTIDAD", filas.size(),
                         "FILTRO", ""
                 ),
