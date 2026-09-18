@@ -1,7 +1,6 @@
 package com.dev.ultron.service.reportes;
 
 import com.dev.ultron.dto.reportes.TipoReporte;
-import com.dev.ultron.dto.reportes.output.ReporteFila;
 import com.dev.ultron.utilitarios.AppConstants;
 import com.dev.ultron.utilitarios.DateUtil;
 import org.springframework.stereotype.Service;
@@ -31,9 +30,9 @@ public class ReporteGenericoService {
 
     public byte[] generar(String tipoRaw, String filtro, Long id) {
         ReporteFuente fuente = resolver(tipoRaw);
-        List<ReporteFila> filas = id != null ? fuente.buscarPorId(id) : fuente.listar(filtro);
+        List<?> filas = id != null ? fuente.buscarPorId(id) : fuente.listar(filtro);
         Map<String, Object> parametros = construirParametros(fuente, filtro, filas.size());
-        return jasperReportService.exportarInventario(parametros, filas);
+        return jasperReportService.exportarPdf(fuente.plantilla(), parametros, filas);
     }
 
     public String nombreArchivo(String tipoRaw, Long id) {

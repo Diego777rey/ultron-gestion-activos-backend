@@ -1,14 +1,12 @@
 package com.dev.ultron.service.reportes;
 
 import com.dev.ultron.dto.reportes.TipoReporte;
-import com.dev.ultron.dto.reportes.output.ReporteFila;
 
 import java.util.List;
 
 /**
- * Fuente de datos intercambiable del reporte genérico de inventario.
- * Cada implementación adapta un producto o servicio (u otro catálogo futuro)
- * a {@link ReporteFila} sin acoplar el motor Jasper al dominio.
+ * Fuente de datos intercambiable de reportes PDF.
+ * Cada implementación adapta un dominio a los beans de su plantilla Jasper.
  */
 public interface ReporteFuente {
 
@@ -22,7 +20,11 @@ public interface ReporteFuente {
 
     String nombreArchivo();
 
-    List<ReporteFila> listar(String filtro);
+    List<?> listar(String filtro);
 
-    List<ReporteFila> buscarPorId(Long id);
+    List<?> buscarPorId(Long id);
+
+    default String plantilla() {
+        return JasperReportService.PLANTILLA_INVENTARIO;
+    }
 }

@@ -87,4 +87,66 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
             WHERE ot.id_orden_trabajo = :id
             """)
     java.util.Optional<OrdenTrabajo> findParaReporte(@Param("id") Long id);
+
+    @Query("""
+            SELECT DISTINCT ot FROM OrdenTrabajo ot
+            LEFT JOIN FETCH ot.cliente c
+            LEFT JOIN FETCH c.persona
+            LEFT JOIN FETCH ot.vehiculo
+            LEFT JOIN FETCH ot.sector
+            LEFT JOIN FETCH ot.mecanico m
+            LEFT JOIN FETCH m.persona
+            LEFT JOIN FETCH ot.responsable
+            LEFT JOIN FETCH ot.recepcion
+            LEFT JOIN FETCH ot.estadoVehiculo
+            LEFT JOIN FETCH ot.diagnostico
+            LEFT JOIN FETCH ot.detalles d
+            LEFT JOIN FETCH d.producto
+            LEFT JOIN FETCH d.servicio
+            ORDER BY ot.fechaCreacion DESC
+            """)
+    java.util.List<OrdenTrabajo> findAllParaReporteDetalle();
+
+    @Query("""
+            SELECT DISTINCT ot FROM OrdenTrabajo ot
+            LEFT JOIN FETCH ot.cliente c
+            LEFT JOIN FETCH c.persona p
+            LEFT JOIN FETCH ot.vehiculo v
+            LEFT JOIN FETCH ot.sector
+            LEFT JOIN FETCH ot.mecanico m
+            LEFT JOIN FETCH m.persona
+            LEFT JOIN FETCH ot.responsable
+            LEFT JOIN FETCH ot.recepcion
+            LEFT JOIN FETCH ot.estadoVehiculo
+            LEFT JOIN FETCH ot.diagnostico
+            LEFT JOIN FETCH ot.detalles d
+            LEFT JOIN FETCH d.producto
+            LEFT JOIN FETCH d.servicio
+            WHERE LOWER(ot.numeroOrden) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(ot.etapa) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(p.apellido) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(v.chapa) LIKE LOWER(CONCAT('%', :filter, '%'))
+            ORDER BY ot.fechaCreacion DESC
+            """)
+    java.util.List<OrdenTrabajo> buscarParaReporteDetalle(@Param("filter") String filter);
+
+    @Query("""
+            SELECT DISTINCT ot FROM OrdenTrabajo ot
+            LEFT JOIN FETCH ot.cliente c
+            LEFT JOIN FETCH c.persona
+            LEFT JOIN FETCH ot.vehiculo
+            LEFT JOIN FETCH ot.sector
+            LEFT JOIN FETCH ot.mecanico m
+            LEFT JOIN FETCH m.persona
+            LEFT JOIN FETCH ot.responsable
+            LEFT JOIN FETCH ot.recepcion
+            LEFT JOIN FETCH ot.estadoVehiculo
+            LEFT JOIN FETCH ot.diagnostico
+            LEFT JOIN FETCH ot.detalles d
+            LEFT JOIN FETCH d.producto
+            LEFT JOIN FETCH d.servicio
+            WHERE ot.id_orden_trabajo = :id
+            """)
+    java.util.Optional<OrdenTrabajo> findParaReporteDetalle(@Param("id") Long id);
 }
