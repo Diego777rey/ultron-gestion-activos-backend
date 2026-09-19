@@ -16,7 +16,11 @@ import com.dev.ultron.service.personas.ClienteService;
 
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Enlaza actores y relaciones del core de la orden (sector, responsable, cliente, vehículo, mecánico, caja).
@@ -64,17 +68,77 @@ public class OrdenTrabajoActoresWriter {
         if (input.id_vehiculo() != null) {
             orden.setVehiculo(vehiculoService.buscarPorIdOrThrow(input.id_vehiculo()));
         }
-        if (input.id_mecanico() != null) {
-            Funcionario mecanico = funcionarioRepo.findById(input.id_mecanico())
-                    .orElseThrow(() -> new EntityNotFoundException("Mecánico no encontrado: " + input.id_mecanico()));
-            orden.setMecanico(mecanico);
-        }
+        aplicarMecanicos(orden, input, creando);
         if (input.id_caja() != null) {
             orden.setCaja(cajaResolver.exigirConSesionAbierta(input.id_caja()));
         }
 
         if (creando || input.id_cliente() != null || input.id_vehiculo() != null) {
             validarVehiculoPerteneceACliente(orden.getCliente(), orden.getVehiculo());
+        }
+    }
+
+    private void aplicarMecanicos(OrdenTrabajo orden, OrdenTrabajoInput input, boolean creando) {
+        List<Long> ids = idsMecanicos(input);
+        if (ids == null) {
+            if (creando) {
+                throw new IllegalArgumentException("Debes asignar al menos un mecánico");
+            }
+            return;
+        }
+        if (ids.isEmpty()) {
+            throw new IllegalArgumentException("Debes asignar al menos un mecánico");
+        }
+
+        List<Funcionario> asignados = new ArrayList<>();
+        Set<Long> vistos = new LinkedHashSet<>();
+        for (Long id : ids) {
+            if (id == null || !vistos.add(id)) {
+                continue;
+            }
+            Funcionario mecanico = funcionarioRepo.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Mecánico no encontrado: " + id));
+            asignados.add(mecanico);
+        }
+        if (asignados.isEmpty()) {
+            throw new IllegalArgumentException("Debes asignar al menos un mecánico");
+        }
+
+        if (!creando) {
+            validarMecanicosConServicios(orden, vistos);
+        }
+
+        if (orden.getMecanicos() == null) {
+            orden.setMecanicos(new ArrayList<>());
+        }
+        orden.getMecanicos().clear();
+        orden.getMecanicos().addAll(asignados);
+        orden.setMecanico(asignados.get(0));
+    }
+
+    private List<Long> idsMecanicos(OrdenTrabajoInput input) {
+        if (input.ids_mecanicos() != null) {
+            return input.ids_mecanicos();
+        }
+        if (input.id_mecanico() != null) {
+            return List.of(input.id_mecanico());
+        }
+        return null;
+    }
+
+    private void validarMecanicosConServicios(OrdenTrabajo orden, Set<Long> nuevosIds) {
+        if (orden.getDetalles() == null) {
+            return;
+        }
+        for (var detalle : orden.getDetalles()) {
+            if (detalle.getMecanico() == null || detalle.getMecanico().getId_funcionario() == null) {
+                continue;
+            }
+            Long id = detalle.getMecanico().getId_funcionario();
+            if (!nuevosIds.contains(id)) {
+                throw new IllegalArgumentException(
+                        "No se puede quitar un mecánico que ya tiene servicios asignados en el presupuesto");
+            }
         }
     }
 

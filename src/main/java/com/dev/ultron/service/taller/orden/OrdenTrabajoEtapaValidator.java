@@ -47,8 +47,8 @@ public class OrdenTrabajoEtapaValidator {
         if (orden.getVehiculo() == null) {
             throw new IllegalArgumentException("Debe asignar un vehículo antes de pasar a Diagnóstico");
         }
-        if (orden.getMecanico() == null) {
-            throw new IllegalArgumentException("Debe asignar un mecánico antes de pasar a Diagnóstico");
+        if (orden.mecanicosAsignados().isEmpty()) {
+            throw new IllegalArgumentException("Debe asignar al menos un mecánico antes de pasar a Diagnóstico");
         }
         String descripcion = orden.getRecepcion() != null
                 ? orden.getRecepcion().getDescripcionFalla()

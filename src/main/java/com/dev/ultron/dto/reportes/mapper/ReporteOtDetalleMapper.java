@@ -80,7 +80,6 @@ public final class ReporteOtDetalleMapper {
 
     private static String construirEncabezado(OrdenTrabajo orden) {
         Persona cliente = orden.getCliente() != null ? orden.getCliente().getPersona() : null;
-        Persona mecanico = orden.getMecanico() != null ? orden.getMecanico().getPersona() : null;
         Vehiculo vehiculo = orden.getVehiculo();
         OrdenRecepcion recepcion = orden.getRecepcion();
         OrdenDiagnostico diagnostico = orden.getDiagnostico();
@@ -92,7 +91,7 @@ public final class ReporteOtDetalleMapper {
         linea(sb, "Vehículo", vehiculoTexto(vehiculo));
         linea(sb, "Chapa", vehiculo != null ? nvl(vehiculo.getChapa()) : "");
         linea(sb, "Sector", orden.getSector() != null ? nvl(orden.getSector().getNombre()) : "");
-        linea(sb, "Mecánico", nombreCompleto(mecanico));
+        linea(sb, "Mecánicos", nombresMecanicos(orden));
         linea(sb, "Responsable", responsable != null ? nvl(responsable.getUsername()) : "");
         linea(sb, "Falla", recepcion != null ? nvl(recepcion.getDescripcionFalla()) : "");
         if (diagnostico != null) {
@@ -156,6 +155,25 @@ public final class ReporteOtDetalleMapper {
         return String.join(" | ", lineas);
     }
 
+    private static String nombresMecanicos(OrdenTrabajo orden) {
+        List<String> nombres = new ArrayList<>();
+        if (orden.getMecanicos() != null) {
+            for (var funcionario : orden.getMecanicos()) {
+                String nombre = nombreCompleto(funcionario != null ? funcionario.getPersona() : null);
+                if (!nombre.isBlank() && !nombres.contains(nombre)) {
+                    nombres.add(nombre);
+                }
+            }
+        }
+        if (nombres.isEmpty() && orden.getMecanico() != null) {
+            String nombre = nombreCompleto(orden.getMecanico().getPersona());
+            if (!nombre.isBlank()) {
+                nombres.add(nombre);
+            }
+        }
+        return String.join(", ", nombres);
+    }
+
     private static String nombreLinea(OrdenTrabajoDetalle detalle) {
         Producto producto = detalle.getProducto();
         if (producto != null && producto.getNombre() != null && !producto.getNombre().isBlank()) {
@@ -163,7 +181,10 @@ public final class ReporteOtDetalleMapper {
         }
         Servicio servicio = detalle.getServicio();
         if (servicio != null && servicio.getNombre() != null && !servicio.getNombre().isBlank()) {
-            return servicio.getNombre();
+            String mecanico = detalle.getMecanico() != null
+                    ? nombreCompleto(detalle.getMecanico().getPersona())
+                    : "";
+            return mecanico.isBlank() ? servicio.getNombre() : servicio.getNombre() + " — " + mecanico;
         }
         return nvl(detalle.getDescripcion());
     }

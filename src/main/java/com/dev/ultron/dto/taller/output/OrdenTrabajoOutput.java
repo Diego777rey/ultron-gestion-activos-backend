@@ -25,6 +25,7 @@ public class OrdenTrabajoOutput implements Serializable {
     private ClienteOutput cliente;
     private VehiculoOutput vehiculo;
     private FuncionarioOutput mecanico;
+    private List<FuncionarioOutput> mecanicos;
     private SectorOutput sector;
     private UsuarioOutput responsable;
     private String fecha_creacion;

@@ -48,6 +48,7 @@ type OrdenTrabajoOutput {
     cliente: ClienteOutput
     vehiculo: VehiculoOutput
     mecanico: FuncionarioOutput
+    mecanicos: [FuncionarioOutput]
     sector: SectorOutput
     responsable: UsuarioOutput
     fecha_creacion: String
@@ -67,6 +68,7 @@ type OrdenTrabajoDetalleOutput {
     nombre_producto: String
     id_servicio: ID
     nombre_servicio: String
+    mecanico: FuncionarioOutput
     descripcion: String
     cantidad: BigDecimal
     precio_unitario: BigDecimal
@@ -121,6 +123,7 @@ input OrdenTrabajoInput {
     id_cliente: ID
     id_vehiculo: ID
     id_mecanico: ID
+    ids_mecanicos: [ID!]
     id_caja: ID
     recepcion: OrdenRecepcionInput
     estado_vehiculo: OrdenEstadoVehiculoInput
@@ -131,6 +134,7 @@ input OrdenTrabajoDetalleInput {
     tipo: String!
     id_producto: ID
     id_servicio: ID
+    id_mecanico: ID
     descripcion: String
     cantidad: BigDecimal
     precio_unitario: BigDecimal

@@ -2,6 +2,7 @@ package com.dev.ultron.service.taller.orden;
 
 import com.dev.ultron.domain.inventario.Producto;
 import com.dev.ultron.domain.inventario.Servicio;
+import com.dev.ultron.domain.personas.Funcionario;
 import com.dev.ultron.domain.taller.OrdenTrabajo;
 import com.dev.ultron.domain.taller.OrdenTrabajoDetalle;
 import com.dev.ultron.dto.taller.input.OrdenTrabajoDetalleInput;
@@ -10,6 +11,7 @@ import com.dev.ultron.dto.taller.output.OrdenTrabajoOutput;
 import com.dev.ultron.generic.EntityNotFoundException;
 import com.dev.ultron.repository.inventario.ProductoRepository;
 import com.dev.ultron.repository.inventario.ServicioRepository;
+import com.dev.ultron.repository.personas.FuncionarioRepository;
 import com.dev.ultron.repository.taller.OrdenTrabajoRepository;
 
 import org.springframework.stereotype.Service;
@@ -28,18 +30,21 @@ public class OrdenTrabajoDetalleService {
     private final OrdenDiagnosticoWriter diagnosticoWriter;
     private final ProductoRepository productoRepo;
     private final ServicioRepository servicioRepo;
+    private final FuncionarioRepository funcionarioRepo;
 
     public OrdenTrabajoDetalleService(
             OrdenTrabajoRepository ordenTrabajoRepository,
             OrdenTrabajoMapper ordenTrabajoMapper,
             OrdenDiagnosticoWriter diagnosticoWriter,
             ProductoRepository productoRepo,
-            ServicioRepository servicioRepo) {
+            ServicioRepository servicioRepo,
+            FuncionarioRepository funcionarioRepo) {
         this.ordenTrabajoRepository = ordenTrabajoRepository;
         this.ordenTrabajoMapper = ordenTrabajoMapper;
         this.diagnosticoWriter = diagnosticoWriter;
         this.productoRepo = productoRepo;
         this.servicioRepo = servicioRepo;
+        this.funcionarioRepo = funcionarioRepo;
     }
 
     @Transactional
@@ -60,7 +65,7 @@ public class OrdenTrabajoDetalleService {
         if ("PRODUCTO".equalsIgnoreCase(input.tipo())) {
             aplicarProducto(detalle, input);
         } else if ("SERVICIO".equalsIgnoreCase(input.tipo())) {
-            aplicarServicio(detalle, input);
+            aplicarServicio(detalle, input, orden);
         } else {
             throw new IllegalArgumentException(
                     "Tipo de detalle inválido: " + input.tipo() + ". Debe ser PRODUCTO o SERVICIO.");
@@ -138,19 +143,32 @@ public class OrdenTrabajoDetalleService {
         }
     }
 
-    private void aplicarServicio(OrdenTrabajoDetalle detalle, OrdenTrabajoDetalleInput input) {
+    private void aplicarServicio(OrdenTrabajoDetalle detalle, OrdenTrabajoDetalleInput input, OrdenTrabajo orden) {
         if (input.id_servicio() == null) {
             throw new IllegalArgumentException("El ID del servicio es obligatorio para tipo SERVICIO");
         }
         Servicio servicio = servicioRepo.findById(input.id_servicio())
                 .orElseThrow(() -> new EntityNotFoundException("Servicio no encontrado: " + input.id_servicio()));
         detalle.setServicio(servicio);
+        detalle.setMecanico(resolverMecanicoDeServicio(orden, input.id_mecanico()));
         if (detalle.getDescripcion() == null) {
             detalle.setDescripcion(servicio.getNombre());
         }
         if (input.precio_unitario() == null) {
             detalle.setPrecioUnitario(servicio.getPrecio());
         }
+    }
+
+    private Funcionario resolverMecanicoDeServicio(OrdenTrabajo orden, Long idMecanico) {
+        if (idMecanico == null) {
+            throw new IllegalArgumentException("Debes indicar el mecánico que realizará el servicio");
+        }
+        if (!orden.tieneMecanicoAsignado(idMecanico)) {
+            throw new IllegalArgumentException(
+                    "El mecánico debe estar asignado a la orden en recepción");
+        }
+        return funcionarioRepo.findById(idMecanico)
+                .orElseThrow(() -> new EntityNotFoundException("Mecánico no encontrado: " + idMecanico));
     }
 
     private void validarAltaEnProceso(OrdenTrabajo orden, OrdenTrabajoDetalleInput input) {

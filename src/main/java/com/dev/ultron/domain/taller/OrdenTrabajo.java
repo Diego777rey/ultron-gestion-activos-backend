@@ -51,6 +51,20 @@ public class OrdenTrabajo implements Serializable {
     @JoinColumn(name = "id_mecanico")
     private Funcionario mecanico;
 
+    @ManyToMany
+    @JoinTable(
+            name = "orden_trabajo_mecanico",
+            schema = "taller",
+            joinColumns = @JoinColumn(name = "id_orden_trabajo"),
+            inverseJoinColumns = @JoinColumn(name = "id_mecanico")
+    )
+    @OrderColumn(name = "orden_asignacion")
+    @org.hibernate.annotations.BatchSize(size = 16)
+    @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<Funcionario> mecanicos = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_sector")
     private Sector sector;
@@ -131,5 +145,23 @@ public class OrdenTrabajo implements Serializable {
         if (etapa == null) {
             etapa = "RECEPCION";
         }
+    }
+
+    public List<Funcionario> mecanicosAsignados() {
+        if (mecanicos != null && !mecanicos.isEmpty()) {
+            return mecanicos;
+        }
+        if (mecanico != null) {
+            return List.of(mecanico);
+        }
+        return List.of();
+    }
+
+    public boolean tieneMecanicoAsignado(Long idMecanico) {
+        if (idMecanico == null) {
+            return false;
+        }
+        return mecanicosAsignados().stream()
+                .anyMatch(f -> f != null && idMecanico.equals(f.getId_funcionario()));
     }
 }

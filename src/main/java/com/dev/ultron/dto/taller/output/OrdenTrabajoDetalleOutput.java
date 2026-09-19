@@ -1,5 +1,6 @@
 package com.dev.ultron.dto.taller.output;
 
+import com.dev.ultron.dto.personas.output.FuncionarioOutput;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ public class OrdenTrabajoDetalleOutput implements Serializable {
     private String nombre_producto;
     private Long id_servicio;
     private String nombre_servicio;
+    private FuncionarioOutput mecanico;
     private String descripcion;
     private BigDecimal cantidad;
     private BigDecimal precio_unitario;
