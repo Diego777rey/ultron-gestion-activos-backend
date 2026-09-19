@@ -1,5 +1,6 @@
 package com.dev.ultron.config;
 
+import com.dev.ultron.dto.reportes.ReporteHttpHeaders;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -62,7 +63,7 @@ public class SecurityConfig {
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
-        configuration.setExposedHeaders(List.of("Content-Disposition"));
+        configuration.setExposedHeaders(List.of("Content-Disposition", ReporteHttpHeaders.TITULO));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

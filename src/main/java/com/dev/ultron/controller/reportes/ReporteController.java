@@ -1,5 +1,6 @@
 package com.dev.ultron.controller.reportes;
 
+import com.dev.ultron.dto.reportes.ReporteHttpHeaders;
 import com.dev.ultron.service.reportes.ReporteGenericoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 @RestController
@@ -29,13 +31,19 @@ public class ReporteController {
     ) {
         byte[] pdf = reporteGenericoService.generar(tipo, filtro, id);
         String filename = reporteGenericoService.nombreArchivo(tipo, id);
-        ContentDisposition disposition = ContentDisposition.attachment()
+        String titulo = encodeHeader(reporteGenericoService.titulo(tipo));
+        ContentDisposition disposition = ContentDisposition.inline()
                 .filename(filename, StandardCharsets.UTF_8)
                 .build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .header(ReporteHttpHeaders.TITULO, titulo)
                 .contentType(MediaType.APPLICATION_PDF)
                 .contentLength(pdf.length)
                 .body(pdf);
+    }
+
+    private static String encodeHeader(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
     }
 }

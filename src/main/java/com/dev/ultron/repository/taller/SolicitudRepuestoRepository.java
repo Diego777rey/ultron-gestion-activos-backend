@@ -31,21 +31,19 @@ public interface SolicitudRepuestoRepository extends JpaRepository<SolicitudRepu
     Page<SolicitudRepuesto> search(@Param("filter") String filter, Pageable pageable);
 
     @Query("""
-            SELECT DISTINCT s FROM SolicitudRepuesto s
+            SELECT s FROM SolicitudRepuesto s
             LEFT JOIN FETCH s.ordenTrabajo
             LEFT JOIN FETCH s.sectorOrigen
             LEFT JOIN FETCH s.sectorDestino
-            LEFT JOIN FETCH s.detalles
             ORDER BY s.fecha DESC
             """)
     List<SolicitudRepuesto> findAllParaReporte();
 
     @Query("""
-            SELECT DISTINCT s FROM SolicitudRepuesto s
+            SELECT s FROM SolicitudRepuesto s
             LEFT JOIN FETCH s.ordenTrabajo ot
             LEFT JOIN FETCH s.sectorOrigen so
             LEFT JOIN FETCH s.sectorDestino sd
-            LEFT JOIN FETCH s.detalles
             WHERE LOWER(ot.numeroOrden) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(s.estado) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(so.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
@@ -59,8 +57,16 @@ public interface SolicitudRepuestoRepository extends JpaRepository<SolicitudRepu
             LEFT JOIN FETCH s.ordenTrabajo
             LEFT JOIN FETCH s.sectorOrigen
             LEFT JOIN FETCH s.sectorDestino
-            LEFT JOIN FETCH s.detalles
             WHERE s.id_solicitud_repuesto = :id
             """)
     java.util.Optional<SolicitudRepuesto> findParaReporte(@Param("id") Long id);
+
+    @Query("""
+            SELECT s.id_solicitud_repuesto, COUNT(d)
+            FROM SolicitudRepuesto s
+            LEFT JOIN s.detalles d
+            WHERE s.id_solicitud_repuesto IN :ids
+            GROUP BY s.id_solicitud_repuesto
+            """)
+    List<Object[]> contarDetallesParaReporte(@Param("ids") java.util.Collection<Long> ids);
 }

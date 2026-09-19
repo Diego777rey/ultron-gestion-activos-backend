@@ -80,4 +80,38 @@ class JasperReportServiceTest {
         assertThat(pdf).isNotEmpty();
         assertThat(pdf).startsWith("%PDF".getBytes());
     }
+
+    @Test
+    void paginaCuandoHayMasFilasQueLasQueEntranEnUnaHoja() {
+        JasperReportService service = new JasperReportService();
+        List<ReporteFila> filas = java.util.stream.IntStream.rangeClosed(1, 80)
+                .mapToObj(i -> ReporteFila.builder()
+                        .numero(i)
+                        .codigo("SRV-%03d".formatted(i))
+                        .nombre("SERVICIO " + i)
+                        .descripcion("Detalle " + i)
+                        .categoria("MANTENIMIENTO")
+                        .subcategoria("GENERAL")
+                        .precio("100.000 Gs")
+                        .extra("")
+                        .estado("ACTIVO")
+                        .build())
+                .toList();
+
+        var print = service.rellenar(
+                JasperReportService.PLANTILLA_INVENTARIO,
+                Map.of(
+                        "TITULO", "Catálogo de servicios",
+                        "SUBTITULO", "Listado genérico de inventario",
+                        "SISTEMA", "Ultron System",
+                        "FECHA_GENERACION", "19/09/2026 19:00:00",
+                        "COLUMNA_EXTRA", "DETALLE",
+                        "CANTIDAD", filas.size(),
+                        "FILTRO", ""
+                ),
+                filas
+        );
+
+        assertThat(print.getPages()).hasSizeGreaterThan(1);
+    }
 }

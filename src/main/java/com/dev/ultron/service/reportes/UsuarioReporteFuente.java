@@ -49,7 +49,7 @@ public class UsuarioReporteFuente implements ReporteFuente {
     public List<ReporteFila> listar(String filtro) {
         List<Usuario> usuarios = (filtro != null && !filtro.isBlank())
                 ? usuarioRepository.buscarParaReporte(filtro.trim())
-                : usuarioRepository.findAllWithRolesAndFuncionario();
+                : usuarioRepository.findAllParaReporte();
         return mapear(usuarios);
     }
 

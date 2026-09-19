@@ -16,6 +16,7 @@
               topMargin="18"
               bottomMargin="18"
               whenNoDataType="AllSectionsNoDetail"
+              isIgnorePagination="false"
               uuid="a1c4e8b2-5d70-4f19-9e33-2b6d0c8a41f0">
 
     <style name="Default" isDefault="true" fontName="DejaVu Sans" fontSize="8" hTextAlign="Left" vTextAlign="Middle"/>
