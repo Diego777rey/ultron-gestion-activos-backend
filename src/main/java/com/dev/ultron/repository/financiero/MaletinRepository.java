@@ -15,10 +15,8 @@ public interface MaletinRepository extends JpaRepository<Maletin, Long> {
 
     @Query("""
             SELECT m FROM Maletin m
-            LEFT JOIN m.sector s
             WHERE (:filter IS NULL OR :filter = ''
-                OR LOWER(m.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(s.nombre) LIKE LOWER(CONCAT('%', :filter, '%')))
+                OR LOWER(m.nombre) LIKE LOWER(CONCAT('%', :filter, '%')))
             """)
     Page<Maletin> buscar(@Param("filter") String filter, Pageable pageable);
 

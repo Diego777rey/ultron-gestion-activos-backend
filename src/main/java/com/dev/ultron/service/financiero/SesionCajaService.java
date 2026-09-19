@@ -86,8 +86,13 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
         if (repository.existsPorMaletinYEstado(maletin.getId_maletin(), "ABIERTA")) {
             throw new IllegalArgumentException("El maletín ya está asociado a una sesión abierta");
         }
-        if (caja.getSector() != null && maletin.getSector() != null
-                && !caja.getSector().getId_sector().equals(maletin.getSector().getId_sector())) {
+        if (caja.getSector() == null || caja.getSector().getId_sector() == null) {
+            throw new IllegalArgumentException("La caja no tiene un sector asignado");
+        }
+        if (maletin.getSector() == null || maletin.getSector().getId_sector() == null) {
+            throw new IllegalArgumentException("El maletín no tiene un sector asignado");
+        }
+        if (!caja.getSector().getId_sector().equals(maletin.getSector().getId_sector())) {
             throw new IllegalArgumentException("El maletín debe pertenecer al mismo sector que la caja");
         }
 
