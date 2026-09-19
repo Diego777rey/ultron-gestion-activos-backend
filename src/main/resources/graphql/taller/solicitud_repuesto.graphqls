@@ -37,6 +37,7 @@ input SolicitudRepuestoDetalleInput {
 
 input SolicitudRepuestoInput {
     id_sector_origen: ID!
+    id_sector_destino: ID
     observacion: String
     detalles: [SolicitudRepuestoDetalleInput!]!
 }
