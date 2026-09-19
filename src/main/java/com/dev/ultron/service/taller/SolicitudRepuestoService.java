@@ -102,28 +102,34 @@ public class SolicitudRepuestoService extends GenericCrudService<SolicitudRepues
                     "Solo se pueden crear solicitudes de repuesto en etapa EN_PROCESO. Etapa actual: "
                             + orden.getEtapa());
         }
-        if (orden.getSector() == null || orden.getSector().getId_sector() == null) {
-            throw new IllegalArgumentException(
-                    "La orden debe tener un sector asignado (destino de reparaciones)");
-        }
         if (input == null || input.id_sector_origen() == null) {
             throw new IllegalArgumentException("Debe indicar el sector origen");
         }
         if (input.detalles() == null || input.detalles().isEmpty()) {
             throw new IllegalArgumentException("Debe indicar al menos un producto");
         }
-        if (input.id_sector_origen().equals(orden.getSector().getId_sector())) {
+
+        final Long idDestino = input.id_sector_destino() != null
+                ? input.id_sector_destino()
+                : (orden.getSector() != null ? orden.getSector().getId_sector() : null);
+        if (idDestino == null) {
+            throw new IllegalArgumentException("Debe indicar el sector destino");
+        }
+        if (input.id_sector_origen().equals(idDestino)) {
             throw new IllegalArgumentException("El sector origen y destino deben ser distintos");
         }
 
         Sector origen = sectorRepository.findById(input.id_sector_origen())
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Sector origen no encontrado: " + input.id_sector_origen()));
+        Sector destino = sectorRepository.findById(idDestino)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Sector destino no encontrado: " + idDestino));
 
         SolicitudRepuesto solicitud = SolicitudRepuesto.builder()
                 .ordenTrabajo(orden)
                 .sectorOrigen(origen)
-                .sectorDestino(orden.getSector())
+                .sectorDestino(destino)
                 .estado("PENDIENTE")
                 .observacion(input.observacion() != null ? input.observacion().toUpperCase() : null)
                 .build();
