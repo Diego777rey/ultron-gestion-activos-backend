@@ -2,6 +2,7 @@ package com.dev.ultron.domain.taller;
 
 import com.dev.ultron.domain.inventario.Producto;
 import com.dev.ultron.domain.inventario.Servicio;
+import com.dev.ultron.domain.personas.Funcionario;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -38,6 +39,10 @@ public class OrdenTrabajoDetalle implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_servicio")
     private Servicio servicio;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_mecanico")
+    private Funcionario mecanico;
 
     private String descripcion;
 

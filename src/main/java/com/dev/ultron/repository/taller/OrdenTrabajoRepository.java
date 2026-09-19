@@ -32,9 +32,10 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
     Page<OrdenTrabajo> findByVehiculoId(@Param("idVehiculo") Long idVehiculo, Pageable pageable);
 
     @Query("""
-            SELECT ot FROM OrdenTrabajo ot
+            SELECT DISTINCT ot FROM OrdenTrabajo ot
+            LEFT JOIN ot.mecanicos mec
             LEFT JOIN ot.diagnostico d
-            WHERE ot.mecanico.id_funcionario = :idMecanico
+            WHERE (ot.mecanico.id_funcionario = :idMecanico OR mec.id_funcionario = :idMecanico)
               AND COALESCE(d.fechaInicioEstimada, ot.fechaCreacion) >= :desde
               AND COALESCE(d.fechaInicioEstimada, ot.fechaCreacion) <= :hasta
             ORDER BY COALESCE(d.fechaInicioEstimada, ot.fechaCreacion)
@@ -103,6 +104,8 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
             LEFT JOIN FETCH ot.detalles d
             LEFT JOIN FETCH d.producto
             LEFT JOIN FETCH d.servicio
+            LEFT JOIN FETCH d.mecanico dm
+            LEFT JOIN FETCH dm.persona
             ORDER BY ot.fechaCreacion DESC
             """)
     java.util.List<OrdenTrabajo> findAllParaReporteDetalle();
@@ -122,6 +125,8 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
             LEFT JOIN FETCH ot.detalles d
             LEFT JOIN FETCH d.producto
             LEFT JOIN FETCH d.servicio
+            LEFT JOIN FETCH d.mecanico dm
+            LEFT JOIN FETCH dm.persona
             WHERE LOWER(ot.numeroOrden) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(ot.etapa) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
@@ -146,6 +151,8 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
             LEFT JOIN FETCH ot.detalles d
             LEFT JOIN FETCH d.producto
             LEFT JOIN FETCH d.servicio
+            LEFT JOIN FETCH d.mecanico dm
+            LEFT JOIN FETCH dm.persona
             WHERE ot.id_orden_trabajo = :id
             """)
     java.util.Optional<OrdenTrabajo> findParaReporteDetalle(@Param("id") Long id);

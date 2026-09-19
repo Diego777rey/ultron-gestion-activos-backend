@@ -10,6 +10,7 @@ public record OrdenTrabajoDetalleInput(
         String tipo,
         Long id_producto,
         Long id_servicio,
+        Long id_mecanico,
         String descripcion,
         BigDecimal cantidad,
         BigDecimal precio_unitario
