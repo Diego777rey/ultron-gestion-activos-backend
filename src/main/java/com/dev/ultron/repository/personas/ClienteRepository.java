@@ -26,23 +26,29 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
             """)
     org.springframework.data.domain.Page<Cliente> search(@org.springframework.data.repository.query.Param("filter") String filter, org.springframework.data.domain.Pageable pageable);
 
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"persona"})
-    @org.springframework.data.jpa.repository.Query("SELECT c FROM Cliente c ORDER BY c.persona.nombre, c.persona.apellido")
-    java.util.List<Cliente> findAllParaReporte();
-
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"persona"})
     @org.springframework.data.jpa.repository.Query("""
             SELECT c FROM Cliente c
-            WHERE LOWER(c.persona.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(c.persona.apellido) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(CONCAT(c.persona.nombre, ' ', c.persona.apellido)) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(c.persona.documento) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(c.ruc) LIKE LOWER(CONCAT('%', :filter, '%'))
+            LEFT JOIN FETCH c.persona
             ORDER BY c.persona.nombre, c.persona.apellido
+            """)
+    java.util.List<Cliente> findAllParaReporte();
+
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT c FROM Cliente c
+            LEFT JOIN FETCH c.persona p
+            WHERE LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(p.apellido) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(CONCAT(p.nombre, ' ', p.apellido)) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(p.documento) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(c.ruc) LIKE LOWER(CONCAT('%', :filter, '%'))
+            ORDER BY p.nombre, p.apellido
             """)
     java.util.List<Cliente> buscarParaReporte(@org.springframework.data.repository.query.Param("filter") String filter);
 
-    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"persona"})
-    @org.springframework.data.jpa.repository.Query("SELECT c FROM Cliente c WHERE c.id_cliente = :id")
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT c FROM Cliente c
+            LEFT JOIN FETCH c.persona
+            WHERE c.id_cliente = :id
+            """)
     java.util.Optional<Cliente> findParaReporte(@org.springframework.data.repository.query.Param("id") Long id);
 }

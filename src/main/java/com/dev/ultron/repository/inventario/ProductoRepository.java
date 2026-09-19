@@ -3,7 +3,6 @@ package com.dev.ultron.repository.inventario;
 import com.dev.ultron.domain.inventario.Producto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -27,13 +26,18 @@ public interface ProductoRepository extends JpaRepository<Producto, Long>, JpaSp
             """)
     Page<Producto> buscar(@Param("filter") String filter, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"categoriaProducto", "categoriaProducto.categoriaPadre"})
-    @Query("SELECT p FROM Producto p ORDER BY p.nombre ASC")
-    List<Producto> findAllParaReporte();
-
-    @EntityGraph(attributePaths = {"categoriaProducto", "categoriaProducto.categoriaPadre"})
     @Query("""
             SELECT p FROM Producto p
+            LEFT JOIN FETCH p.categoriaProducto cp
+            LEFT JOIN FETCH cp.categoriaPadre
+            ORDER BY p.nombre ASC
+            """)
+    List<Producto> findAllParaReporte();
+
+    @Query("""
+            SELECT p FROM Producto p
+            LEFT JOIN FETCH p.categoriaProducto cp
+            LEFT JOIN FETCH cp.categoriaPadre
             WHERE LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(p.codigo) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR (p.codigoBarras IS NOT NULL
@@ -42,7 +46,11 @@ public interface ProductoRepository extends JpaRepository<Producto, Long>, JpaSp
             """)
     List<Producto> buscarParaReporte(@Param("filter") String filter);
 
-    @EntityGraph(attributePaths = {"categoriaProducto", "categoriaProducto.categoriaPadre"})
-    @Query("SELECT p FROM Producto p WHERE p.id_producto = :id")
+    @Query("""
+            SELECT p FROM Producto p
+            LEFT JOIN FETCH p.categoriaProducto cp
+            LEFT JOIN FETCH cp.categoriaPadre
+            WHERE p.id_producto = :id
+            """)
     Optional<Producto> findParaReporte(@Param("id") Long id);
 }

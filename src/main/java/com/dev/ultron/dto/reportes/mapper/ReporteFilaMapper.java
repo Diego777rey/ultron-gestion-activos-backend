@@ -30,6 +30,13 @@ public final class ReporteFilaMapper {
 
     private static final Locale LOCALE_PY = Locale.of("es", "PY");
 
+    private static final ThreadLocal<NumberFormat> FORMATO_CANTIDAD = ThreadLocal.withInitial(() -> {
+        NumberFormat nf = NumberFormat.getInstance(LOCALE_PY);
+        nf.setMaximumFractionDigits(0);
+        nf.setMinimumFractionDigits(0);
+        return nf;
+    });
+
     private ReporteFilaMapper() {
     }
 
@@ -134,10 +141,9 @@ public final class ReporteFilaMapper {
                 .build();
     }
 
-    public static ReporteFila deTransferencia(Transferencia transferencia, int numero) {
+    public static ReporteFila deTransferencia(Transferencia transferencia, int numero, int items) {
         String origen = transferencia.getSectorOrigen() != null ? nvl(transferencia.getSectorOrigen().getNombre()) : "";
         String destino = transferencia.getSectorDestino() != null ? nvl(transferencia.getSectorDestino().getNombre()) : "";
-        int items = transferencia.getDetalles() == null ? 0 : transferencia.getDetalles().size();
         return ReporteFila.builder()
                 .numero(numero)
                 .codigo(nvl(transferencia.getNumero()))
@@ -151,11 +157,10 @@ public final class ReporteFilaMapper {
                 .build();
     }
 
-    public static ReporteFila deSolicitudRepuesto(SolicitudRepuesto solicitud, int numero) {
+    public static ReporteFila deSolicitudRepuesto(SolicitudRepuesto solicitud, int numero, int items) {
         String origen = solicitud.getSectorOrigen() != null ? nvl(solicitud.getSectorOrigen().getNombre()) : "";
         String destino = solicitud.getSectorDestino() != null ? nvl(solicitud.getSectorDestino().getNombre()) : "";
         String ot = solicitud.getOrdenTrabajo() != null ? nvl(solicitud.getOrdenTrabajo().getNumeroOrden()) : "";
-        int items = solicitud.getDetalles() == null ? 0 : solicitud.getDetalles().size();
         String descripcion = firstNonBlank(solicitud.getObservacion(), solicitud.getMotivoRechazo());
         return ReporteFila.builder()
                 .numero(numero)
@@ -265,10 +270,7 @@ public final class ReporteFilaMapper {
         if (value == null) {
             return "0";
         }
-        NumberFormat nf = NumberFormat.getInstance(LOCALE_PY);
-        nf.setMaximumFractionDigits(0);
-        nf.setMinimumFractionDigits(0);
-        return nf.format(value);
+        return FORMATO_CANTIDAD.get().format(value);
     }
 
     private static String estado(boolean activo) {

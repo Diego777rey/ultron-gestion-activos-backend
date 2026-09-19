@@ -43,6 +43,10 @@ public class ReporteGenericoService {
         return fuente.nombreArchivo();
     }
 
+    public String titulo(String tipoRaw) {
+        return resolver(tipoRaw).titulo();
+    }
+
     private Map<String, Object> construirParametros(ReporteFuente fuente, String filtro, int cantidad) {
         Map<String, Object> parametros = new HashMap<>();
         parametros.put("TITULO", fuente.titulo());

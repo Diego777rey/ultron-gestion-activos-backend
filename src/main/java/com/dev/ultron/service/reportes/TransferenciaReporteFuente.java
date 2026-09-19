@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
@@ -62,9 +63,23 @@ public class TransferenciaReporteFuente implements ReporteFuente {
     }
 
     private List<ReporteFila> mapear(List<Transferencia> transferencias) {
+        Map<Long, Integer> itemsPorId = contarItems(transferencias);
         AtomicInteger numero = new AtomicInteger(1);
         return transferencias.stream()
-                .map(transferencia -> ReporteFilaMapper.deTransferencia(transferencia, numero.getAndIncrement()))
+                .map(transferencia -> ReporteFilaMapper.deTransferencia(
+                        transferencia,
+                        numero.getAndIncrement(),
+                        itemsPorId.getOrDefault(transferencia.getId_transferencia(), 0)))
                 .toList();
+    }
+
+    private Map<Long, Integer> contarItems(List<Transferencia> transferencias) {
+        List<Long> ids = ReporteConteos.ids(transferencias.stream()
+                .map(Transferencia::getId_transferencia)
+                .toList());
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        return ReporteConteos.deFilas(transferenciaRepository.contarDetallesParaReporte(ids));
     }
 }
