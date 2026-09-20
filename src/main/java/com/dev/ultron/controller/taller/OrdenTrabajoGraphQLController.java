@@ -63,6 +63,11 @@ public class OrdenTrabajoGraphQLController {
         return ordenTrabajoService.listarCajasConSesionAbierta();
     }
 
+    @QueryMapping
+    public List<OrdenTrabajoOutput> listarOrdenesTrabajoPorEtapa(@Argument String etapa) {
+        return ordenTrabajoService.listarOrdenesPorEtapa(etapa);
+    }
+
     // ==================== MUTATIONS ====================
 
     @MutationMapping
