@@ -54,7 +54,15 @@ input TransferenciaInput {
 }
 
 extend type Query {
-    listarTransferenciasPaginado(page: Int!, size: Int!, filter: String): TransferenciaPageResponse!
+    listarTransferenciasPaginado(
+        page: Int!
+        size: Int!
+        filter: String
+        idSectorOrigen: ID
+        idSectorDestino: ID
+        fechaDesde: String
+        fechaHasta: String
+    ): TransferenciaPageResponse!
     buscarTransferenciaPorId(id: ID!): TransferenciaOutput
     stockPorProductoSector(idProducto: ID!, idSector: ID!): BigDecimal!
     listarStockPorSector(idSector: ID!, page: Int!, size: Int!, filter: String): StockProductoSectorPageResponse!
