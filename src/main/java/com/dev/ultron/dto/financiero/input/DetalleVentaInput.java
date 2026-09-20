@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 public class DetalleVentaInput implements Serializable {
     private Long idProducto;
     private Long idOrdenTrabajo;
+    private Long idServicio;
     private String descripcion;
     private BigDecimal cantidad;
     private BigDecimal precioUnitario;
