@@ -24,8 +24,12 @@ public class VentaGraphQLController {
     }
 
     @QueryMapping
-    public PageResponse<VentaOutput> listarVentasPaginado(@Argument int page, @Argument int size, @Argument String filter) {
-        return service.findAllPaginated(page, size, filter);
+    public PageResponse<VentaOutput> listarVentasPaginado(
+            @Argument int page,
+            @Argument int size,
+            @Argument String filter,
+            @Argument Long idSesionCaja) {
+        return service.findAllPaginated(page, size, filter, idSesionCaja);
     }
 
     @QueryMapping

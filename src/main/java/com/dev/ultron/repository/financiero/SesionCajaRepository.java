@@ -17,7 +17,7 @@ public interface SesionCajaRepository extends JpaRepository<SesionCaja, Long> {
     @Query("SELECT s FROM SesionCaja s WHERE s.estado = :estado ORDER BY s.fechaApertura DESC")
     List<SesionCaja> listarPorEstado(@Param("estado") String estado, Pageable pageable);
 
-    @Query("SELECT s FROM SesionCaja s WHERE s.caja.id_caja = :idCaja AND s.estado = :estado")
+    @Query("SELECT s FROM SesionCaja s LEFT JOIN FETCH s.persona WHERE s.caja.id_caja = :idCaja AND s.estado = :estado")
     Optional<SesionCaja> findPorCajaYEstado(@Param("idCaja") Long idCaja, @Param("estado") String estado);
 
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM SesionCaja s WHERE s.caja.id_caja = :idCaja AND s.estado = :estado")
@@ -26,7 +26,7 @@ public interface SesionCajaRepository extends JpaRepository<SesionCaja, Long> {
     @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM SesionCaja s WHERE s.maletin.id_maletin = :idMaletin AND s.estado = :estado")
     boolean existsPorMaletinYEstado(@Param("idMaletin") Long idMaletin, @Param("estado") String estado);
 
-    @Query("SELECT s FROM SesionCaja s WHERE s.maletin.id_maletin = :idMaletin AND s.estado = 'ABIERTA'")
+    @Query("SELECT s FROM SesionCaja s LEFT JOIN FETCH s.persona WHERE s.maletin.id_maletin = :idMaletin AND s.estado = 'ABIERTA'")
     Optional<SesionCaja> findAbiertaPorMaletin(@Param("idMaletin") Long idMaletin);
 
     @Query("""
@@ -43,4 +43,19 @@ public interface SesionCajaRepository extends JpaRepository<SesionCaja, Long> {
                 OR LOWER(s.maletin.nombre) LIKE LOWER(CONCAT('%', :filter, '%')))
             """)
     Page<SesionCaja> buscar(@Param("filter") String filter, Pageable pageable);
+
+    @Query("""
+            SELECT s FROM SesionCaja s
+            LEFT JOIN s.persona p
+            LEFT JOIN s.maletin m
+            WHERE s.caja.id_caja = :idCaja
+            AND (:filter IS NULL OR :filter = ''
+                OR LOWER(COALESCE(m.nombre, '')) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(CONCAT(COALESCE(p.nombre, ''), ' ', COALESCE(p.apellido, ''))) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(COALESCE(s.estado, '')) LIKE LOWER(CONCAT('%', :filter, '%')))
+            """)
+    Page<SesionCaja> buscarPorCaja(
+            @Param("idCaja") Long idCaja,
+            @Param("filter") String filter,
+            Pageable pageable);
 }

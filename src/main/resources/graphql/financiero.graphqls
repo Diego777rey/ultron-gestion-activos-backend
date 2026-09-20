@@ -145,6 +145,7 @@ input VentaInput {
 
 extend type Query {
     listarCajas: [CajaOutput!]!
+    listarCajasDisponibles: [CajaOutput!]!
     listarCajasPaginado(page: Int!, size: Int!, filter: String): CajaPageResponse!
     buscarCajaPorId(id: ID!): CajaOutput
 
@@ -155,10 +156,10 @@ extend type Query {
 
     sesionCajaAbierta(idCaja: ID): SesionCajaOutput
     buscarSesionCajaPorId(id: ID!): SesionCajaOutput
-    listarSesionesCajaPaginado(page: Int!, size: Int!, filter: String): SesionCajaPageResponse!
+    listarSesionesCajaPaginado(page: Int!, size: Int!, filter: String, idCaja: ID): SesionCajaPageResponse!
 
     listarVentas: [VentaOutput!]!
-    listarVentasPaginado(page: Int!, size: Int!, filter: String): VentaPageResponse!
+    listarVentasPaginado(page: Int!, size: Int!, filter: String, idSesionCaja: ID): VentaPageResponse!
     buscarVentaPorId(id: ID!): VentaOutput
 }
 

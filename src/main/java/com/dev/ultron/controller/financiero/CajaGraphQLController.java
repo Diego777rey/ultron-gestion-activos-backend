@@ -24,6 +24,11 @@ public class CajaGraphQLController {
     }
 
     @QueryMapping
+    public List<CajaOutput> listarCajasDisponibles() {
+        return service.findDisponibles();
+    }
+
+    @QueryMapping
     public PageResponse<CajaOutput> listarCajasPaginado(@Argument int page, @Argument int size, @Argument String filter) {
         return service.findAllPaginated(page, size, filter);
     }
