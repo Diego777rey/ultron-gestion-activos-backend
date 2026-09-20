@@ -31,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -238,16 +239,61 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
 
     @Transactional(readOnly = true)
     public PageResponse<SesionCajaOutput> findAllPaginated(int page, int size, String filter) {
-        return findAllPaginated(page, size, filter, null);
+        return findAllPaginated(page, size, filter, null, null, null, null);
     }
 
     @Transactional(readOnly = true)
     public PageResponse<SesionCajaOutput> findAllPaginated(int page, int size, String filter, Long idCaja) {
+        return findAllPaginated(page, size, filter, idCaja, null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<SesionCajaOutput> findAllPaginated(
+            int page,
+            int size,
+            String filter,
+            Long idCaja,
+            String estado,
+            String fechaDesde,
+            String fechaHasta) {
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaApertura"));
         if (idCaja != null) {
-            return new PageResponse<>(repository.buscarPorCaja(idCaja, filter, pageable).map(mapper::toOutput));
+            return new PageResponse<>(
+                    repository.buscarPorCaja(
+                                    idCaja,
+                                    blankToEmpty(filter),
+                                    blankToEmpty(estado),
+                                    parseDesde(fechaDesde),
+                                    parseHasta(fechaHasta),
+                                    pageable)
+                            .map(mapper::toOutput));
         }
         return new PageResponse<>(repository.buscar(filter, pageable).map(mapper::toOutput));
+    }
+
+    private static final LocalDateTime FECHA_MIN = LocalDateTime.of(1970, 1, 1, 0, 0);
+    private static final LocalDateTime FECHA_MAX = LocalDateTime.of(2999, 12, 31, 23, 59, 59);
+
+    private String blankToEmpty(String value) {
+        return value == null || value.isBlank() ? "" : value.trim();
+    }
+
+    private LocalDateTime parseDesde(String value) {
+        LocalDate date = parseIsoDate(value);
+        return date != null ? date.atStartOfDay() : FECHA_MIN;
+    }
+
+    private LocalDateTime parseHasta(String value) {
+        LocalDate date = parseIsoDate(value);
+        return date != null ? date.atTime(23, 59, 59) : FECHA_MAX;
+    }
+
+    private LocalDate parseIsoDate(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String iso = value.length() >= 10 ? value.substring(0, 10) : value;
+        return LocalDate.parse(iso);
     }
 
     private Persona resolverPersonaLogueada(Long idPersonaInput) {
