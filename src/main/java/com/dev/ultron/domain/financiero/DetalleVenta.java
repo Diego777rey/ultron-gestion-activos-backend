@@ -1,6 +1,7 @@
 package com.dev.ultron.domain.financiero;
 
 import com.dev.ultron.domain.inventario.Producto;
+import com.dev.ultron.domain.taller.OrdenTrabajo;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -34,8 +35,14 @@ public class DetalleVenta implements Serializable {
     private Venta venta;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_producto", nullable = false)
+    @JoinColumn(name = "id_producto")
     private Producto producto;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_orden_trabajo")
+    private OrdenTrabajo ordenTrabajo;
+
+    private String descripcion;
 
     private BigDecimal cantidad;
     private BigDecimal precioUnitario;

@@ -106,6 +106,15 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
         return cajaResolver.listarConSesionAbierta();
     }
 
+    @Transactional(readOnly = true)
+    public List<OrdenTrabajoOutput> listarOrdenesPorEtapa(String etapa) {
+        if (etapa == null || etapa.isBlank()) {
+            throw new IllegalArgumentException("Debe indicar la etapa");
+        }
+        return ordenTrabajoMapper.toOutputList(
+                ordenTrabajoRepository.findByEtapaConResumen(etapa.trim().toUpperCase()));
+    }
+
     // ==================== CRUD ====================
 
     @Transactional

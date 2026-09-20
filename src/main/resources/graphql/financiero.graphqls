@@ -105,6 +105,7 @@ input CerrarCajaInput {
 type DetalleVentaOutput {
     id_detalle_venta: ID
     idProducto: ID
+    idOrdenTrabajo: ID
     productoNombre: String
     cantidad: BigDecimal
     precioUnitario: BigDecimal
@@ -131,7 +132,9 @@ type VentaPageResponse {
 }
 
 input DetalleVentaInput {
-    idProducto: ID!
+    idProducto: ID
+    idOrdenTrabajo: ID
+    descripcion: String
     cantidad: BigDecimal!
     precioUnitario: BigDecimal
 }

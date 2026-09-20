@@ -14,6 +14,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class DetalleVentaInput implements Serializable {
     private Long idProducto;
+    private Long idOrdenTrabajo;
+    private String descripcion;
     private BigDecimal cantidad;
     private BigDecimal precioUnitario;
 }

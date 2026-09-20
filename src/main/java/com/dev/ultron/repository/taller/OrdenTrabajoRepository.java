@@ -49,6 +49,13 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
     Long obtenerSiguienteNumero();
 
     @Query("""
+            SELECT ot FROM OrdenTrabajo ot
+            WHERE UPPER(ot.etapa) = UPPER(:etapa)
+            ORDER BY ot.fechaFinalizacion DESC, ot.fechaCreacion DESC
+            """)
+    List<OrdenTrabajo> findByEtapaConResumen(@Param("etapa") String etapa);
+
+    @Query("""
             SELECT DISTINCT ot FROM OrdenTrabajo ot
             LEFT JOIN FETCH ot.cliente c
             LEFT JOIN FETCH c.persona
