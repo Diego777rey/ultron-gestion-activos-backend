@@ -13,7 +13,8 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
 
     @Query("""
             SELECT v FROM Venta v
-            WHERE (:filter IS NULL OR :filter = '' OR LOWER(v.numero) LIKE LOWER(CONCAT('%', :filter, '%')))
+            WHERE (:filter IS NULL OR :filter = ''
+                OR CONCAT(v.id_venta, '') LIKE CONCAT('%', :filter, '%'))
             """)
     Page<Venta> buscar(@Param("filter") String filter, Pageable pageable);
 
@@ -21,8 +22,7 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
             SELECT v FROM Venta v
             WHERE v.sesionCaja.id_sesion_caja = :idSesionCaja
             AND (:filter IS NULL OR :filter = ''
-                OR LOWER(COALESCE(v.numero, '')) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(COALESCE(v.estado, '')) LIKE LOWER(CONCAT('%', :filter, '%')))
+                OR CONCAT(v.id_venta, '') LIKE CONCAT('%', :filter, '%'))
             """)
     Page<Venta> buscarPorSesion(
             @Param("idSesionCaja") Long idSesionCaja,
