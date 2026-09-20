@@ -29,8 +29,11 @@ public class SesionCajaGraphQLController {
 
     @QueryMapping
     public PageResponse<SesionCajaOutput> listarSesionesCajaPaginado(
-            @Argument int page, @Argument int size, @Argument String filter) {
-        return service.findAllPaginated(page, size, filter);
+            @Argument int page,
+            @Argument int size,
+            @Argument String filter,
+            @Argument Long idCaja) {
+        return service.findAllPaginated(page, size, filter, idCaja);
     }
 
     @MutationMapping

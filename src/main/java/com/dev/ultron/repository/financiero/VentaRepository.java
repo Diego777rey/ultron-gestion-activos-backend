@@ -17,6 +17,18 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
             """)
     Page<Venta> buscar(@Param("filter") String filter, Pageable pageable);
 
+    @Query("""
+            SELECT v FROM Venta v
+            WHERE v.sesionCaja.id_sesion_caja = :idSesionCaja
+            AND (:filter IS NULL OR :filter = ''
+                OR LOWER(COALESCE(v.numero, '')) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(COALESCE(v.estado, '')) LIKE LOWER(CONCAT('%', :filter, '%')))
+            """)
+    Page<Venta> buscarPorSesion(
+            @Param("idSesionCaja") Long idSesionCaja,
+            @Param("filter") String filter,
+            Pageable pageable);
+
     @Query("SELECT COUNT(v) FROM Venta v WHERE v.sesionCaja.id_sesion_caja = :idSesion")
     long countBySesion(@Param("idSesion") Long idSesion);
 }

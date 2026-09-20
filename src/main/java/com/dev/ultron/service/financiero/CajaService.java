@@ -88,6 +88,11 @@ public class CajaService extends GenericCrudService<Caja, Long> {
         return mapper.toOutput(buscarPorIdOrThrow(id));
     }
 
+    @Transactional(readOnly = true)
+    public List<CajaOutput> findDisponibles() {
+        return repository.findDisponibles().stream().map(mapper::toOutput).collect(Collectors.toList());
+    }
+
     private Persona resolveResponsable(Long idResponsable) {
         if (idResponsable == null) {
             return null;

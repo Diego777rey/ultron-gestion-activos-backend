@@ -23,6 +23,7 @@ import com.dev.ultron.repository.inventario.ProductoRepository;
 import com.dev.ultron.repository.personas.ClienteRepository;
 import com.dev.ultron.service.operaciones.StockProductoSectorService;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -208,7 +209,17 @@ public class VentaService extends GenericCrudService<Venta, Long> {
 
     @Transactional(readOnly = true)
     public PageResponse<VentaOutput> findAllPaginated(int page, int size, String filter) {
-        return new PageResponse<>(repository.buscar(filter, PageRequest.of(page, size)).map(mapper::toOutput));
+        return findAllPaginated(page, size, filter, null);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<VentaOutput> findAllPaginated(int page, int size, String filter, Long idSesionCaja) {
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fecha"));
+        if (idSesionCaja != null) {
+            return new PageResponse<>(
+                    repository.buscarPorSesion(idSesionCaja, filter, pageable).map(mapper::toOutput));
+        }
+        return new PageResponse<>(repository.buscar(filter, pageable).map(mapper::toOutput));
     }
 
     @Transactional(readOnly = true)

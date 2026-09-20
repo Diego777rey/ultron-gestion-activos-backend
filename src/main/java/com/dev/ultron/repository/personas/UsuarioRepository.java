@@ -14,6 +14,14 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByUsername(String username);
 
+    @Query("""
+            SELECT u FROM Usuario u
+            LEFT JOIN FETCH u.funcionario f
+            LEFT JOIN FETCH f.persona
+            WHERE u.username = :username
+            """)
+    Optional<Usuario> findByUsernameWithPersona(@Param("username") String username);
+
     boolean existsByUsername(String username);
 
     boolean existsByUsernameAndIdNot(String username, Long id);

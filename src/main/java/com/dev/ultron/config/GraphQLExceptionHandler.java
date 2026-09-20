@@ -38,13 +38,16 @@ public class GraphQLExceptionHandler extends DataFetcherExceptionResolverAdapter
             return buildError(env, ex.getMessage(), ErrorType.BAD_REQUEST, "VALIDATION_ERROR");
         }
 
-        if (ex instanceof DataIntegrityViolationException) {
-            return buildError(
-                    env,
-                    "No se pudo completar la operación porque afectaría la integridad de los datos "
-                            + "(por ejemplo, un registro relacionado o un valor duplicado).",
-                    ErrorType.BAD_REQUEST,
-                    "DATA_INTEGRITY_VIOLATION");
+        if (ex instanceof DataIntegrityViolationException integrityEx) {
+            String detalle = String.valueOf(integrityEx.getMostSpecificCause().getMessage());
+            String message = "No se pudo completar la operación porque afectaría la integridad de los datos "
+                    + "(por ejemplo, un registro relacionado o un valor duplicado).";
+            if (detalle.contains("uq_sesion_caja_abierta")) {
+                message = "La caja ya está abierta por otro usuario";
+            } else if (detalle.contains("uq_sesion_maletin_abierta")) {
+                message = "El maletín ya está en uso. Queda libre cuando se cierre la caja";
+            }
+            return buildError(env, message, ErrorType.BAD_REQUEST, "DATA_INTEGRITY_VIOLATION");
         }
 
         return buildError(
