@@ -26,9 +26,14 @@ public class TransferenciaGraphQLController {
     public PageResponse<TransferenciaOutput> listarTransferenciasPaginado(
             @Argument int page,
             @Argument int size,
-            @Argument String filter
+            @Argument String filter,
+            @Argument Long idSectorOrigen,
+            @Argument Long idSectorDestino,
+            @Argument String fechaDesde,
+            @Argument String fechaHasta
     ) {
-        return transferenciaService.findAllPaginated(page, size, filter);
+        return transferenciaService.findAllPaginated(
+                page, size, filter, idSectorOrigen, idSectorDestino, fechaDesde, fechaHasta);
     }
 
     @QueryMapping

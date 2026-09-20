@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
@@ -56,6 +57,9 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
             MOTIVO_ENVIADO_MAL,
             MOTIVO_OTRO
     );
+
+    private static final LocalDateTime FECHA_MIN = LocalDateTime.of(1970, 1, 1, 0, 0);
+    private static final LocalDateTime FECHA_MAX = LocalDateTime.of(2999, 12, 31, 23, 59, 59);
 
     private final TransferenciaRepository repository;
     private final TransferenciaMapper mapper;
@@ -322,7 +326,46 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
 
     @Transactional(readOnly = true)
     public PageResponse<TransferenciaOutput> findAllPaginated(int page, int size, String filter) {
-        return new PageResponse<>(repository.buscar(filter, PageRequest.of(page, size)).map(mapper::toOutput));
+        return findAllPaginated(page, size, filter, null, null, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<TransferenciaOutput> findAllPaginated(
+            int page,
+            int size,
+            String filter,
+            Long idSectorOrigen,
+            Long idSectorDestino,
+            String fechaDesde,
+            String fechaHasta
+    ) {
+        return new PageResponse<>(
+                repository.buscar(
+                                filter,
+                                idSectorOrigen,
+                                idSectorDestino,
+                                parseDesde(fechaDesde),
+                                parseHasta(fechaHasta),
+                                PageRequest.of(page, size))
+                        .map(mapper::toOutput));
+    }
+
+    private LocalDateTime parseDesde(String value) {
+        LocalDate date = parseIsoDate(value);
+        return date != null ? date.atStartOfDay() : FECHA_MIN;
+    }
+
+    private LocalDateTime parseHasta(String value) {
+        LocalDate date = parseIsoDate(value);
+        return date != null ? date.atTime(23, 59, 59) : FECHA_MAX;
+    }
+
+    private LocalDate parseIsoDate(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String iso = value.length() >= 10 ? value.substring(0, 10) : value;
+        return LocalDate.parse(iso);
     }
 
     @Transactional(readOnly = true)

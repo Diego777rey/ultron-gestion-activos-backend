@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+
 @Repository
 public interface TransferenciaRepository extends JpaRepository<Transferencia, Long> {
 
@@ -16,12 +18,23 @@ public interface TransferenciaRepository extends JpaRepository<Transferencia, Lo
             LEFT JOIN t.sectorOrigen so
             LEFT JOIN t.sectorDestino sd
             WHERE (:filter IS NULL OR :filter = ''
+                OR CONCAT(t.id_transferencia, '') LIKE CONCAT('%', :filter, '%')
                 OR LOWER(t.numero) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(so.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(sd.nombre) LIKE LOWER(CONCAT('%', :filter, '%')))
+            AND (:idSectorOrigen IS NULL OR so.id_sector = :idSectorOrigen)
+            AND (:idSectorDestino IS NULL OR sd.id_sector = :idSectorDestino)
+            AND t.fecha >= :fechaDesde
+            AND t.fecha <= :fechaHasta
             ORDER BY t.fecha DESC
             """)
-    Page<Transferencia> buscar(@Param("filter") String filter, Pageable pageable);
+    Page<Transferencia> buscar(
+            @Param("filter") String filter,
+            @Param("idSectorOrigen") Long idSectorOrigen,
+            @Param("idSectorDestino") Long idSectorDestino,
+            @Param("fechaDesde") LocalDateTime fechaDesde,
+            @Param("fechaHasta") LocalDateTime fechaHasta,
+            Pageable pageable);
 
     long countByNumeroStartingWith(String prefix);
 
@@ -37,7 +50,8 @@ public interface TransferenciaRepository extends JpaRepository<Transferencia, Lo
             SELECT t FROM Transferencia t
             LEFT JOIN FETCH t.sectorOrigen so
             LEFT JOIN FETCH t.sectorDestino sd
-            WHERE LOWER(t.numero) LIKE LOWER(CONCAT('%', :filter, '%'))
+            WHERE CONCAT(t.id_transferencia, '') LIKE CONCAT('%', :filter, '%')
+                OR LOWER(t.numero) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(so.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(sd.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
             ORDER BY t.fecha DESC
