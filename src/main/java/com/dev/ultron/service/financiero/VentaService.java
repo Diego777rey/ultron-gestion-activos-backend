@@ -6,6 +6,7 @@ import com.dev.ultron.domain.financiero.MovimientoCaja;
 import com.dev.ultron.domain.financiero.SesionCaja;
 import com.dev.ultron.domain.financiero.Venta;
 import com.dev.ultron.domain.inventario.Producto;
+import com.dev.ultron.domain.inventario.Servicio;
 import com.dev.ultron.domain.personas.Cliente;
 import com.dev.ultron.domain.taller.OrdenTrabajo;
 import com.dev.ultron.domain.taller.OrdenTrabajoDetalle;
@@ -22,6 +23,7 @@ import com.dev.ultron.repository.financiero.MovimientoCajaRepository;
 import com.dev.ultron.repository.financiero.SesionCajaRepository;
 import com.dev.ultron.repository.financiero.VentaRepository;
 import com.dev.ultron.repository.inventario.ProductoRepository;
+import com.dev.ultron.repository.inventario.ServicioRepository;
 import com.dev.ultron.repository.personas.ClienteRepository;
 import com.dev.ultron.repository.taller.OrdenTrabajoRepository;
 import com.dev.ultron.service.operaciones.StockProductoSectorService;
@@ -46,6 +48,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
     private final VentaMapper mapper;
     private final SesionCajaRepository sesionCajaRepository;
     private final ProductoRepository productoRepository;
+    private final ServicioRepository servicioRepository;
     private final ClienteRepository clienteRepository;
     private final MovimientoCajaRepository movimientoCajaRepository;
     private final IngresoRepository ingresoRepository;
@@ -59,6 +62,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             VentaMapper mapper,
             SesionCajaRepository sesionCajaRepository,
             ProductoRepository productoRepository,
+            ServicioRepository servicioRepository,
             ClienteRepository clienteRepository,
             MovimientoCajaRepository movimientoCajaRepository,
             IngresoRepository ingresoRepository,
@@ -70,6 +74,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         this.mapper = mapper;
         this.sesionCajaRepository = sesionCajaRepository;
         this.productoRepository = productoRepository;
+        this.servicioRepository = servicioRepository;
         this.clienteRepository = clienteRepository;
         this.movimientoCajaRepository = movimientoCajaRepository;
         this.ingresoRepository = ingresoRepository;
@@ -137,6 +142,11 @@ public class VentaService extends GenericCrudService<Venta, Long> {
                 if (cliente == null && venta.getCliente() != null) {
                     cliente = venta.getCliente();
                 }
+                continue;
+            }
+
+            if (detInput.getIdServicio() != null) {
+                subtotal = subtotal.add(agregarDetalleServicio(venta, detInput));
                 continue;
             }
 
@@ -251,6 +261,38 @@ public class VentaService extends GenericCrudService<Venta, Long> {
     @Transactional(readOnly = true)
     public List<VentaOutput> findAll() {
         return listarTodos().stream().map(mapper::toOutput).toList();
+    }
+
+    private BigDecimal agregarDetalleServicio(Venta venta, DetalleVentaInput detInput) {
+        if (detInput.getCantidad() == null || detInput.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("El servicio debe tener una cantidad válida");
+        }
+
+        Servicio servicio = servicioRepository.findById(detInput.getIdServicio())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Servicio no encontrado con id: " + detInput.getIdServicio()));
+        if (!servicio.isEstado()) {
+            throw new IllegalArgumentException("El servicio " + servicio.getNombre() + " no está activo");
+        }
+
+        BigDecimal precio = detInput.getPrecioUnitario() != null
+                ? detInput.getPrecioUnitario()
+                : servicio.getPrecio();
+        if (precio == null || precio.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El servicio " + servicio.getNombre() + " no tiene un precio válido");
+        }
+
+        BigDecimal lineaSubtotal = precio.multiply(detInput.getCantidad());
+        DetalleVenta detalle = DetalleVenta.builder()
+                .venta(venta)
+                .servicio(servicio)
+                .descripcion(servicio.getNombre())
+                .cantidad(detInput.getCantidad())
+                .precioUnitario(precio)
+                .subtotal(lineaSubtotal)
+                .build();
+        venta.getDetalles().add(detalle);
+        return lineaSubtotal;
     }
 
     private BigDecimal agregarDetalleOrdenTrabajo(

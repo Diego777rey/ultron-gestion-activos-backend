@@ -106,6 +106,7 @@ type DetalleVentaOutput {
     id_detalle_venta: ID
     idProducto: ID
     idOrdenTrabajo: ID
+    idServicio: ID
     productoNombre: String
     cantidad: BigDecimal
     precioUnitario: BigDecimal
@@ -134,6 +135,7 @@ type VentaPageResponse {
 input DetalleVentaInput {
     idProducto: ID
     idOrdenTrabajo: ID
+    idServicio: ID
     descripcion: String
     cantidad: BigDecimal!
     precioUnitario: BigDecimal

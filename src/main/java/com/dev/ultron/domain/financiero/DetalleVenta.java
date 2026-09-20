@@ -1,6 +1,7 @@
 package com.dev.ultron.domain.financiero;
 
 import com.dev.ultron.domain.inventario.Producto;
+import com.dev.ultron.domain.inventario.Servicio;
 import com.dev.ultron.domain.taller.OrdenTrabajo;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -41,6 +42,10 @@ public class DetalleVenta implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_orden_trabajo")
     private OrdenTrabajo ordenTrabajo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_servicio")
+    private Servicio servicio;
 
     private String descripcion;
 
