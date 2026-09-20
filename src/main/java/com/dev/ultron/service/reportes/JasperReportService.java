@@ -30,6 +30,7 @@ public class JasperReportService {
 
     public static final String PLANTILLA_INVENTARIO = "reports/inventario_generico.jrxml";
     public static final String PLANTILLA_ORDEN_DETALLE = "reports/orden_trabajo_detalle.jrxml";
+    public static final String PLANTILLA_TRANSFERENCIA_DETALLE = "reports/transferencia_detalle.jrxml";
 
     private static final Logger log = LoggerFactory.getLogger(JasperReportService.class);
 
@@ -38,7 +39,7 @@ public class JasperReportService {
     @PostConstruct
     void precargarPlantillas() {
         long inicio = System.nanoTime();
-        for (String plantilla : List.of(PLANTILLA_INVENTARIO, PLANTILLA_ORDEN_DETALLE)) {
+        for (String plantilla : List.of(PLANTILLA_INVENTARIO, PLANTILLA_ORDEN_DETALLE, PLANTILLA_TRANSFERENCIA_DETALLE)) {
             try {
                 compilados.computeIfAbsent(plantilla, this::compilar);
             } catch (RuntimeException ex) {

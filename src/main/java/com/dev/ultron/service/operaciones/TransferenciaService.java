@@ -4,6 +4,7 @@ import com.dev.ultron.domain.inventario.Producto;
 import com.dev.ultron.domain.operaciones.Transferencia;
 import com.dev.ultron.domain.operaciones.TransferenciaDetalle;
 import com.dev.ultron.domain.personas.Persona;
+import com.dev.ultron.domain.personas.Usuario;
 import com.dev.ultron.domain.sectores.Sector;
 import com.dev.ultron.dto.operaciones.input.TransferenciaDetalleInput;
 import com.dev.ultron.dto.operaciones.input.TransferenciaInput;
@@ -15,9 +16,12 @@ import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.repository.inventario.ProductoRepository;
 import com.dev.ultron.repository.operaciones.TransferenciaRepository;
 import com.dev.ultron.repository.personas.PersonaRepository;
+import com.dev.ultron.repository.personas.UsuarioRepository;
 import com.dev.ultron.repository.sectores.SectorRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,6 +70,7 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
     private final SectorRepository sectorRepository;
     private final ProductoRepository productoRepository;
     private final PersonaRepository personaRepository;
+    private final UsuarioRepository usuarioRepository;
     private final StockProductoSectorService stockService;
 
     public TransferenciaService(
@@ -74,6 +79,7 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
             SectorRepository sectorRepository,
             ProductoRepository productoRepository,
             PersonaRepository personaRepository,
+            UsuarioRepository usuarioRepository,
             StockProductoSectorService stockService
     ) {
         this.repository = repository;
@@ -81,6 +87,7 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
         this.sectorRepository = sectorRepository;
         this.productoRepository = productoRepository;
         this.personaRepository = personaRepository;
+        this.usuarioRepository = usuarioRepository;
         this.stockService = stockService;
     }
 
@@ -107,11 +114,7 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
         Sector destino = sectorRepository.findById(input.getIdSectorDestino())
                 .orElseThrow(() -> new EntityNotFoundException("Sector destino no encontrado"));
 
-        Persona persona = null;
-        if (input.getIdPersona() != null) {
-            persona = personaRepository.findById(input.getIdPersona())
-                    .orElseThrow(() -> new EntityNotFoundException("Persona no encontrada con id: " + input.getIdPersona()));
-        }
+        Persona persona = resolverPersonaLogueada(input.getIdPersona());
 
         Transferencia transferencia = Transferencia.builder()
                 .numero(generarNumero())
@@ -380,6 +383,7 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
             );
         }
         transferencia.setEstado(ESTADO_PENDIENTE_CONFERIR);
+        asegurarPersonaOrigen(transferencia);
         return mapper.toOutput(actualizar(transferencia));
     }
 
@@ -405,6 +409,7 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
         }
 
         transferencia.setEstado(ESTADO_CONFERIDO);
+        asegurarPersonaOrigen(transferencia);
         return mapper.toOutput(actualizar(transferencia));
     }
 
@@ -437,6 +442,7 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
         }
 
         transferencia.setEstado(ESTADO_RECEPCIONADO);
+        transferencia.setPersonaRecepcion(resolverPersonaLogueada(null));
         Transferencia actualizada = actualizar(transferencia);
         for (Long idProducto : productosAfectados) {
             stockService.resyncProductoStock(idProducto);
@@ -484,6 +490,28 @@ public class TransferenciaService extends GenericCrudService<Transferencia, Long
         String prefix = "TRF-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-";
         long seq = repository.countByNumeroStartingWith(prefix) + 1;
         return prefix + String.format("%04d", seq);
+    }
+
+    private void asegurarPersonaOrigen(Transferencia transferencia) {
+        if (transferencia.getPersona() == null) {
+            transferencia.setPersona(resolverPersonaLogueada(null));
+        }
+    }
+
+    private Persona resolverPersonaLogueada(Long idPersonaInput) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth != null ? auth.getName() : null;
+        if (username != null && !username.isBlank() && !"anonymousUser".equalsIgnoreCase(username)) {
+            Usuario usuario = usuarioRepository.findByUsernameWithPersona(username).orElse(null);
+            if (usuario != null && usuario.getFuncionario() != null && usuario.getFuncionario().getPersona() != null) {
+                return usuario.getFuncionario().getPersona();
+            }
+        }
+        if (idPersonaInput != null) {
+            return personaRepository.findById(idPersonaInput)
+                    .orElseThrow(() -> new EntityNotFoundException("Persona no encontrada con id: " + idPersonaInput));
+        }
+        return null;
     }
 
 }
