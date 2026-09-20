@@ -156,7 +156,15 @@ extend type Query {
 
     sesionCajaAbierta(idCaja: ID): SesionCajaOutput
     buscarSesionCajaPorId(id: ID!): SesionCajaOutput
-    listarSesionesCajaPaginado(page: Int!, size: Int!, filter: String, idCaja: ID): SesionCajaPageResponse!
+    listarSesionesCajaPaginado(
+        page: Int!,
+        size: Int!,
+        filter: String,
+        idCaja: ID,
+        estado: String,
+        fechaDesde: String,
+        fechaHasta: String
+    ): SesionCajaPageResponse!
 
     listarVentas: [VentaOutput!]!
     listarVentasPaginado(page: Int!, size: Int!, filter: String, idSesionCaja: ID): VentaPageResponse!

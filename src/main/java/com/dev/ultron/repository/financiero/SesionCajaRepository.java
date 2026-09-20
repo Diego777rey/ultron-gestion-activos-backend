@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,15 +48,18 @@ public interface SesionCajaRepository extends JpaRepository<SesionCaja, Long> {
     @Query("""
             SELECT s FROM SesionCaja s
             LEFT JOIN s.persona p
-            LEFT JOIN s.maletin m
             WHERE s.caja.id_caja = :idCaja
-            AND (:filter IS NULL OR :filter = ''
-                OR LOWER(COALESCE(m.nombre, '')) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(CONCAT(COALESCE(p.nombre, ''), ' ', COALESCE(p.apellido, ''))) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(COALESCE(s.estado, '')) LIKE LOWER(CONCAT('%', :filter, '%')))
+            AND (:filter = ''
+                OR LOWER(CONCAT(COALESCE(p.nombre, ''), ' ', COALESCE(p.apellido, ''))) LIKE LOWER(CONCAT('%', :filter, '%')))
+            AND (:estado = '' OR s.estado = :estado)
+            AND s.fechaApertura >= :fechaDesde
+            AND s.fechaApertura <= :fechaHasta
             """)
     Page<SesionCaja> buscarPorCaja(
             @Param("idCaja") Long idCaja,
             @Param("filter") String filter,
+            @Param("estado") String estado,
+            @Param("fechaDesde") LocalDateTime fechaDesde,
+            @Param("fechaHasta") LocalDateTime fechaHasta,
             Pageable pageable);
 }
