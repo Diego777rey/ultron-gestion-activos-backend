@@ -62,6 +62,8 @@ public interface TransferenciaRepository extends JpaRepository<Transferencia, Lo
             SELECT t FROM Transferencia t
             LEFT JOIN FETCH t.sectorOrigen
             LEFT JOIN FETCH t.sectorDestino
+            LEFT JOIN FETCH t.persona
+            LEFT JOIN FETCH t.personaRecepcion
             WHERE t.id_transferencia = :id
             """)
     java.util.Optional<Transferencia> findParaReporte(@Param("id") Long id);

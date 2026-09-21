@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Comprobante de transferencia. Una página (o grupo) por transferencia.
+  Incluye bloques de firma para entrega (origen) y recepción (destino).
+  Campos alimentados por ReporteTransferenciaDetalleFila.
+-->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="transferencia_detalle"
+              pageWidth="595"
+              pageHeight="842"
+              orientation="Portrait"
+              columnWidth="555"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="18"
+              bottomMargin="18"
+              whenNoDataType="AllSectionsNoDetail"
+              isIgnorePagination="false"
+              uuid="c429de4f-608e-4f9f-ab07-43b433e81448">
+
+    <style name="Default" isDefault="true" fontName="DejaVu Sans" fontSize="8" hTextAlign="Left" vTextAlign="Middle"/>
+    <style name="Titulo" fontName="DejaVu Sans" fontSize="15" isBold="true" forecolor="#F4F7FB"/>
+    <style name="Subtitulo" fontName="DejaVu Sans" fontSize="8" forecolor="#C5D0DC"/>
+    <style name="Meta" fontName="DejaVu Sans" fontSize="8" forecolor="#A8B6C4"/>
+    <style name="GrupoTitulo" fontName="DejaVu Sans" fontSize="11" isBold="true" forecolor="#F4F7FB"/>
+    <style name="GrupoMeta" fontName="DejaVu Sans" fontSize="8" forecolor="#C5D0DC"/>
+    <style name="Encabezado" fontName="DejaVu Sans" fontSize="8" forecolor="#1B2430"/>
+    <style name="ColHeader" fontName="DejaVu Sans" fontSize="7" isBold="true" forecolor="#F4F7FB" hTextAlign="Left" vTextAlign="Middle"/>
+    <style name="Celda" fontName="DejaVu Sans" fontSize="8" forecolor="#1B2430" hTextAlign="Left" vTextAlign="Middle"/>
+    <style name="CeldaNumero" style="Celda" hTextAlign="Right"/>
+    <style name="Pie" fontName="DejaVu Sans" fontSize="7" forecolor="#6B7785"/>
+    <style name="FirmaTitulo" fontName="DejaVu Sans" fontSize="8" isBold="true" forecolor="#1B2430" hTextAlign="Center"/>
+    <style name="FirmaNombre" fontName="DejaVu Sans" fontSize="8" forecolor="#1B2430" hTextAlign="Center"/>
+    <style name="FirmaHint" fontName="DejaVu Sans" fontSize="7" forecolor="#6B7785" hTextAlign="Center"/>
+
+    <parameter name="TITULO" class="java.lang.String"/>
+    <parameter name="SUBTITULO" class="java.lang.String"/>
+    <parameter name="SISTEMA" class="java.lang.String"/>
+    <parameter name="FECHA_GENERACION" class="java.lang.String"/>
+    <parameter name="COLUMNA_EXTRA" class="java.lang.String"/>
+    <parameter name="CANTIDAD" class="java.lang.Integer"/>
+    <parameter name="FILTRO" class="java.lang.String"/>
+
+    <field name="numero" class="java.lang.String"/>
+    <field name="estado" class="java.lang.String"/>
+    <field name="fecha" class="java.lang.String"/>
+    <field name="encabezado" class="java.lang.String"/>
+    <field name="codigo" class="java.lang.String"/>
+    <field name="nombreLinea" class="java.lang.String"/>
+    <field name="cantidad" class="java.lang.String"/>
+    <field name="estadoLinea" class="java.lang.String"/>
+    <field name="firmaEntrega" class="java.lang.String"/>
+    <field name="firmaRecepcion" class="java.lang.String"/>
+
+    <group name="Transferencia" isStartNewPage="true">
+        <groupExpression><![CDATA[$F{numero}]]></groupExpression>
+        <groupHeader>
+            <band height="118" splitType="Stretch">
+                <rectangle radius="3">
+                    <reportElement x="0" y="0" width="555" height="28" backcolor="#1A2332" forecolor="#1A2332" uuid="a03b93c5-17ac-4156-8fa9-d9edc2691e4a"/>
+                    <graphicElement>
+                        <pen lineWidth="0.0"/>
+                    </graphicElement>
+                </rectangle>
+                <textField>
+                    <reportElement style="GrupoTitulo" x="10" y="4" width="260" height="20" uuid="3ba29e34-b10d-4397-8ec9-1ecb69d9c797"/>
+                    <textFieldExpression><![CDATA[$F{numero}]]></textFieldExpression>
+                </textField>
+                <textField>
+                    <reportElement style="GrupoMeta" x="270" y="4" width="140" height="20" uuid="dedee043-d435-429f-8a17-c644e7523aad"/>
+                    <textFieldExpression><![CDATA[$F{estado}]]></textFieldExpression>
+                </textField>
+                <textField>
+                    <reportElement style="GrupoMeta" x="410" y="4" width="135" height="20" uuid="21ec49d7-e5ca-4d72-b21e-6ec5ececd643"/>
+                    <textElement textAlignment="Right"/>
+                    <textFieldExpression><![CDATA[$F{fecha}]]></textFieldExpression>
+                </textField>
+                <rectangle radius="2">
+                    <reportElement x="0" y="32" width="555" height="62" stretchType="RelativeToTallestObject" backcolor="#F4F7FB" forecolor="#E2E8F0" uuid="bc7be79a-54e9-43d7-9c2e-ca3667509745"/>
+                    <graphicElement>
+                        <pen lineWidth="0.4" lineColor="#D5DEE8"/>
+                    </graphicElement>
+                </rectangle>
+                <textField textAdjust="StretchHeight">
+                    <reportElement style="Encabezado" x="8" y="36" width="539" height="54" positionType="Float" uuid="c9f2cdde-fdfa-4603-8b68-584cb31dc665"/>
+                    <textElement markup="none">
+                        <paragraph lineSpacing="Single"/>
+                    </textElement>
+                    <textFieldExpression><![CDATA[$F{encabezado}]]></textFieldExpression>
+                </textField>
+                <rectangle>
+                    <reportElement x="0" y="98" width="555" height="16" positionType="Float" backcolor="#2B3A4A" forecolor="#2B3A4A" uuid="b523e4af-e0c5-4895-a735-5f08247e3de9"/>
+                    <graphicElement>
+                        <pen lineWidth="0.0"/>
+                    </graphicElement>
+                </rectangle>
+                <staticText>
+                    <reportElement style="ColHeader" x="8" y="98" width="110" height="16" positionType="Float" uuid="ddcea845-4c74-4983-8fee-d1efb73958bc"/>
+                    <text><![CDATA[CÓDIGO]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement style="ColHeader" x="122" y="98" width="260" height="16" positionType="Float" uuid="d017425b-cab3-4000-b912-13f432f9ccc6"/>
+                    <text><![CDATA[PRODUCTO]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement style="ColHeader" x="386" y="98" width="60" height="16" positionType="Float" uuid="2d090896-b60d-4096-9e8b-cafd1ecbdd18"/>
+                    <textElement textAlignment="Right"/>
+                    <text><![CDATA[CANT.]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement style="ColHeader" x="450" y="98" width="97" height="16" positionType="Float" uuid="762af909-191e-4b09-a097-570a7c16317a"/>
+                    <text><![CDATA[ESTADO]]></text>
+                </staticText>
+            </band>
+        </groupHeader>
+        <groupFooter>
+            <band height="108">
+                <staticText>
+                    <reportElement style="Pie" x="0" y="8" width="555" height="12" uuid="fb8601c0-70f5-4764-a130-c9bf340a113c"/>
+                    <text><![CDATA[Firmas de los responsables (usuario logueado en cada etapa)]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement style="FirmaTitulo" x="20" y="28" width="240" height="14" uuid="d6399a71-bc66-4a69-a154-5b78b9b3f139"/>
+                    <text><![CDATA[ENTREGA — SECTOR ORIGEN]]></text>
+                </staticText>
+                <line>
+                    <reportElement x="40" y="62" width="200" height="1" forecolor="#1B2430" uuid="a2d9a911-c831-43d9-bcb6-963113181499"/>
+                </line>
+                <textField>
+                    <reportElement style="FirmaNombre" x="20" y="66" width="240" height="14" uuid="e17372e0-c972-4707-9af1-e989a53b84c1"/>
+                    <textFieldExpression><![CDATA[$F{firmaEntrega} == null || $F{firmaEntrega}.isBlank() ? "Aclaración" : $F{firmaEntrega}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement style="FirmaHint" x="20" y="80" width="240" height="12" uuid="005b8424-d782-493e-9eb1-55d801b33674"/>
+                    <text><![CDATA[Firma y aclaración]]></text>
+                </staticText>
+                <staticText>
+                    <reportElement style="FirmaTitulo" x="295" y="28" width="240" height="14" uuid="c3cbb12b-4bdf-476c-8535-378dfe16e25e"/>
+                    <text><![CDATA[RECEPCIÓN — SECTOR DESTINO]]></text>
+                </staticText>
+                <line>
+                    <reportElement x="315" y="62" width="200" height="1" forecolor="#1B2430" uuid="66f97184-d760-458f-bd0e-9132f247606d"/>
+                </line>
+                <textField>
+                    <reportElement style="FirmaNombre" x="295" y="66" width="240" height="14" uuid="2b6510ca-a0f1-4545-b2d6-33ff4d64f66e"/>
+                    <textFieldExpression><![CDATA[$F{firmaRecepcion} == null || $F{firmaRecepcion}.isBlank() ? "Aclaración" : $F{firmaRecepcion}]]></textFieldExpression>
+                </textField>
+                <staticText>
+                    <reportElement style="FirmaHint" x="295" y="80" width="240" height="12" uuid="dc035ad1-220d-4225-83ff-9c58e5874625"/>
+                    <text><![CDATA[Firma y aclaración]]></text>
+                </staticText>
+            </band>
+        </groupFooter>
+    </group>
+
+    <title>
+        <band height="58" splitType="Stretch">
+            <rectangle radius="4">
+                <reportElement x="0" y="0" width="555" height="54" backcolor="#1A2332" forecolor="#1A2332" uuid="9e5bd4cc-3ffb-417a-a6cf-6ae129b4d0b0"/>
+                <graphicElement>
+                    <pen lineWidth="0.0"/>
+                </graphicElement>
+            </rectangle>
+            <staticText>
+                <reportElement style="Meta" x="14" y="6" width="200" height="12" uuid="3a5ba50d-8d82-49de-b4b8-4dbc9e946d40"/>
+                <textElement>
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[ULTRON]]></text>
+            </staticText>
+            <textField>
+                <reportElement style="Titulo" x="14" y="18" width="360" height="18" uuid="e159c911-4c8a-4342-8532-8fe3c4b7155b"/>
+                <textFieldExpression><![CDATA[$P{TITULO}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement style="Subtitulo" x="14" y="36" width="360" height="12" uuid="111e79c4-cb39-445d-9f0b-7b4bbbdbc72b"/>
+                <textFieldExpression><![CDATA[$P{SUBTITULO}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement style="Meta" x="380" y="10" width="161" height="14" uuid="d8c15492-033b-4d93-98ca-4cb38095dc4d"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$P{SISTEMA}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement style="Meta" x="380" y="26" width="161" height="14" uuid="e34533ec-228f-4d1f-910b-4d0e4f6a4fc9"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA[$P{FECHA_GENERACION}]]></textFieldExpression>
+            </textField>
+        </band>
+    </title>
+
+    <detail>
+        <band height="18" splitType="Prevent">
+            <textField textAdjust="StretchHeight">
+                <reportElement style="Celda" x="8" y="1" width="110" height="16" uuid="f89d9273-0119-462c-a26b-f69999b8b979"/>
+                <textFieldExpression><![CDATA[$F{codigo}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight">
+                <reportElement style="Celda" x="122" y="1" width="260" height="16" uuid="e043cff4-10ea-4485-9dca-d68915229677"/>
+                <textFieldExpression><![CDATA[$F{nombreLinea}]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement style="CeldaNumero" x="386" y="1" width="60" height="16" uuid="7624d7ad-12f0-4605-9b38-75ac762e7ce5"/>
+                <textFieldExpression><![CDATA[$F{cantidad}]]></textFieldExpression>
+            </textField>
+            <textField textAdjust="StretchHeight">
+                <reportElement style="Celda" x="450" y="1" width="97" height="16" uuid="94171cfe-99ae-4e19-9655-daa859d1aaa8"/>
+                <textFieldExpression><![CDATA[$F{estadoLinea}]]></textFieldExpression>
+            </textField>
+            <line>
+                <reportElement x="0" y="17" width="555" height="1" forecolor="#E2E8F0" uuid="34b8665c-33ff-4259-940f-c0340fb1fa72"/>
+            </line>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="18">
+            <textField>
+                <reportElement style="Pie" x="0" y="2" width="300" height="14" uuid="93502c2b-543c-4106-8156-52e44cb77db1"/>
+                <textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+            <textField evaluationTime="Report">
+                <reportElement style="Pie" x="300" y="2" width="255" height="14" uuid="60e02128-8300-425d-9737-af3dc2b2ce90"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA["de " + $V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+</jasperReport>

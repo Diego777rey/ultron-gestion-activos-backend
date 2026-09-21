@@ -23,6 +23,7 @@ public class TransferenciaOutput implements Serializable {
     private String estado;
     private String fecha;
     private PersonaOutput persona;
+    private PersonaOutput personaRecepcion;
     private Integer cantidadItems;
     private List<TransferenciaDetalleOutput> detalles;
 }

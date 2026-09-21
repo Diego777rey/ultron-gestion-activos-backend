@@ -33,6 +33,7 @@ type TransferenciaOutput {
     estado: String
     fecha: String
     persona: PersonaOutput
+    personaRecepcion: PersonaOutput
     cantidadItems: Int
     detalles: [TransferenciaDetalleOutput!]
 }

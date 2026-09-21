@@ -2,6 +2,7 @@ package com.dev.ultron.service.reportes;
 
 import com.dev.ultron.dto.reportes.output.ReporteFila;
 import com.dev.ultron.dto.reportes.output.ReporteOtDetalleFila;
+import com.dev.ultron.dto.reportes.output.ReporteTransferenciaDetalleFila;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -70,6 +71,42 @@ class JasperReportServiceTest {
                         "SUBTITULO", "Vista completa",
                         "SISTEMA", "Ultron System",
                         "FECHA_GENERACION", "18/09/2026 19:00:00",
+                        "COLUMNA_EXTRA", "",
+                        "CANTIDAD", filas.size(),
+                        "FILTRO", ""
+                ),
+                filas
+        );
+
+        assertThat(pdf).isNotEmpty();
+        assertThat(pdf).startsWith("%PDF".getBytes());
+    }
+
+    @Test
+    void compilaYExportaPlantillaDetalleTransferencia() {
+        JasperReportService service = new JasperReportService();
+        List<ReporteTransferenciaDetalleFila> filas = List.of(
+                ReporteTransferenciaDetalleFila.builder()
+                        .numero("TRF-20260920-0001")
+                        .estado("Conferido")
+                        .fecha("20/09/2026 11:00:00")
+                        .encabezado("Sector origen: DEPOSITO\nSector destino: SALON DE VENTAS\nEntregado por: Admin")
+                        .codigo("LIQ REFR ORG")
+                        .nombreLinea("REFRIGERANTE ANTICONGELANTE")
+                        .cantidad("7")
+                        .estadoLinea("Verificado")
+                        .firmaEntrega("Admin")
+                        .firmaRecepcion("")
+                        .build()
+        );
+
+        byte[] pdf = service.exportarPdf(
+                JasperReportService.PLANTILLA_TRANSFERENCIA_DETALLE,
+                Map.of(
+                        "TITULO", "Comprobante de transferencia",
+                        "SUBTITULO", "Para firma de responsables",
+                        "SISTEMA", "Ultron System",
+                        "FECHA_GENERACION", "20/09/2026 11:00:00",
                         "COLUMNA_EXTRA", "",
                         "CANTIDAD", filas.size(),
                         "FILTRO", ""

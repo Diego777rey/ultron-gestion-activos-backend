@@ -53,6 +53,10 @@ public class Transferencia implements Serializable {
     @JoinColumn(name = "id_persona")
     private Persona persona;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_persona_recepcion")
+    private Persona personaRecepcion;
+
     @Builder.Default
     @OneToMany(mappedBy = "transferencia", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id_detalle ASC")
