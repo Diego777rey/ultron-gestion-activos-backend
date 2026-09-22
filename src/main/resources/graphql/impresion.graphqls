@@ -1,0 +1,43 @@
+# =============================================================
+# Impresión térmica genérica (CUPS en Linux / cola de Windows)
+# =============================================================
+
+type ImpresoraOutput {
+    name: String!
+    displayName: String
+    isDefault: Boolean
+}
+
+type ImpresionResultado {
+    success: Boolean!
+    message: String
+}
+
+input TicketLineaInput {
+    descripcion: String!
+    cantidad: BigDecimal
+    precioUnitario: BigDecimal
+    subtotal: BigDecimal
+}
+
+input TicketVentaInput {
+    titulo: String
+    subtitulo: String
+    numero: String
+    fecha: String
+    cajero: String
+    cliente: String
+    lineas: [TicketLineaInput!]!
+    descuento: BigDecimal
+    total: BigDecimal
+    pie: String
+}
+
+extend type Query {
+    listarImpresoras: [ImpresoraOutput!]!
+}
+
+extend type Mutation {
+    imprimirPrueba(printerName: String!): ImpresionResultado!
+    imprimirTicketVenta(printerName: String!, ticket: TicketVentaInput!): ImpresionResultado!
+}
