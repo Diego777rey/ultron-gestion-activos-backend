@@ -124,6 +124,13 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         String numero = "VEN-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
                 + "-" + sesion.getId_sesion_caja() + "-" + String.format("%04d", seq);
 
+        String formaPago = input.getFormaPago() != null && !input.getFormaPago().isBlank()
+                ? input.getFormaPago().toUpperCase()
+                : "EFECTIVO";
+        if (!formaPago.equals("EFECTIVO") && !formaPago.equals("TARJETA") && !formaPago.equals("TRANSFERENCIA")) {
+            formaPago = "EFECTIVO";
+        }
+
         Venta venta = Venta.builder()
                 .numero(numero)
                 .fecha(LocalDateTime.now())
@@ -131,6 +138,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
                 .cliente(cliente)
                 .descuento(descuento)
                 .estado("PAGADA")
+                .formaPago(formaPago)
                 .build();
 
         BigDecimal subtotal = BigDecimal.ZERO;
@@ -210,11 +218,17 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         caja.setSaldo_actual(nvl(caja.getSaldo_actual()).add(total));
         cajaRepository.save(caja);
 
+        String etiquetaFormaPago = switch (formaPago) {
+            case "TARJETA" -> "Tarjeta";
+            case "TRANSFERENCIA" -> "Transferencia";
+            default -> "Efectivo";
+        };
+
         MovimientoCaja movimiento = MovimientoCaja.builder()
                 .caja(caja)
                 .tipo("INGRESO")
                 .monto(total)
-                .concepto("Pago venta " + venta.getNumero() + " - Efectivo")
+                .concepto("Pago venta " + venta.getNumero() + " - " + etiquetaFormaPago)
                 .fecha(LocalDateTime.now())
                 .persona(sesion.getPersona())
                 .moneda("PYG")
@@ -231,7 +245,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
                 .cliente_o_fuente(cliente != null && cliente.getPersona() != null
                         ? (cliente.getPersona().getNombre() + " " + cliente.getPersona().getApellido()).trim()
                         : "CONSUMIDOR FINAL")
-                .observaciones("Efectivo PYG")
+                .observaciones(etiquetaFormaPago + " PYG")
                 .build();
         ingresoRepository.save(ingreso);
 

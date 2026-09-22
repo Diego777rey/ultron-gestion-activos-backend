@@ -124,6 +124,7 @@ type VentaOutput {
     descuento: BigDecimal
     total: BigDecimal
     estado: String
+    formaPago: String
     detalles: [DetalleVentaOutput!]
 }
 
@@ -145,6 +146,7 @@ input VentaInput {
     idSesionCaja: ID!
     idCliente: ID
     descuento: BigDecimal
+    formaPago: String
     detalles: [DetalleVentaInput!]!
 }
 

@@ -25,5 +25,6 @@ public class VentaOutput implements Serializable {
     private BigDecimal descuento;
     private BigDecimal total;
     private String estado;
+    private String formaPago;
     private List<DetalleVentaOutput> detalles;
 }
