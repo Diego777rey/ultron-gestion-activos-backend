@@ -21,11 +21,11 @@ public class OrdenDiagnosticoWriter {
         if (input == null || diagnostico == null) {
             return;
         }
-        if (input.fecha_inicio_estimada() != null && !input.fecha_inicio_estimada().isBlank()) {
-            diagnostico.setFechaInicioEstimada(parseDateTime(input.fecha_inicio_estimada()));
+        if (input.fecha_inicio_estimada() != null) {
+            diagnostico.setFechaInicioEstimada(parseDateTimeOrNull(input.fecha_inicio_estimada()));
         }
-        if (input.fecha_fin_estimada() != null && !input.fecha_fin_estimada().isBlank()) {
-            diagnostico.setFechaFinEstimada(parseDateTime(input.fecha_fin_estimada()));
+        if (input.fecha_fin_estimada() != null) {
+            diagnostico.setFechaFinEstimada(parseDateTimeOrNull(input.fecha_fin_estimada()));
         }
         if (input.duracion_estimada_dias() != null) {
             diagnostico.setDuracionEstimadaDias(
@@ -67,7 +67,10 @@ public class OrdenDiagnosticoWriter {
         }
     }
 
-    private LocalDateTime parseDateTime(String value) {
+    private LocalDateTime parseDateTimeOrNull(String value) {
+        if (value.isBlank()) {
+            return null;
+        }
         if (value.contains("T")) {
             return LocalDateTime.parse(value.length() > 19 ? value.substring(0, 19) : value);
         }
