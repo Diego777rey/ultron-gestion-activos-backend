@@ -38,6 +38,7 @@ public class Producto implements Serializable {
     private BigDecimal stockMinimo;
     private String ubicacion;
     private boolean estado;
+    private String imagen;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_categoria_producto", nullable = false)

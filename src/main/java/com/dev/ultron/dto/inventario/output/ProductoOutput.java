@@ -16,5 +16,6 @@ public class ProductoOutput {
     private BigDecimal stockMinimo;
     private String ubicacion;
     private Boolean estado;
+    private String imagen;
     private CategoriaProductoOutput categoriaProducto;
 }
