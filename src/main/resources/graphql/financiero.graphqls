@@ -178,6 +178,31 @@ extend type Query {
     buscarVentaPorId(id: ID!): VentaOutput
 }
 
+type CotizacionOutput {
+    id_cotizacion: ID
+    moneda: String
+    valor: BigDecimal
+    fechaActualizacion: String
+    activa: Boolean
+}
+
+type CotizacionPageResponse {
+    content: [CotizacionOutput!]!
+    pageInfo: PageInfo!
+}
+
+input CotizacionInput {
+    moneda: String!
+    valor: BigDecimal!
+    activa: Boolean
+}
+
+extend type Query {
+    listarCotizaciones: [CotizacionOutput!]!
+    listarCotizacionesPaginado(page: Int!, size: Int!, filter: String): CotizacionPageResponse!
+    obtenerCotizacionPorId(id: ID!): CotizacionOutput
+}
+
 extend type Mutation {
     registrarCaja(input: CajaInput!): CajaOutput
     actualizarCaja(id: ID!, input: CajaInput!): CajaOutput
@@ -191,4 +216,8 @@ extend type Mutation {
     cerrarCaja(input: CerrarCajaInput!): SesionCajaOutput
 
     registrarVenta(input: VentaInput!): VentaOutput
+
+    crearCotizacion(input: CotizacionInput!): CotizacionOutput
+    actualizarCotizacion(id: ID!, input: CotizacionInput!): CotizacionOutput
+    eliminarCotizacion(id: ID!): Boolean
 }
