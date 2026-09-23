@@ -38,7 +38,7 @@ type Query {
     buscarVehiculoPorId(id: ID!): VehiculoOutput
 
     # ---- Taller: Órdenes de Trabajo ----
-    listarOrdenesTrabajoPaginado(page: Int!, size: Int!, filter: String): OrdenTrabajoPageResponse!
+    listarOrdenesTrabajoPaginado(page: Int!, size: Int!, filter: String, fechaDesde: String, fechaHasta: String): OrdenTrabajoPageResponse!
     listarOrdenesTrabajoPorEtapa(etapa: String!): [OrdenTrabajoOutput!]!
     buscarOrdenTrabajoPorId(id: ID!): OrdenTrabajoOutput
     listarOrdenesPorClientePaginado(idCliente: ID!, page: Int!, size: Int!): OrdenTrabajoPageResponse!

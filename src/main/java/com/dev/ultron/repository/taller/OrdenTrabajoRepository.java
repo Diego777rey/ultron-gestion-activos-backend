@@ -14,16 +14,26 @@ import java.util.List;
 @Repository
 public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long> {
 
-    @Query("SELECT ot FROM OrdenTrabajo ot " +
-           "LEFT JOIN ot.cliente c LEFT JOIN c.persona p " +
-           "LEFT JOIN ot.vehiculo v " +
-           "WHERE LOWER(ot.numeroOrden) LIKE LOWER(CONCAT('%', :filter, '%')) " +
-           "OR LOWER(ot.etapa) LIKE LOWER(CONCAT('%', :filter, '%')) " +
-           "OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%')) " +
-           "OR LOWER(p.apellido) LIKE LOWER(CONCAT('%', :filter, '%')) " +
-           "OR LOWER(p.documento) LIKE LOWER(CONCAT('%', :filter, '%')) " +
-           "OR LOWER(v.chapa) LIKE LOWER(CONCAT('%', :filter, '%'))")
-    Page<OrdenTrabajo> search(@Param("filter") String filter, Pageable pageable);
+    @Query("""
+            SELECT ot FROM OrdenTrabajo ot
+            LEFT JOIN ot.cliente c LEFT JOIN c.persona p
+            LEFT JOIN ot.vehiculo v
+            WHERE (:filter IS NULL OR :filter = ''
+                OR LOWER(ot.numeroOrden) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(ot.etapa) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(p.apellido) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(p.documento) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(v.chapa) LIKE LOWER(CONCAT('%', :filter, '%')))
+            AND ot.fechaCreacion >= :fechaDesde
+            AND ot.fechaCreacion <= :fechaHasta
+            ORDER BY ot.fechaCreacion DESC, ot.id_orden_trabajo DESC
+            """)
+    Page<OrdenTrabajo> buscar(
+            @Param("filter") String filter,
+            @Param("fechaDesde") LocalDateTime fechaDesde,
+            @Param("fechaHasta") LocalDateTime fechaHasta,
+            Pageable pageable);
 
     @Query("SELECT ot FROM OrdenTrabajo ot WHERE ot.cliente.id_cliente = :idCliente ORDER BY ot.fechaCreacion DESC")
     Page<OrdenTrabajo> findByClienteId(@Param("idCliente") Long idCliente, Pageable pageable);

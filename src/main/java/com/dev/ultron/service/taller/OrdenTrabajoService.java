@@ -23,6 +23,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -38,6 +39,9 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
     private final OrdenTrabajoFlujoService flujoService;
     private final OrdenTrabajoDetalleService detalleService;
     private final OrdenDiagnosticoHallazgoService hallazgoService;
+    private static final LocalDateTime FECHA_MIN = LocalDateTime.of(1970, 1, 1, 0, 0);
+    private static final LocalDateTime FECHA_MAX = LocalDateTime.of(2999, 12, 31, 23, 59, 59);
+
     private final OrdenTrabajoCajaResolver cajaResolver;
 
     public OrdenTrabajoService(
@@ -66,14 +70,36 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
 
     @Transactional(readOnly = true)
     public PageResponse<OrdenTrabajoOutput> listarOrdenesPaginado(int page, int size, String filter) {
-        PageRequest pageRequest = PageRequest.of(page, size);
-        Page<OrdenTrabajo> pagina;
-        if (filter != null && !filter.trim().isEmpty()) {
-            pagina = ordenTrabajoRepository.search(SearchNormalizer.normalizeFilter(filter), pageRequest);
-        } else {
-            pagina = listarPaginado(pageRequest);
-        }
+        return listarOrdenesPaginado(page, size, filter, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<OrdenTrabajoOutput> listarOrdenesPaginado(
+            int page, int size, String filter, String fechaDesde, String fechaHasta) {
+        Page<OrdenTrabajo> pagina = ordenTrabajoRepository.buscar(
+                SearchNormalizer.normalizeFilter(filter),
+                parseDesde(fechaDesde),
+                parseHasta(fechaHasta),
+                PageRequest.of(page, size));
         return new PageResponse<>(pagina.map(ordenTrabajoMapper::toOutput));
+    }
+
+    private LocalDateTime parseDesde(String value) {
+        LocalDate date = parseIsoDate(value);
+        return date != null ? date.atStartOfDay() : FECHA_MIN;
+    }
+
+    private LocalDateTime parseHasta(String value) {
+        LocalDate date = parseIsoDate(value);
+        return date != null ? date.atTime(23, 59, 59) : FECHA_MAX;
+    }
+
+    private LocalDate parseIsoDate(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String iso = value.length() >= 10 ? value.substring(0, 10) : value;
+        return LocalDate.parse(iso);
     }
 
     @Transactional(readOnly = true)
