@@ -31,8 +31,12 @@ public class OrdenTrabajoGraphQLController {
 
     @QueryMapping
     public PageResponse<OrdenTrabajoOutput> listarOrdenesTrabajoPaginado(
-            @Argument int page, @Argument int size, @Argument String filter) {
-        return ordenTrabajoService.listarOrdenesPaginado(page, size, filter);
+            @Argument int page,
+            @Argument int size,
+            @Argument String filter,
+            @Argument String fechaDesde,
+            @Argument String fechaHasta) {
+        return ordenTrabajoService.listarOrdenesPaginado(page, size, filter, fechaDesde, fechaHasta);
     }
 
     @QueryMapping
