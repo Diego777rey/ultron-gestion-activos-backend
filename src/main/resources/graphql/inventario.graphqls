@@ -38,6 +38,7 @@ type ProductoOutput {
     stockMinimo: BigDecimal
     ubicacion: String
     estado: Boolean
+    imagen: String
     categoriaProducto: CategoriaProductoOutput
 }
 
@@ -57,6 +58,7 @@ input ProductoInput {
     stockMinimo: BigDecimal!
     ubicacion: String
     estado: Boolean
+    imagen: String
     idCategoriaProducto: ID!
 }
 
