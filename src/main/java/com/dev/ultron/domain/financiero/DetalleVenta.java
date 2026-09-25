@@ -1,5 +1,6 @@
 package com.dev.ultron.domain.financiero;
 
+import com.dev.ultron.domain.inventario.PresentacionProducto;
 import com.dev.ultron.domain.inventario.Producto;
 import com.dev.ultron.domain.inventario.Servicio;
 import com.dev.ultron.domain.taller.OrdenTrabajo;
@@ -38,6 +39,10 @@ public class DetalleVenta implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_producto")
     private Producto producto;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_presentacion_producto")
+    private PresentacionProducto presentacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_orden_trabajo")

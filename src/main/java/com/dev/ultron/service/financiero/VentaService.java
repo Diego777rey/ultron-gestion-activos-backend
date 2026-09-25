@@ -5,6 +5,7 @@ import com.dev.ultron.domain.financiero.Ingreso;
 import com.dev.ultron.domain.financiero.MovimientoCaja;
 import com.dev.ultron.domain.financiero.SesionCaja;
 import com.dev.ultron.domain.financiero.Venta;
+import com.dev.ultron.domain.inventario.PresentacionProducto;
 import com.dev.ultron.domain.inventario.Producto;
 import com.dev.ultron.domain.inventario.Servicio;
 import com.dev.ultron.domain.personas.Cliente;
@@ -166,18 +167,10 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             Producto producto = productoRepository.findById(detInput.getIdProducto())
                     .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado con id: " + detInput.getIdProducto()));
 
-            BigDecimal precio = detInput.getPrecioUnitario() != null
-                    ? detInput.getPrecioUnitario()
-                    : producto.getPrecioVenta();
-
-            BigDecimal stockADescontar = detInput.getCantidad();
-            BigDecimal stockSector = stockProductoSectorService.getCantidad(producto.getId_producto(), idSectorCaja);
-            if (stockSector.compareTo(stockADescontar) < 0) {
-                throw new IllegalArgumentException(
-                        "Stock insuficiente para " + producto.getNombre()
-                                + " en el sector de la caja. Disponible: " + stockSector
-                                + ", requerido: " + stockADescontar);
-            }
+            PresentacionProducto presentacion = resolverPresentacion(producto, detInput.getIdPresentacion());
+            BigDecimal precio = precioDeVenta(producto, presentacion, detInput.getPrecioUnitario());
+            BigDecimal unidadesPorPresentacion = unidadesPorPresentacion(presentacion);
+            BigDecimal stockADescontar = detInput.getCantidad().multiply(unidadesPorPresentacion);
 
             BigDecimal lineaSubtotal = precio.multiply(detInput.getCantidad());
             subtotal = subtotal.add(lineaSubtotal);
@@ -185,6 +178,8 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             DetalleVenta detalle = DetalleVenta.builder()
                     .venta(venta)
                     .producto(producto)
+                    .presentacion(presentacion)
+                    .descripcion(presentacion != null ? presentacion.getDescripcion() : null)
                     .cantidad(detInput.getCantidad())
                     .precioUnitario(precio)
                     .subtotal(lineaSubtotal)
@@ -376,6 +371,51 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             return numero;
         }
         return numero + " · " + chapa;
+    }
+
+    /**
+     * Si el producto tiene presentaciones, la venta usa una de ellas.
+     * Sin id, toma la primera (la principal). Sin presentaciones, vende el producto suelto.
+     */
+    private PresentacionProducto resolverPresentacion(Producto producto, Long idPresentacion) {
+        List<PresentacionProducto> presentaciones = producto.getPresentaciones() == null
+                ? List.of()
+                : producto.getPresentaciones();
+        if (presentaciones.isEmpty()) {
+            if (idPresentacion != null) {
+                throw new IllegalArgumentException("El producto " + producto.getNombre() + " no tiene presentaciones");
+            }
+            return null;
+        }
+        if (idPresentacion == null) {
+            return presentaciones.get(0);
+        }
+        for (PresentacionProducto presentacion : presentaciones) {
+            if (idPresentacion.equals(presentacion.getId_presentacion_producto())) {
+                return presentacion;
+            }
+        }
+        throw new IllegalArgumentException(
+                "La presentación no pertenece al producto " + producto.getNombre());
+    }
+
+    private BigDecimal precioDeVenta(Producto producto, PresentacionProducto presentacion, BigDecimal precioInformado) {
+        BigDecimal precio = presentacion != null ? presentacion.getPrecio() : precioInformado;
+        if (precio == null) {
+            precio = producto.getPrecioVenta();
+        }
+        if (precio == null || precio.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El producto " + producto.getNombre() + " no tiene un precio de venta válido");
+        }
+        return precio;
+    }
+
+    private BigDecimal unidadesPorPresentacion(PresentacionProducto presentacion) {
+        if (presentacion == null || presentacion.getCantidad() == null
+                || presentacion.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ONE;
+        }
+        return presentacion.getCantidad();
     }
 
     private BigDecimal nvl(BigDecimal value) {

@@ -1,6 +1,7 @@
 package com.dev.ultron.dto.inventario.output;
 
 import java.math.BigDecimal;
+import java.util.List;
 import lombok.Data;
 
 @Data
@@ -18,4 +19,5 @@ public class ProductoOutput {
     private Boolean estado;
     private String imagen;
     private CategoriaProductoOutput categoriaProducto;
+    private List<PresentacionProductoOutput> presentaciones;
 }

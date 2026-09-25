@@ -105,6 +105,8 @@ input CerrarCajaInput {
 type DetalleVentaOutput {
     id_detalle_venta: ID
     idProducto: ID
+    idPresentacion: ID
+    presentacionDescripcion: String
     idOrdenTrabajo: ID
     idServicio: ID
     productoNombre: String
@@ -135,6 +137,7 @@ type VentaPageResponse {
 
 input DetalleVentaInput {
     idProducto: ID
+    idPresentacion: ID
     idOrdenTrabajo: ID
     idServicio: ID
     descripcion: String

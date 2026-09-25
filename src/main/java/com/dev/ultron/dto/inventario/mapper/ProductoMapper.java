@@ -16,6 +16,7 @@ import org.mapstruct.MappingTarget;
 public interface ProductoMapper extends BaseMapper<Producto, ProductoInput, ProductoOutput> {
 
     @Mapping(target = "id_producto", ignore = true)
+    @Mapping(target = "presentaciones", ignore = true)
     @Mapping(target = "codigo", source = "input.codigo", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "nombre", source = "input.nombre", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "descripcion", source = "input.descripcion", qualifiedByName = MappingHelper.TO_UPPER_CASE)
@@ -25,8 +26,12 @@ public interface ProductoMapper extends BaseMapper<Producto, ProductoInput, Prod
     @Mapping(target = "categoriaProducto", source = "categoria")
     Producto toEntity(ProductoInput input, CategoriaProducto categoria);
 
+    @Mapping(target = "presentaciones", ignore = true)
+    ProductoOutput toOutput(Producto entity);
+
     @BeanMapping(nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id_producto", ignore = true)
+    @Mapping(target = "presentaciones", ignore = true)
     @Mapping(target = "codigo", source = "input.codigo", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "nombre", source = "input.nombre", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "descripcion", source = "input.descripcion", qualifiedByName = MappingHelper.TO_UPPER_CASE)

@@ -26,6 +26,22 @@ input CategoriaProductoInput {
 
 # ---- Producto ----
 
+type PresentacionProductoOutput {
+    id_presentacion_producto: ID
+    descripcion: String
+    codigoBarras: String
+    cantidad: BigDecimal
+    precio: BigDecimal
+}
+
+input PresentacionProductoInput {
+    id_presentacion_producto: ID
+    descripcion: String!
+    codigoBarras: String!
+    cantidad: BigDecimal!
+    precio: BigDecimal!
+}
+
 type ProductoOutput {
     id_producto: ID
     codigo: String
@@ -40,6 +56,7 @@ type ProductoOutput {
     estado: Boolean
     imagen: String
     categoriaProducto: CategoriaProductoOutput
+    presentaciones: [PresentacionProductoOutput!]!
 }
 
 type ProductoPageResponse {
@@ -60,6 +77,7 @@ input ProductoInput {
     estado: Boolean
     imagen: String
     idCategoriaProducto: ID!
+    presentaciones: [PresentacionProductoInput!]
 }
 
 # ---- Categoria Servicio ----
