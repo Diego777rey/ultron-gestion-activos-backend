@@ -17,6 +17,8 @@ public interface VentaMapper {
     VentaOutput toOutput(Venta entity);
 
     @Mapping(target = "idProducto", source = "producto.id_producto")
+    @Mapping(target = "idPresentacion", source = "presentacion.id_presentacion_producto")
+    @Mapping(target = "presentacionDescripcion", source = "presentacion.descripcion")
     @Mapping(target = "idOrdenTrabajo", source = "ordenTrabajo.id_orden_trabajo")
     @Mapping(target = "idServicio", source = "servicio.id_servicio")
     @Mapping(target = "productoNombre", expression = "java(resolveDetalleNombre(entity))")
@@ -24,7 +26,13 @@ public interface VentaMapper {
 
     default String resolveDetalleNombre(DetalleVenta entity) {
         if (entity.getProducto() != null && entity.getProducto().getNombre() != null) {
-            return entity.getProducto().getNombre();
+            String nombre = entity.getProducto().getNombre();
+            if (entity.getPresentacion() != null
+                    && entity.getPresentacion().getDescripcion() != null
+                    && !entity.getPresentacion().getDescripcion().isBlank()) {
+                return nombre + " · " + entity.getPresentacion().getDescripcion();
+            }
+            return nombre;
         }
         if (entity.getServicio() != null && entity.getServicio().getNombre() != null) {
             return entity.getServicio().getNombre();
