@@ -19,6 +19,8 @@ import java.util.stream.Collectors;
 @Service
 public class CotizacionService extends GenericCrudService<Cotizacion, Long> {
 
+    private static final int MONEDA_MAX_LENGTH = 80;
+
     private final CotizacionRepository repository;
     private final CotizacionMapper mapper;
 
@@ -37,6 +39,7 @@ public class CotizacionService extends GenericCrudService<Cotizacion, Long> {
 
     @Transactional
     public CotizacionOutput save(CotizacionInput input) {
+        normalizarMoneda(input);
         Cotizacion entidad = mapper.toEntity(input);
         entidad.setFechaActualizacion(LocalDateTime.now());
         if (entidad.getActiva() == null) {
@@ -47,6 +50,7 @@ public class CotizacionService extends GenericCrudService<Cotizacion, Long> {
 
     @Transactional
     public CotizacionOutput update(Long id, CotizacionInput input) {
+        normalizarMoneda(input);
         Cotizacion entidad = buscarPorIdOrThrow(id);
         mapper.updateEntity(entidad, input);
         entidad.setFechaActualizacion(LocalDateTime.now());
@@ -66,5 +70,16 @@ public class CotizacionService extends GenericCrudService<Cotizacion, Long> {
     @Transactional(readOnly = true)
     public CotizacionOutput findById(Long id) {
         return mapper.toOutput(buscarPorIdOrThrow(id));
+    }
+
+    private void normalizarMoneda(CotizacionInput input) {
+        String moneda = input.getMoneda() == null ? "" : input.getMoneda().trim();
+        if (moneda.isEmpty()) {
+            throw new IllegalArgumentException("Debe indicar la moneda");
+        }
+        if (moneda.length() > MONEDA_MAX_LENGTH) {
+            throw new IllegalArgumentException("La moneda no puede superar 80 caracteres");
+        }
+        input.setMoneda(moneda);
     }
 }

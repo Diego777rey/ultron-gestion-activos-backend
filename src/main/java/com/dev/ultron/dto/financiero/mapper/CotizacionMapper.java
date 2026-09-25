@@ -5,7 +5,6 @@ import com.dev.ultron.dto.financiero.input.CotizacionInput;
 import com.dev.ultron.dto.financiero.output.CotizacionOutput;
 import com.dev.ultron.generic.mapper.BaseMapper;
 import com.dev.ultron.generic.mapper.MapStructConfig;
-import com.dev.ultron.generic.mapper.MappingHelper;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -15,7 +14,7 @@ import org.mapstruct.MappingTarget;
 public interface CotizacionMapper extends BaseMapper<Cotizacion, CotizacionInput, CotizacionOutput> {
 
     @Mapping(target = "id_cotizacion", ignore = true)
-    @Mapping(target = "moneda", source = "moneda", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "moneda", source = "moneda")
     @Mapping(target = "valor", source = "valor")
     @Mapping(target = "fechaActualizacion", ignore = true)
     @Mapping(target = "activa", source = "activa")
@@ -23,7 +22,7 @@ public interface CotizacionMapper extends BaseMapper<Cotizacion, CotizacionInput
 
     @BeanMapping(nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id_cotizacion", ignore = true)
-    @Mapping(target = "moneda", source = "moneda", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "moneda", source = "moneda")
     @Mapping(target = "valor", source = "valor")
     @Mapping(target = "fechaActualizacion", ignore = true)
     @Mapping(target = "activa", source = "activa")

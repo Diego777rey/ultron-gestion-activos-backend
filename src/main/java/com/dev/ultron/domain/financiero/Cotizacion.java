@@ -27,7 +27,7 @@ public class Cotizacion implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_cotizacion;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 80)
     private String moneda;
 
     @Column(nullable = false, precision = 15, scale = 4)
