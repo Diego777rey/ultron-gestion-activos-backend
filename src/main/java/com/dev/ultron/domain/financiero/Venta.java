@@ -51,6 +51,8 @@ public class Venta implements Serializable {
     private BigDecimal total;
     private String estado;
     private String formaPago;
+    private String moneda;
+    private BigDecimal montoMonedaOriginal;
 
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("id_detalle_venta ASC")

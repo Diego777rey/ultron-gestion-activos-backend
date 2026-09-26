@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface CotizacionRepository extends JpaRepository<Cotizacion, Long> {
 
@@ -19,4 +21,20 @@ public interface CotizacionRepository extends JpaRepository<Cotizacion, Long> {
             ORDER BY c.moneda ASC
             """)
     Page<Cotizacion> buscar(@Param("filter") String filter, Pageable pageable);
+    
+    @Query("""
+            SELECT c FROM Cotizacion c
+            WHERE c.activa = true
+            ORDER BY c.moneda ASC
+            """)
+    List<Cotizacion> findAllActivas();
+    
+    @Query("""
+            SELECT c FROM Cotizacion c
+            WHERE UPPER(c.moneda) = UPPER(:moneda)
+                AND c.activa = true
+            ORDER BY c.fechaActualizacion DESC
+            LIMIT 1
+            """)
+    Cotizacion findActivaByMoneda(@Param("moneda") String moneda);
 }
