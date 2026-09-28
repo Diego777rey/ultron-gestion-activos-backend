@@ -79,6 +79,12 @@ public class OrdenTrabajo implements Serializable {
     @Column(name = "fecha_finalizacion")
     private LocalDateTime fechaFinalizacion;
 
+    @Column(name = "monto_pago")
+    private BigDecimal montoPago;
+
+    @Column(name = "observaciones_finalizacion", length = 1000)
+    private String observacionesFinalizacion;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_caja")
     private Caja caja;
