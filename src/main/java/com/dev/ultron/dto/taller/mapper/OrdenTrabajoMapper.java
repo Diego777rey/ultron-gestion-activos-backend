@@ -41,6 +41,8 @@ public interface OrdenTrabajoMapper {
     @Mapping(target = "numero_orden", source = "numeroOrden")
     @Mapping(target = "fecha_creacion", source = "fechaCreacion", qualifiedByName = "formatDateTime")
     @Mapping(target = "fecha_finalizacion", source = "fechaFinalizacion", qualifiedByName = "formatDateTime")
+    @Mapping(target = "monto_pago", source = "montoPago")
+    @Mapping(target = "observaciones_finalizacion", source = "observacionesFinalizacion")
     @Mapping(target = "recepcion", source = "recepcion")
     @Mapping(target = "estado_vehiculo", source = "estadoVehiculo")
     @Mapping(target = "diagnostico", source = "diagnostico")

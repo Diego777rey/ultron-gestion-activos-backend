@@ -30,6 +30,8 @@ public class OrdenTrabajoOutput implements Serializable {
     private UsuarioOutput responsable;
     private String fecha_creacion;
     private String fecha_finalizacion;
+    private java.math.BigDecimal monto_pago;
+    private String observaciones_finalizacion;
     private CajaOutput caja;
     private OrdenRecepcionOutput recepcion;
     private OrdenEstadoVehiculoOutput estado_vehiculo;

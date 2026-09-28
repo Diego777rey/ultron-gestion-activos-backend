@@ -73,6 +73,13 @@ public class OrdenTrabajoActoresWriter {
             orden.setCaja(cajaResolver.exigirConSesionAbierta(input.id_caja()));
         }
 
+        if (input.monto_pago() != null) {
+            orden.setMontoPago(input.monto_pago());
+        }
+        if (input.observaciones_finalizacion() != null) {
+            orden.setObservacionesFinalizacion(input.observaciones_finalizacion());
+        }
+
         if (creando || input.id_cliente() != null || input.id_vehiculo() != null) {
             validarVehiculoPerteneceACliente(orden.getCliente(), orden.getVehiculo());
         }

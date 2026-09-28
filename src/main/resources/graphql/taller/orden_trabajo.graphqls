@@ -53,6 +53,8 @@ type OrdenTrabajoOutput {
     responsable: UsuarioOutput
     fecha_creacion: String
     fecha_finalizacion: String
+    monto_pago: BigDecimal
+    observaciones_finalizacion: String
     caja: CajaOutput
     recepcion: OrdenRecepcionOutput
     estado_vehiculo: OrdenEstadoVehiculoOutput
@@ -125,6 +127,8 @@ input OrdenTrabajoInput {
     id_mecanico: ID
     ids_mecanicos: [ID!]
     id_caja: ID
+    monto_pago: BigDecimal
+    observaciones_finalizacion: String
     recepcion: OrdenRecepcionInput
     estado_vehiculo: OrdenEstadoVehiculoInput
     diagnostico: OrdenDiagnosticoInput

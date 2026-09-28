@@ -14,6 +14,8 @@ public record OrdenTrabajoInput(
         Long id_mecanico,
         List<Long> ids_mecanicos,
         Long id_caja,
+        java.math.BigDecimal monto_pago,
+        String observaciones_finalizacion,
         OrdenRecepcionInput recepcion,
         OrdenEstadoVehiculoInput estado_vehiculo,
         OrdenDiagnosticoInput diagnostico
