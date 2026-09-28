@@ -10,9 +10,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
-    private String token;
-    private String username;
-    private List<RoleDto> roles;
+public class RoleDto {
+    private Long id;
+    private String descripcion;
+    private List<PermisoDto> permisos;
 }
-
