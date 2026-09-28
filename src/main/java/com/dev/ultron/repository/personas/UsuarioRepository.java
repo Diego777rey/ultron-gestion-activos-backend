@@ -82,8 +82,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
             SELECT DISTINCT u FROM Usuario u
             LEFT JOIN FETCH u.usuarioRoles ur
             LEFT JOIN FETCH ur.role r
-            LEFT JOIN FETCH r.rolePermisos rp
-            LEFT JOIN FETCH rp.permiso
             WHERE u.username = :username
             """)
     Optional<Usuario> findByUsernameWithRolesAndPermissions(@Param("username") String username);

@@ -5,6 +5,7 @@ import com.dev.ultron.dto.security.AuthRequest;
 import com.dev.ultron.dto.security.AuthResponse;
 import com.dev.ultron.dto.security.RoleDto;
 import com.dev.ultron.dto.security.PermisoDto;
+import com.dev.ultron.repository.personas.RoleRepository;
 import com.dev.ultron.repository.personas.UsuarioRepository;
 import com.dev.ultron.service.security.TokenService;
 import com.dev.ultron.utilitarios.StringUtil;
@@ -14,10 +15,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -28,8 +31,10 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;
     private final UsuarioRepository usuarioRepository;
+    private final RoleRepository roleRepository;
 
     @PostMapping("/login")
+    @Transactional(readOnly = true)
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
         if (StringUtil.isNullOrEmpty(request.getUsername()) || StringUtil.isNullOrEmpty(request.getPassword())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -46,6 +51,15 @@ public class AuthController {
 
         Usuario usuario = usuarioRepository.findByUsernameWithRolesAndPermissions(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        var roleIds = usuario.getUsuarioRoles().stream()
+                .map(ur -> ur.getRole().getId())
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (!roleIds.isEmpty()) {
+            roleRepository.findWithPermisosByIdIn(roleIds);
+        }
 
         var roles = usuario.getUsuarioRoles().stream()
                 .map(ur -> RoleDto.builder()
