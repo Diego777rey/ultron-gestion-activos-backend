@@ -5,6 +5,7 @@ import com.dev.ultron.dto.impresion.input.TicketVentaInput;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
@@ -12,16 +13,21 @@ import java.text.DecimalFormatSymbols;
 import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
 /**
  * Genera bytes ESC/POS para tickets de 58mm (32 caracteres).
- * Independiente de la cola de impresión: sirve para CUPS y Windows.
+ * No es el camino de impresión: el ticket se arma e imprime desde el frontend
+ * ({@code escpos-ticket-builder.ts}). Esta clase queda solo como respaldo.
  */
 public final class EscPosTicketBuilder {
 
     public static final int WIDTH_58MM = 32;
+    /** Ancho imprimible de una térmica de 58 mm a 203 dpi. */
+    private static final int DOTS_58MM = 384;
+    private static final LogoRaster LOGO = loadLogo();
     private static final Charset IBM850 = Charset.forName("IBM850");
     private static final DateTimeFormatter FECHA =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -67,6 +73,11 @@ public final class EscPosTicketBuilder {
         writeText(sanitize(text));
         write(new byte[]{0x0A});
         return this;
+    }
+
+    /** Imprime el logo de CH Service centrado en el ancho de 58 mm. */
+    public EscPosTicketBuilder logo() {
+        return rasterCentered(LOGO.width, LOGO.height, LOGO.rows);
     }
 
     public EscPosTicketBuilder separator() {
@@ -123,10 +134,9 @@ public final class EscPosTicketBuilder {
     }
 
     public static byte[] ticketVenta(TicketVentaInput ticket) {
-        EscPosTicketBuilder builder = new EscPosTicketBuilder().init().align(1).bold(true);
-        String titulo = blankTo(ticket.getTitulo(), "CH-SERVICE");
-        builder.line(titulo);
-        builder.bold(false);
+        EscPosTicketBuilder builder = new EscPosTicketBuilder().init().align(1);
+        builder.logo();
+        builder.feed(1);
         if (notBlank(ticket.getSubtitulo())) {
             builder.line(ticket.getSubtitulo());
         }
@@ -194,8 +204,54 @@ public final class EscPosTicketBuilder {
         return normalized.replaceAll("[^\\x20-\\x7E]", "?");
     }
 
+    private EscPosTicketBuilder rasterCentered(int widthDots, int heightDots, byte[] rows) {
+        int srcBytes = (widthDots + 7) / 8;
+        int paperBytes = DOTS_58MM / 8;
+        int left = Math.max(0, (paperBytes - srcBytes) / 2);
+        int outBytes = Math.max(paperBytes, srcBytes);
+        write(new byte[]{
+                0x1D, 0x76, 0x30, 0x00,
+                (byte) (outBytes & 0xFF),
+                (byte) ((outBytes >> 8) & 0xFF),
+                (byte) (heightDots & 0xFF),
+                (byte) ((heightDots >> 8) & 0xFF)
+        });
+        byte[] row = new byte[outBytes];
+        for (int y = 0; y < heightDots; y++) {
+            Arrays.fill(row, (byte) 0);
+            System.arraycopy(rows, y * srcBytes, row, left, srcBytes);
+            write(row);
+        }
+        return this;
+    }
+
     private void writeText(String text) {
         write(text.getBytes(IBM850));
+    }
+
+    private static LogoRaster loadLogo() {
+        try (InputStream in = EscPosTicketBuilder.class.getResourceAsStream("/impresion/chservice-logo.bin")) {
+            if (in == null) {
+                throw new IllegalStateException("No se encontró el logo del ticket");
+            }
+            byte[] all = in.readAllBytes();
+            if (all.length < 4) {
+                throw new IllegalStateException("El logo del ticket está incompleto");
+            }
+            int width = ((all[0] & 0xFF) << 8) | (all[1] & 0xFF);
+            int height = ((all[2] & 0xFF) << 8) | (all[3] & 0xFF);
+            int rowBytes = (width + 7) / 8;
+            byte[] rows = Arrays.copyOfRange(all, 4, all.length);
+            if (width <= 0 || height <= 0 || rows.length != rowBytes * height) {
+                throw new IllegalStateException("El logo del ticket no tiene el tamaño esperado");
+            }
+            return new LogoRaster(width, height, rows);
+        } catch (IOException e) {
+            throw new IllegalStateException("No se pudo leer el logo del ticket", e);
+        }
+    }
+
+    private record LogoRaster(int width, int height, byte[] rows) {
     }
 
     private void write(byte[] bytes) {

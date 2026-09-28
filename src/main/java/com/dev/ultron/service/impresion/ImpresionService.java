@@ -19,8 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Servicio genérico de impresión térmica.
- * Usa la cola del sistema: CUPS en Linux/macOS y spooler en Windows.
+ * Respaldo de impresión térmica por la cola del sistema.
+ * El ticket de venta no sale por acá: el frontend lo arma y lo manda
+ * con {@code window.ultronDesktop.printRaw}.
  */
 @Service
 public class ImpresionService {
