@@ -9,6 +9,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
+
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
 
@@ -20,4 +23,12 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 
     @Query("SELECT r FROM Role r WHERE LOWER(r.descripcion) LIKE LOWER(CONCAT('%', :filter, '%'))")
     Page<Role> search(@Param("filter") String filter, Pageable pageable);
+
+    @Query("""
+            SELECT DISTINCT r FROM Role r
+            LEFT JOIN FETCH r.rolePermisos rp
+            LEFT JOIN FETCH rp.permiso
+            WHERE r.id IN :ids
+            """)
+    List<Role> findWithPermisosByIdIn(@Param("ids") Collection<Long> ids);
 }
