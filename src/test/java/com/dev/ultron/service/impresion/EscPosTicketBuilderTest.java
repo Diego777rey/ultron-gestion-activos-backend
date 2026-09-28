@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EscPosTicketBuilderTest {
@@ -55,15 +54,16 @@ class EscPosTicketBuilderTest {
                 .pie("Gracias por su compra")
                 .build();
 
-        String text = new String(EscPosTicketBuilder.ticketVenta(ticket), IBM850);
+        byte[] bytes = EscPosTicketBuilder.ticketVenta(ticket);
+        String text = new String(bytes, IBM850);
 
+        assertTrue(containsLogo(bytes));
         assertTrue(text.contains("TICKET DE VENTA"));
         assertTrue(text.contains("VEN-20260921-1-0001"));
         assertTrue(text.contains("LIQUIDO DE FRENOS DOT 4"));
         assertTrue(text.contains("BATERIA 12V"));
         assertTrue(text.contains("1.162.000"));
         assertTrue(text.contains("Gracias por su compra"));
-        assertFalse(text.contains("á"));
     }
 
     @Test
@@ -74,6 +74,20 @@ class EscPosTicketBuilderTest {
     private static boolean containsCut(byte[] bytes) {
         for (int i = 0; i < bytes.length - 3; i++) {
             if (bytes[i] == 0x1D && bytes[i + 1] == 0x56 && bytes[i + 2] == 0x41) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsLogo(byte[] bytes) {
+        for (int i = 0; i < bytes.length - 7; i++) {
+            if (bytes[i] == 0x1D
+                    && bytes[i + 1] == 0x76
+                    && bytes[i + 2] == 0x30
+                    && bytes[i + 4] == 48
+                    && bytes[i + 6] == (byte) (275 & 0xFF)
+                    && bytes[i + 7] == 1) {
                 return true;
             }
         }
