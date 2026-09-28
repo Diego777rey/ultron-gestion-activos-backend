@@ -77,4 +77,14 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
                 OR LOWER(f.persona.apellido) LIKE LOWER(CONCAT('%', :filter, '%'))
             """)
     List<Usuario> buscarParaReporte(@Param("filter") String filter);
+
+    @Query("""
+            SELECT DISTINCT u FROM Usuario u
+            LEFT JOIN FETCH u.usuarioRoles ur
+            LEFT JOIN FETCH ur.role r
+            LEFT JOIN FETCH r.rolePermisos rp
+            LEFT JOIN FETCH rp.permiso
+            WHERE u.username = :username
+            """)
+    Optional<Usuario> findByUsernameWithRolesAndPermissions(@Param("username") String username);
 }
