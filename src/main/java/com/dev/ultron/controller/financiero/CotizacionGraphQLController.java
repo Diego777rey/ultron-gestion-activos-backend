@@ -22,6 +22,11 @@ public class CotizacionGraphQLController {
     public List<CotizacionOutput> listarCotizaciones() {
         return service.findAll();
     }
+    
+    @QueryMapping
+    public List<CotizacionOutput> listarCotizacionesActivas() {
+        return service.findAllActivas();
+    }
 
     @QueryMapping
     public PageResponse<CotizacionOutput> listarCotizacionesPaginado(@Argument int page, @Argument int size, @Argument String filter) {

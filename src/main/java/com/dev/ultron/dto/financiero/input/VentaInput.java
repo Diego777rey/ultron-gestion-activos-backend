@@ -18,5 +18,7 @@ public class VentaInput implements Serializable {
     private Long idCliente;
     private BigDecimal descuento;
     private String formaPago;
+    private String moneda;
+    private BigDecimal montoMonedaOriginal;
     private List<DetalleVentaInput> detalles;
 }

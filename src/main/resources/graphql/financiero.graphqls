@@ -127,6 +127,8 @@ type VentaOutput {
     total: BigDecimal
     estado: String
     formaPago: String
+    moneda: String
+    montoMonedaOriginal: BigDecimal
     detalles: [DetalleVentaOutput!]
 }
 
@@ -150,6 +152,8 @@ input VentaInput {
     idCliente: ID
     descuento: BigDecimal
     formaPago: String
+    moneda: String
+    montoMonedaOriginal: BigDecimal
     detalles: [DetalleVentaInput!]!
 }
 
@@ -202,6 +206,7 @@ input CotizacionInput {
 
 extend type Query {
     listarCotizaciones: [CotizacionOutput!]!
+    listarCotizacionesActivas: [CotizacionOutput!]!
     listarCotizacionesPaginado(page: Int!, size: Int!, filter: String): CotizacionPageResponse!
     obtenerCotizacionPorId(id: ID!): CotizacionOutput
 }

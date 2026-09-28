@@ -19,6 +19,7 @@ import com.dev.ultron.generic.EntityNotFoundException;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.repository.financiero.CajaRepository;
+import com.dev.ultron.repository.financiero.CotizacionRepository;
 import com.dev.ultron.repository.financiero.IngresoRepository;
 import com.dev.ultron.repository.financiero.MovimientoCajaRepository;
 import com.dev.ultron.repository.financiero.SesionCajaRepository;
@@ -57,6 +58,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
     private final StockProductoSectorService stockProductoSectorService;
     private final OrdenTrabajoRepository ordenTrabajoRepository;
     private final OrdenTrabajoFlujoService ordenTrabajoFlujoService;
+    private final CotizacionRepository cotizacionRepository;
 
     public VentaService(
             VentaRepository repository,
@@ -70,7 +72,8 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             CajaRepository cajaRepository,
             StockProductoSectorService stockProductoSectorService,
             OrdenTrabajoRepository ordenTrabajoRepository,
-            OrdenTrabajoFlujoService ordenTrabajoFlujoService) {
+            OrdenTrabajoFlujoService ordenTrabajoFlujoService,
+            CotizacionRepository cotizacionRepository) {
         this.repository = repository;
         this.mapper = mapper;
         this.sesionCajaRepository = sesionCajaRepository;
@@ -83,6 +86,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         this.stockProductoSectorService = stockProductoSectorService;
         this.ordenTrabajoRepository = ordenTrabajoRepository;
         this.ordenTrabajoFlujoService = ordenTrabajoFlujoService;
+        this.cotizacionRepository = cotizacionRepository;
     }
 
     @Override
@@ -132,6 +136,11 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             formaPago = "EFECTIVO";
         }
 
+        String moneda = input.getMoneda() != null && !input.getMoneda().isBlank()
+                ? input.getMoneda().toUpperCase()
+                : "PYG";
+        BigDecimal montoMonedaOriginal = input.getMontoMonedaOriginal();
+
         Venta venta = Venta.builder()
                 .numero(numero)
                 .fecha(LocalDateTime.now())
@@ -140,6 +149,8 @@ public class VentaService extends GenericCrudService<Venta, Long> {
                 .descuento(descuento)
                 .estado("PAGADA")
                 .formaPago(formaPago)
+                .moneda(moneda)
+                .montoMonedaOriginal(montoMonedaOriginal)
                 .build();
 
         BigDecimal subtotal = BigDecimal.ZERO;
@@ -200,17 +211,28 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         BigDecimal total = subtotal.subtract(descuento);
         venta.setSubtotal(subtotal);
         venta.setTotal(total);
+        
+        BigDecimal totalEnPyg = total;
+        if (!"PYG".equalsIgnoreCase(moneda)) {
+            var cotizacion = cotizacionRepository.findActivaByMoneda(moneda);
+            if (cotizacion == null) {
+                throw new IllegalArgumentException(
+                        "No se encontró una cotización activa para la moneda " + moneda);
+            }
+            totalEnPyg = total.multiply(cotizacion.getValor());
+        }
+        
         venta = guardar(venta);
 
         for (Long idOrden : ordenesAFacturar) {
             ordenTrabajoFlujoService.marcarFacturada(idOrden);
         }
 
-        sesion.setTotalVentasPyg(nvl(sesion.getTotalVentasPyg()).add(total));
+        sesion.setTotalVentasPyg(nvl(sesion.getTotalVentasPyg()).add(totalEnPyg));
         sesionCajaRepository.save(sesion);
 
         var caja = sesion.getCaja();
-        caja.setSaldo_actual(nvl(caja.getSaldo_actual()).add(total));
+        caja.setSaldo_actual(nvl(caja.getSaldo_actual()).add(totalEnPyg));
         cajaRepository.save(caja);
 
         String etiquetaFormaPago = switch (formaPago) {
@@ -218,12 +240,17 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             case "TRANSFERENCIA" -> "Transferencia";
             default -> "Efectivo";
         };
+        
+        String conceptoMovimiento = "Pago venta " + venta.getNumero() + " - " + etiquetaFormaPago;
+        if (!"PYG".equalsIgnoreCase(moneda)) {
+            conceptoMovimiento += " (" + moneda + " " + total + ")";
+        }
 
         MovimientoCaja movimiento = MovimientoCaja.builder()
                 .caja(caja)
                 .tipo("INGRESO")
-                .monto(total)
-                .concepto("Pago venta " + venta.getNumero() + " - " + etiquetaFormaPago)
+                .monto(totalEnPyg)
+                .concepto(conceptoMovimiento)
                 .fecha(LocalDateTime.now())
                 .persona(sesion.getPersona())
                 .moneda("PYG")
@@ -233,6 +260,13 @@ public class VentaService extends GenericCrudService<Venta, Long> {
                 .build();
         movimiento = movimientoCajaRepository.save(movimiento);
 
+        String observaciones = etiquetaFormaPago;
+        if (!"PYG".equalsIgnoreCase(moneda)) {
+            observaciones += " - " + moneda + " " + total + " (PYG " + totalEnPyg + ")";
+        } else {
+            observaciones += " PYG";
+        }
+
         Ingreso ingreso = Ingreso.builder()
                 .movimiento(movimiento)
                 .descripcion("Venta POS " + venta.getNumero())
@@ -240,7 +274,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
                 .cliente_o_fuente(cliente != null && cliente.getPersona() != null
                         ? (cliente.getPersona().getNombre() + " " + cliente.getPersona().getApellido()).trim()
                         : "CONSUMIDOR FINAL")
-                .observaciones(etiquetaFormaPago + " PYG")
+                .observaciones(observaciones)
                 .build();
         ingresoRepository.save(ingreso);
 

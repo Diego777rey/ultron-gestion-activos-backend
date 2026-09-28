@@ -61,6 +61,13 @@ public class CotizacionService extends GenericCrudService<Cotizacion, Long> {
     public List<CotizacionOutput> findAll() {
         return listarTodos().stream().map(mapper::toOutput).collect(Collectors.toList());
     }
+    
+    @Transactional(readOnly = true)
+    public List<CotizacionOutput> findAllActivas() {
+        return repository.findAllActivas().stream()
+                .map(mapper::toOutput)
+                .collect(Collectors.toList());
+    }
 
     @Transactional(readOnly = true)
     public PageResponse<CotizacionOutput> findAllPaginated(int page, int size, String filter) {
