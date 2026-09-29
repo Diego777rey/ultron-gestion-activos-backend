@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface VentaRepository extends JpaRepository<Venta, Long> {
 
@@ -31,4 +33,6 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
 
     @Query("SELECT COUNT(v) FROM Venta v WHERE v.sesionCaja.id_sesion_caja = :idSesion")
     long countBySesion(@Param("idSesion") Long idSesion);
+
+    List<Venta> findBySesionCaja_IdSesionCajaOrderByFechaDesc(Long idSesionCaja);
 }
