@@ -8,6 +8,6 @@ import lombok.Data;
 @ConfigurationProperties(prefix = "file.storage")
 @Data
 public class FileStorageProperties {
-    private String uploadDir = "uploads";
+    private String uploadDir = System.getProperty("user.home") + "/ultron-uploads";
     private long maxFileSize = 5242880;
 }

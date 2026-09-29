@@ -3,6 +3,7 @@ package com.dev.ultron.config;
 import com.dev.ultron.dto.reportes.ReporteHttpHeaders;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -34,7 +35,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/graphql", "/graphiql", "/api/files/**").permitAll()
+                        .requestMatchers("/api/auth/login", "/graphql", "/graphiql").permitAll()
+                        .requestMatchers(HttpMethod.GET, UploadsResourceConfig.PUBLIC_PATH + "**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
