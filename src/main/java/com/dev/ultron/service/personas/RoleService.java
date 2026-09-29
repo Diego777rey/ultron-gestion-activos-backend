@@ -75,9 +75,11 @@ public class RoleService extends GenericCrudService<Role, Long> {
 
     @Transactional(readOnly = true)
     public com.dev.ultron.generic.PageResponse<RoleOutput> rolesUsuarioPaginado(Long usuarioId, int page, int size, String filter) {
-        org.springframework.data.domain.Page<Role> pagina = roleRepository.findRolesByUsuarioIdPaginado(
-            usuarioId, SearchNormalizer.normalizeFilter(filter), org.springframework.data.domain.PageRequest.of(page, size)
-        );
+        String search = SearchNormalizer.normalizeFilter(filter);
+        org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<Role> pagina = search == null
+                ? roleRepository.findAsignadosByUsuarioId(usuarioId, pageRequest)
+                : roleRepository.findAsignadosByUsuarioIdAndDescripcion(usuarioId, search, pageRequest);
         return new com.dev.ultron.generic.PageResponse<>(
             pagina.map(roleMapper::toOutput)
         );
@@ -85,9 +87,11 @@ public class RoleService extends GenericCrudService<Role, Long> {
 
     @Transactional(readOnly = true)
     public com.dev.ultron.generic.PageResponse<RoleOutput> rolesDisponiblesUsuarioPaginado(Long usuarioId, int page, int size, String filter) {
-        org.springframework.data.domain.Page<Role> pagina = roleRepository.findRolesDisponiblesByUsuarioIdPaginado(
-            usuarioId, SearchNormalizer.normalizeFilter(filter), org.springframework.data.domain.PageRequest.of(page, size)
-        );
+        String search = SearchNormalizer.normalizeFilter(filter);
+        org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<Role> pagina = search == null
+                ? roleRepository.findDisponiblesByUsuarioId(usuarioId, pageRequest)
+                : roleRepository.findDisponiblesByUsuarioIdAndDescripcion(usuarioId, search, pageRequest);
         return new com.dev.ultron.generic.PageResponse<>(
             pagina.map(roleMapper::toOutput)
         );
