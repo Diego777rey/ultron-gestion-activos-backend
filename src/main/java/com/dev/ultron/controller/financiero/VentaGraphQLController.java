@@ -37,6 +37,11 @@ public class VentaGraphQLController {
         return service.findById(id);
     }
 
+    @QueryMapping
+    public List<VentaOutput> listarVentasPorSesion(@Argument Long idSesionCaja) {
+        return service.findBySesion(idSesionCaja);
+    }
+
     @MutationMapping
     public VentaOutput registrarVenta(@Argument VentaInput input) {
         return service.registrarVenta(input);

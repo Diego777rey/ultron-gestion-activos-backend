@@ -306,6 +306,17 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         return listarTodos().stream().map(mapper::toOutput).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<VentaOutput> findBySesion(Long idSesionCaja) {
+        if (idSesionCaja == null) {
+            throw new IllegalArgumentException("Debe indicar el ID de la sesión de caja");
+        }
+        return repository.findBySesionCaja_IdSesionCajaOrderByFechaDesc(idSesionCaja)
+                .stream()
+                .map(mapper::toOutput)
+                .toList();
+    }
+
     private BigDecimal agregarDetalleServicio(Venta venta, DetalleVentaInput detInput) {
         if (detInput.getCantidad() == null || detInput.getCantidad().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El servicio debe tener una cantidad válida");
