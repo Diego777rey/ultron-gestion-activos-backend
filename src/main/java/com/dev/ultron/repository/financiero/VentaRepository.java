@@ -34,5 +34,10 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
     @Query("SELECT COUNT(v) FROM Venta v WHERE v.sesionCaja.id_sesion_caja = :idSesion")
     long countBySesion(@Param("idSesion") Long idSesion);
 
-    List<Venta> findBySesionCaja_IdSesionCajaOrderByFechaDesc(Long idSesionCaja);
+    @Query("""
+            SELECT v FROM Venta v
+            WHERE v.sesionCaja.id_sesion_caja = :idSesionCaja
+            ORDER BY v.fecha DESC
+            """)
+    List<Venta> findBySesionCaja_IdSesionCajaOrderByFechaDesc(@Param("idSesionCaja") Long idSesionCaja);
 }
