@@ -17,7 +17,7 @@ type PersonaOutput {
 # ---- INPUT: Tipo de entrada para mutations ----
 input PersonaInput {
     nombre: String!
-    apellido: String!
+    apellido: String
     documento: String!
     email: String
     telefono: String
