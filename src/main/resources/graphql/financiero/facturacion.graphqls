@@ -1,0 +1,155 @@
+# =============================================================
+# Schema de Facturación - CRUD completo
+# =============================================================
+
+# ---- OUTPUT: Tipos de salida para consultas ----
+
+type TimbradoOutput {
+    id_timbrado: ID
+    numero_timbrado: String
+    establecimiento: String
+    punto_expedicion: String
+    numero_inicial: Int
+    numero_final: Int
+    numero_actual: Int
+    fecha_inicio_vigencia: String
+    fecha_fin_vigencia: String
+    id_empresa: ID
+    tipo_factura: String
+    activo: Boolean
+    fecha_creacion: String
+    numeros_disponibles: Int
+    esta_vigente: Boolean
+    dias_hasta_vencimiento: Int
+}
+
+type DetalleFacturaOutput {
+    id_detalle_factura: ID
+    id_producto: ID
+    id_servicio: ID
+    id_presentacion: ID
+    descripcion: String
+    codigo: String
+    cantidad: BigDecimal
+    precio_unitario: BigDecimal
+    subtotal: BigDecimal
+    tipo_iva: String
+    monto_iva: BigDecimal
+    total_linea: BigDecimal
+    numero_linea: Int
+}
+
+type FacturaOutput {
+    id_factura: ID
+    numero_factura: String
+    timbrado: String
+    fecha_emision: String
+    id_timbrado: ID
+    id_cliente: ID
+    id_venta: ID
+    id_sesion_caja: ID
+    id_empresa: ID
+    cliente: ClienteOutput
+    cliente_nombre: String
+    cliente_documento: String
+    cliente_ruc: String
+    cliente_direccion: String
+    subtotal: BigDecimal
+    total_iva_5: BigDecimal
+    total_iva_10: BigDecimal
+    total_exenta: BigDecimal
+    total_iva: BigDecimal
+    total: BigDecimal
+    forma_pago: String
+    moneda: String
+    estado: String
+    fecha_anulacion: String
+    motivo_anulacion: String
+    id_usuario_anulacion: ID
+    observaciones: String
+    id_usuario_emisor: ID
+    fecha_creacion: String
+    detalles: [DetalleFacturaOutput!]
+}
+
+type FacturaPageResponse {
+    content: [FacturaOutput!]!
+    pageInfo: PageInfo!
+}
+
+# ---- INPUT: Tipos de entrada para mutations ----
+
+input TimbradoInput {
+    numeroTimbrado: String!
+    establecimiento: String!
+    puntoExpedicion: String!
+    numeroInicial: Int!
+    numeroFinal: Int!
+    numeroActual: Int
+    fechaInicioVigencia: String!
+    fechaFinVigencia: String!
+    idEmpresa: ID!
+    tipoFactura: String
+    activo: Boolean
+}
+
+input DetalleFacturaInput {
+    idProducto: ID
+    idServicio: ID
+    idPresentacion: ID
+    descripcion: String!
+    codigo: String
+    cantidad: BigDecimal!
+    precioUnitario: BigDecimal!
+    tipoIva: String!
+}
+
+input FacturaInput {
+    idTimbrado: ID!
+    idCliente: ID
+    idVenta: ID
+    idSesionCaja: ID
+    idEmpresa: ID!
+    clienteNombre: String
+    clienteDocumento: String
+    clienteRuc: String
+    clienteDireccion: String
+    formaPago: String!
+    moneda: String
+    observaciones: String
+    detalles: [DetalleFacturaInput!]!
+}
+
+# ---- QUERIES: Operaciones de lectura ----
+
+extend type Query {
+    # Timbrados
+    timbrado(id: ID!): TimbradoOutput
+    timbrados: [TimbradoOutput!]!
+    timbradosPorEmpresa(idEmpresa: ID!): [TimbradoOutput!]!
+    timbradosActivosPorEmpresa(idEmpresa: ID!): [TimbradoOutput!]!
+    timbradoDisponible(idEmpresa: ID!): TimbradoOutput
+    
+    # Facturas
+    factura(id: ID!): FacturaOutput
+    facturas(page: Int, size: Int): FacturaPageResponse!
+    facturasPorEmpresaYEstado(idEmpresa: ID!, estado: String!, page: Int, size: Int): FacturaPageResponse!
+    facturasPorCliente(idCliente: ID!, page: Int, size: Int): FacturaPageResponse!
+    buscarFacturas(idEmpresa: ID!, filtro: String!, page: Int, size: Int): FacturaPageResponse!
+    facturasParaLibroVentas(idEmpresa: ID!, fechaInicio: String!, fechaFin: String!): [FacturaOutput!]!
+}
+
+# ---- MUTATIONS: Operaciones de escritura ----
+
+extend type Mutation {
+    # Timbrados
+    registrarTimbrado(input: TimbradoInput!): TimbradoOutput
+    actualizarTimbrado(id: ID!, input: TimbradoInput!): TimbradoOutput
+    desactivarTimbrado(id: ID!): TimbradoOutput
+    activarTimbrado(id: ID!): TimbradoOutput
+    eliminarTimbrado(id: ID!): Boolean
+    
+    # Facturas
+    emitirFactura(input: FacturaInput!): FacturaOutput
+    anularFactura(id: ID!, motivo: String!): FacturaOutput
+}
