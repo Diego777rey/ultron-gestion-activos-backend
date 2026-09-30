@@ -28,4 +28,9 @@ public class Empresa implements Serializable {
     private String ruc;
     private String direccion;
     private LocalDate fecha_creacion;
+    private String telefono;
+    private String email;
+    private String actividad_economica;
+    private String logo;
+    private Boolean activa;
 }

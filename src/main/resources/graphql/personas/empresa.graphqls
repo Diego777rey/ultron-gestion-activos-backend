@@ -1,0 +1,43 @@
+# =============================================================
+# Schema de Empresa - CRUD completo
+# =============================================================
+
+# ---- OUTPUT: Tipo de salida para consultas ----
+type EmpresaOutput {
+    id_empresa: ID
+    razon_social: String
+    ruc: String
+    direccion: String
+    fecha_creacion: String
+    telefono: String
+    email: String
+    actividad_economica: String
+    logo: String
+    activa: Boolean
+}
+
+# ---- INPUT: Tipo de entrada para mutations ----
+input EmpresaInput {
+    razon_social: String!
+    ruc: String!
+    direccion: String!
+    fechaCreacion: String
+    telefono: String
+    email: String
+    actividadEconomica: String
+    logo: String
+    activa: Boolean
+}
+
+# ---- QUERIES: Operaciones de lectura ----
+extend type Query {
+    empresas: [EmpresaOutput!]!
+    empresa(id: ID!): EmpresaOutput
+}
+
+# ---- MUTATIONS: Operaciones de escritura ----
+extend type Mutation {
+    registrarEmpresa(input: EmpresaInput!): EmpresaOutput
+    actualizarEmpresa(id: ID!, input: EmpresaInput!): EmpresaOutput
+    eliminarEmpresa(id: ID!): Boolean
+}
