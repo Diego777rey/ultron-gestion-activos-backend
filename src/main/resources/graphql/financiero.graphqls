@@ -182,6 +182,7 @@ extend type Query {
 
     listarVentas: [VentaOutput!]!
     listarVentasPaginado(page: Int!, size: Int!, filter: String, idSesionCaja: ID): VentaPageResponse!
+    listarVentasPorSesion(idSesionCaja: ID!): [VentaOutput!]!
     buscarVentaPorId(id: ID!): VentaOutput
 }
 
@@ -204,11 +205,18 @@ input CotizacionInput {
     activa: Boolean
 }
 
+type MontoCotizado {
+    moneda: String!
+    valorCotizacion: BigDecimal
+    monto: BigDecimal!
+}
+
 extend type Query {
     listarCotizaciones: [CotizacionOutput!]!
     listarCotizacionesActivas: [CotizacionOutput!]!
     listarCotizacionesPaginado(page: Int!, size: Int!, filter: String): CotizacionPageResponse!
     obtenerCotizacionPorId(id: ID!): CotizacionOutput
+    cotizarTotal(totalPyg: BigDecimal!): [MontoCotizado!]!
 }
 
 extend type Mutation {

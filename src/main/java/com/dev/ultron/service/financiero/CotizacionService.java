@@ -4,6 +4,7 @@ import com.dev.ultron.domain.financiero.Cotizacion;
 import com.dev.ultron.dto.financiero.input.CotizacionInput;
 import com.dev.ultron.dto.financiero.mapper.CotizacionMapper;
 import com.dev.ultron.dto.financiero.output.CotizacionOutput;
+import com.dev.ultron.dto.financiero.output.MontoCotizadoOutput;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.repository.financiero.CotizacionRepository;
@@ -12,7 +13,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,6 +71,51 @@ public class CotizacionService extends GenericCrudService<Cotizacion, Long> {
         return repository.findAllActivas().stream()
                 .map(mapper::toOutput)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Cotizacion buscarActiva(String moneda) {
+        if (moneda == null || moneda.isBlank()) {
+            return null;
+        }
+        return repository.findActivaByMoneda(moneda.trim());
+    }
+
+    /**
+     * Convierte un total en guaraníes a la moneda de la cotización.
+     * {@code valorCotizacion} es la cantidad de guaraníes por una unidad de esa moneda.
+     */
+    public BigDecimal convertirDesdePyg(BigDecimal totalPyg, BigDecimal valorCotizacion) {
+        if (totalPyg == null) {
+            throw new IllegalArgumentException("Debe indicar el total en guaraníes");
+        }
+        if (valorCotizacion == null || valorCotizacion.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("La cotización debe ser mayor a cero");
+        }
+        return totalPyg.divide(valorCotizacion, 2, RoundingMode.HALF_UP);
+    }
+
+    @Transactional(readOnly = true)
+    public List<MontoCotizadoOutput> cotizarTotal(BigDecimal totalPyg) {
+        if (totalPyg == null || totalPyg.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El total en guaraníes debe ser mayor o igual a cero");
+        }
+        List<MontoCotizadoOutput> montos = new ArrayList<>();
+        montos.add(MontoCotizadoOutput.builder()
+                .moneda("PYG")
+                .monto(totalPyg)
+                .build());
+        for (Cotizacion cotizacion : repository.findAllActivas()) {
+            if (cotizacion.getValor() == null || cotizacion.getValor().compareTo(BigDecimal.ZERO) <= 0) {
+                continue;
+            }
+            montos.add(MontoCotizadoOutput.builder()
+                    .moneda(cotizacion.getMoneda())
+                    .valorCotizacion(cotizacion.getValor())
+                    .monto(convertirDesdePyg(totalPyg, cotizacion.getValor()))
+                    .build());
+        }
+        return montos;
     }
 
     @Transactional(readOnly = true)

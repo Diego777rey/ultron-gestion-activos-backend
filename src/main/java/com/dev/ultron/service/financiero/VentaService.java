@@ -19,7 +19,6 @@ import com.dev.ultron.generic.EntityNotFoundException;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.repository.financiero.CajaRepository;
-import com.dev.ultron.repository.financiero.CotizacionRepository;
 import com.dev.ultron.repository.financiero.IngresoRepository;
 import com.dev.ultron.repository.financiero.MovimientoCajaRepository;
 import com.dev.ultron.repository.financiero.SesionCajaRepository;
@@ -58,7 +57,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
     private final StockProductoSectorService stockProductoSectorService;
     private final OrdenTrabajoRepository ordenTrabajoRepository;
     private final OrdenTrabajoFlujoService ordenTrabajoFlujoService;
-    private final CotizacionRepository cotizacionRepository;
+    private final CotizacionService cotizacionService;
 
     public VentaService(
             VentaRepository repository,
@@ -73,7 +72,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             StockProductoSectorService stockProductoSectorService,
             OrdenTrabajoRepository ordenTrabajoRepository,
             OrdenTrabajoFlujoService ordenTrabajoFlujoService,
-            CotizacionRepository cotizacionRepository) {
+            CotizacionService cotizacionService) {
         this.repository = repository;
         this.mapper = mapper;
         this.sesionCajaRepository = sesionCajaRepository;
@@ -86,7 +85,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         this.stockProductoSectorService = stockProductoSectorService;
         this.ordenTrabajoRepository = ordenTrabajoRepository;
         this.ordenTrabajoFlujoService = ordenTrabajoFlujoService;
-        this.cotizacionRepository = cotizacionRepository;
+        this.cotizacionService = cotizacionService;
     }
 
     @Override
@@ -137,7 +136,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         }
 
         String moneda = input.getMoneda() != null && !input.getMoneda().isBlank()
-                ? input.getMoneda().toUpperCase()
+                ? input.getMoneda().trim()
                 : "PYG";
         BigDecimal montoMonedaOriginal = input.getMontoMonedaOriginal();
 
@@ -211,15 +210,18 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         BigDecimal total = subtotal.subtract(descuento);
         venta.setSubtotal(subtotal);
         venta.setTotal(total);
-        
+
         BigDecimal totalEnPyg = total;
         if (!"PYG".equalsIgnoreCase(moneda)) {
-            var cotizacion = cotizacionRepository.findActivaByMoneda(moneda);
+            var cotizacion = cotizacionService.buscarActiva(moneda);
             if (cotizacion == null) {
                 throw new IllegalArgumentException(
                         "No se encontró una cotización activa para la moneda " + moneda);
             }
-            totalEnPyg = total.multiply(cotizacion.getValor());
+            moneda = cotizacion.getMoneda();
+            montoMonedaOriginal = cotizacionService.convertirDesdePyg(total, cotizacion.getValor());
+            venta.setMoneda(moneda);
+            venta.setMontoMonedaOriginal(montoMonedaOriginal);
         }
         
         venta = guardar(venta);
@@ -243,7 +245,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         
         String conceptoMovimiento = "Pago venta " + venta.getNumero() + " - " + etiquetaFormaPago;
         if (!"PYG".equalsIgnoreCase(moneda)) {
-            conceptoMovimiento += " (" + moneda + " " + total + ")";
+            conceptoMovimiento += " (" + moneda + " " + montoMonedaOriginal + ")";
         }
 
         MovimientoCaja movimiento = MovimientoCaja.builder()
@@ -262,7 +264,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
 
         String observaciones = etiquetaFormaPago;
         if (!"PYG".equalsIgnoreCase(moneda)) {
-            observaciones += " - " + moneda + " " + total + " (PYG " + totalEnPyg + ")";
+            observaciones += " - " + moneda + " " + montoMonedaOriginal + " (PYG " + totalEnPyg + ")";
         } else {
             observaciones += " PYG";
         }
