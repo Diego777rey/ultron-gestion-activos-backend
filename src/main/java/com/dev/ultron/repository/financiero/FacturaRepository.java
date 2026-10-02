@@ -15,7 +15,14 @@ import java.util.Optional;
 @Repository
 public interface FacturaRepository extends JpaRepository<Factura, Long> {
 
-    Optional<Factura> findByNumero_facturaAndTimbrado(String numeroFactura, String timbrado);
+    @Query("""
+            SELECT f FROM Factura f
+            WHERE f.numero_factura = :numeroFactura
+            AND f.timbrado = :timbrado
+            """)
+    Optional<Factura> findByNumero_facturaAndTimbrado(
+            @Param("numeroFactura") String numeroFactura,
+            @Param("timbrado") String timbrado);
 
     @Query("""
             SELECT f FROM Factura f

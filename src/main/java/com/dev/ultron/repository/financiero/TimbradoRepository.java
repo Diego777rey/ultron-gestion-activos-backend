@@ -12,7 +12,8 @@ import java.util.Optional;
 @Repository
 public interface TimbradoRepository extends JpaRepository<Timbrado, Long> {
 
-    Optional<Timbrado> findByNumero_timbrado(String numeroTimbrado);
+    @Query("SELECT t FROM Timbrado t WHERE t.numero_timbrado = :numeroTimbrado")
+    Optional<Timbrado> findByNumero_timbrado(@Param("numeroTimbrado") String numeroTimbrado);
 
     @Query("""
             SELECT t FROM Timbrado t

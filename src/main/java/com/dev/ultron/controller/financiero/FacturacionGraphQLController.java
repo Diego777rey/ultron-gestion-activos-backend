@@ -78,7 +78,7 @@ public class FacturacionGraphQLController {
         int s = size != null ? size : 10;
         Pageable pageable = PageRequest.of(p, s);
         
-        Page<FacturaOutput> result = facturaService.listarTodos(pageable)
+        Page<FacturaOutput> result = facturaService.listarPaginado(pageable)
                 .map(factura -> facturaService.obtenerPorIdConDetalles(factura.getId_factura()));
         
         return buildPageResponse(result);

@@ -9,7 +9,7 @@ import com.dev.ultron.dto.financiero.output.TimbradoOutput;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.repository.financiero.TimbradoRepository;
 import com.dev.ultron.repository.personas.EmpresaRepository;
-import com.dev.ultron.service.seguridad.AuthService;
+import com.dev.ultron.service.security.AuthService;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

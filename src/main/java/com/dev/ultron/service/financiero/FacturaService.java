@@ -20,7 +20,7 @@ import com.dev.ultron.repository.inventario.ProductoRepository;
 import com.dev.ultron.repository.inventario.ServicioRepository;
 import com.dev.ultron.repository.personas.ClienteRepository;
 import com.dev.ultron.repository.personas.EmpresaRepository;
-import com.dev.ultron.service.seguridad.AuthService;
+import com.dev.ultron.service.security.AuthService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

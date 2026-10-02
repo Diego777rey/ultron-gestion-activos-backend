@@ -6,6 +6,7 @@ import com.dev.ultron.utilitarios.StringUtil;
 import org.mapstruct.Named;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Transformaciones reutilizables para MapStruct.
@@ -18,6 +19,7 @@ public final class MappingHelper {
     public static final String TO_LOWER_CASE = "toLowerCase";
     public static final String PARSE_DATE = "parseDate";
     public static final String FORMAT_DATE = "formatDate";
+    public static final String FORMAT_DATETIME = "formatLocalDateTime";
     public static final String DEFAULT_ESTADO_ACTIVO = "defaultEstadoActivo";
     public static final String DEFAULT_BOOLEAN_TRUE = "defaultBooleanTrue";
     public static final String DEFAULT_BOOLEAN_FALSE = "defaultBooleanFalse";
@@ -43,6 +45,11 @@ public final class MappingHelper {
 
     @Named(FORMAT_DATE)
     public static String formatDate(LocalDate value) {
+        return DateUtil.format(value);
+    }
+
+    @Named(FORMAT_DATETIME)
+    public static String formatLocalDateTime(LocalDateTime value) {
         return DateUtil.format(value);
     }
 
