@@ -65,7 +65,7 @@ public interface FacturaMapper {
     @Mapping(target = "id_venta", source = "venta.id_venta")
     @Mapping(target = "id_sesion_caja", source = "sesionCaja.id_sesion_caja")
     @Mapping(target = "id_empresa", source = "empresa.id_empresa")
-    @Mapping(target = "id_usuario_anulacion", source = "usuario_anulacion.id_usuario")
-    @Mapping(target = "id_usuario_emisor", source = "usuario_emisor.id_usuario")
+    @Mapping(target = "id_usuario_anulacion", source = "usuario_anulacion.id")
+    @Mapping(target = "id_usuario_emisor", source = "usuario_emisor.id")
     FacturaOutput toOutput(Factura factura);
 }
