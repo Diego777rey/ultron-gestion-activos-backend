@@ -6,6 +6,7 @@
 type EmpresaOutput {
     id_empresa: ID
     razon_social: String
+    nombre_fantasia: String
     ruc: String
     direccion: String
     fecha_creacion: String
@@ -19,6 +20,7 @@ type EmpresaOutput {
 # ---- INPUT: Tipo de entrada para mutations ----
 input EmpresaInput {
     razon_social: String!
+    nombre_fantasia: String
     ruc: String!
     direccion: String!
     fechaCreacion: String

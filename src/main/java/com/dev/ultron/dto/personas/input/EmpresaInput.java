@@ -7,6 +7,7 @@ import java.io.Serializable;
  */
 public record EmpresaInput(
         String razon_social,
+        String nombre_fantasia,
         String ruc,
         String direccion,
         String fechaCreacion,

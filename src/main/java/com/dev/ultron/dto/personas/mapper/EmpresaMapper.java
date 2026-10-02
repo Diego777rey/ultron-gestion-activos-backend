@@ -17,6 +17,7 @@ public interface EmpresaMapper extends BaseMapper<Empresa, EmpresaInput, Empresa
 
     @Mapping(target = "id_empresa", ignore = true)
     @Mapping(target = "razon_social", source = "razon_social", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "nombre_fantasia", source = "nombre_fantasia", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "ruc", source = "ruc", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "direccion", source = "direccion", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "telefono", source = "telefono", qualifiedByName = MappingHelper.TO_UPPER_CASE)
@@ -31,6 +32,7 @@ public interface EmpresaMapper extends BaseMapper<Empresa, EmpresaInput, Empresa
     @BeanMapping(nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id_empresa", ignore = true)
     @Mapping(target = "razon_social", source = "razon_social", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "nombre_fantasia", source = "nombre_fantasia", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "ruc", source = "ruc", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "direccion", source = "direccion", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "telefono", source = "telefono", qualifiedByName = MappingHelper.TO_UPPER_CASE)

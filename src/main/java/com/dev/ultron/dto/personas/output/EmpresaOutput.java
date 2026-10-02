@@ -14,6 +14,7 @@ import java.time.LocalDate;
 public class EmpresaOutput implements Serializable {
     private Long id_empresa;
     private String razon_social;
+    private String nombre_fantasia;
     private String ruc;
     private String direccion;
     private String fecha_creacion;
