@@ -62,4 +62,19 @@ public interface TimbradoRepository extends JpaRepository<Timbrado, Long> {
             @Param("establecimiento") String establecimiento,
             @Param("puntoExpedicion") String puntoExpedicion
     );
+
+    @Query("""
+            SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END
+            FROM Timbrado t
+            WHERE t.numero_timbrado = :numeroTimbrado
+            AND t.establecimiento = :establecimiento
+            AND t.punto_expedicion = :puntoExpedicion
+            AND t.id_timbrado <> :idExcluir
+            """)
+    boolean existsOtroConMismoPunto(
+            @Param("numeroTimbrado") String numeroTimbrado,
+            @Param("establecimiento") String establecimiento,
+            @Param("puntoExpedicion") String puntoExpedicion,
+            @Param("idExcluir") Long idExcluir
+    );
 }
