@@ -35,7 +35,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/graphql", "/graphiql").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/health", "/graphql", "/graphiql").permitAll()
                         .requestMatchers(HttpMethod.GET, UploadsResourceConfig.PUBLIC_PATH + "**").permitAll()
                         .anyRequest().authenticated()
                 )
@@ -49,11 +49,16 @@ public class SecurityConfig {
     public BearerTokenResolver publicEndpointAwareBearerTokenResolver() {
         DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
         return (HttpServletRequest request) -> {
-            if ("/api/auth/login".equals(request.getRequestURI())) {
+            if (omiteToken(request)) {
                 return null;
             }
             return delegate.resolve(request);
         };
+    }
+
+    private static boolean omiteToken(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return "/api/auth/login".equals(uri) || "/api/health".equals(uri);
     }
 
     @Bean
