@@ -55,6 +55,15 @@ public class FacturaOutput implements Serializable {
     
     private Long id_usuario_emisor;
     private String fecha_creacion;
+
+    private String empresa_razon_social;
+    private String empresa_nombre_fantasia;
+    private String empresa_ruc;
+    private String empresa_direccion;
+    private String empresa_telefono;
+    private String empresa_actividad_economica;
+    private String timbrado_vigencia_inicio;
+    private String timbrado_vigencia_fin;
     
     private List<DetalleFacturaOutput> detalles;
 }

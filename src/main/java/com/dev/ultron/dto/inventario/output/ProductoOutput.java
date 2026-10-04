@@ -18,6 +18,7 @@ public class ProductoOutput {
     private String ubicacion;
     private Boolean estado;
     private String imagen;
+    private String tipoIva;
     private CategoriaProductoOutput categoriaProducto;
     private List<PresentacionProductoOutput> presentaciones;
 }

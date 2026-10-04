@@ -55,6 +55,7 @@ type ProductoOutput {
     ubicacion: String
     estado: Boolean
     imagen: String
+    tipoIva: String
     categoriaProducto: CategoriaProductoOutput
     presentaciones: [PresentacionProductoOutput!]!
 }
@@ -76,6 +77,7 @@ input ProductoInput {
     ubicacion: String
     estado: Boolean
     imagen: String
+    tipoIva: String
     idCategoriaProducto: ID!
     presentaciones: [PresentacionProductoInput!]
 }

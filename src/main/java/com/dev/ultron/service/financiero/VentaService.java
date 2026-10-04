@@ -14,6 +14,8 @@ import com.dev.ultron.domain.taller.OrdenTrabajoDetalle;
 import com.dev.ultron.dto.financiero.input.DetalleVentaInput;
 import com.dev.ultron.dto.financiero.input.VentaInput;
 import com.dev.ultron.dto.financiero.mapper.VentaMapper;
+import com.dev.ultron.dto.financiero.output.FacturaOutput;
+import com.dev.ultron.dto.financiero.output.VentaConFacturaOutput;
 import com.dev.ultron.dto.financiero.output.VentaOutput;
 import com.dev.ultron.generic.EntityNotFoundException;
 import com.dev.ultron.generic.GenericCrudService;
@@ -58,6 +60,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
     private final OrdenTrabajoRepository ordenTrabajoRepository;
     private final OrdenTrabajoFlujoService ordenTrabajoFlujoService;
     private final CotizacionService cotizacionService;
+    private final FacturaService facturaService;
 
     public VentaService(
             VentaRepository repository,
@@ -72,7 +75,8 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             StockProductoSectorService stockProductoSectorService,
             OrdenTrabajoRepository ordenTrabajoRepository,
             OrdenTrabajoFlujoService ordenTrabajoFlujoService,
-            CotizacionService cotizacionService) {
+            CotizacionService cotizacionService,
+            FacturaService facturaService) {
         this.repository = repository;
         this.mapper = mapper;
         this.sesionCajaRepository = sesionCajaRepository;
@@ -86,6 +90,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         this.ordenTrabajoRepository = ordenTrabajoRepository;
         this.ordenTrabajoFlujoService = ordenTrabajoFlujoService;
         this.cotizacionService = cotizacionService;
+        this.facturaService = facturaService;
     }
 
     @Override
@@ -95,6 +100,21 @@ public class VentaService extends GenericCrudService<Venta, Long> {
 
     @Transactional
     public VentaOutput registrarVenta(VentaInput input) {
+        return mapper.toOutput(registrarEntidad(input));
+    }
+
+    /**
+     * Cobra y emite la factura en papel en la misma transacción.
+     * Si el timbrado o la empresa no están listos, la venta no queda registrada.
+     */
+    @Transactional
+    public VentaConFacturaOutput registrarVentaConFactura(VentaInput input) {
+        Venta venta = registrarEntidad(input);
+        FacturaOutput factura = facturaService.emitirDesdeVenta(venta);
+        return new VentaConFacturaOutput(mapper.toOutput(venta), factura);
+    }
+
+    private Venta registrarEntidad(VentaInput input) {
         if (input.getIdSesionCaja() == null) {
             throw new IllegalArgumentException("Debe indicar la sesión de caja");
         }
@@ -280,7 +300,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
                 .build();
         ingresoRepository.save(ingreso);
 
-        return mapper.toOutput(venta);
+        return venta;
     }
 
     @Transactional(readOnly = true)

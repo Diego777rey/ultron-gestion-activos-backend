@@ -69,6 +69,14 @@ type FacturaOutput {
     observaciones: String
     id_usuario_emisor: ID
     fecha_creacion: String
+    empresa_razon_social: String
+    empresa_nombre_fantasia: String
+    empresa_ruc: String
+    empresa_direccion: String
+    empresa_telefono: String
+    empresa_actividad_economica: String
+    timbrado_vigencia_inicio: String
+    timbrado_vigencia_fin: String
     detalles: [DetalleFacturaOutput!]
 }
 
@@ -137,6 +145,7 @@ extend type Query {
     facturasPorCliente(idCliente: ID!, page: Int, size: Int): FacturaPageResponse!
     buscarFacturas(idEmpresa: ID!, filtro: String!, page: Int, size: Int): FacturaPageResponse!
     facturasParaLibroVentas(idEmpresa: ID!, fechaInicio: String!, fechaFin: String!): [FacturaOutput!]!
+    facturaPorVenta(idVenta: ID!): FacturaOutput
 }
 
 # ---- MUTATIONS: Operaciones de escritura ----

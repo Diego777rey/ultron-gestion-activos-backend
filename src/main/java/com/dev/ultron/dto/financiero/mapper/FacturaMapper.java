@@ -67,5 +67,13 @@ public interface FacturaMapper {
     @Mapping(target = "id_empresa", source = "empresa.id_empresa")
     @Mapping(target = "id_usuario_anulacion", source = "usuario_anulacion.id")
     @Mapping(target = "id_usuario_emisor", source = "usuario_emisor.id")
+    @Mapping(target = "empresa_razon_social", source = "empresa.razon_social")
+    @Mapping(target = "empresa_nombre_fantasia", source = "empresa.nombre_fantasia")
+    @Mapping(target = "empresa_ruc", source = "empresa.ruc")
+    @Mapping(target = "empresa_direccion", source = "empresa.direccion")
+    @Mapping(target = "empresa_telefono", source = "empresa.telefono")
+    @Mapping(target = "empresa_actividad_economica", source = "empresa.actividad_economica")
+    @Mapping(target = "timbrado_vigencia_inicio", source = "timbradoEntity.fecha_inicio_vigencia", qualifiedByName = MappingHelper.FORMAT_DATE)
+    @Mapping(target = "timbrado_vigencia_fin", source = "timbradoEntity.fecha_fin_vigencia", qualifiedByName = MappingHelper.FORMAT_DATE)
     FacturaOutput toOutput(Factura factura);
 }

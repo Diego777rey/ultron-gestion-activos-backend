@@ -17,6 +17,7 @@ public class ProductoInput {
     private String ubicacion;
     private Boolean estado;
     private String imagen;
+    private String tipoIva;
     private Long idCategoriaProducto;
     private List<PresentacionProductoInput> presentaciones;
 }
