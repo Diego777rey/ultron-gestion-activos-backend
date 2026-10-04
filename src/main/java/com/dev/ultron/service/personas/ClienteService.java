@@ -112,13 +112,14 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
      * Lista clientes de forma paginada y retorna un PageResponse DTO.
      */
     @Transactional(readOnly = true)
+    /** Los más recientes primero: un cliente recién registrado aparece arriba. */
     public com.dev.ultron.generic.PageResponse<ClienteOutput> listarClientesPaginado(int page, int size, String filter) {
         org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(page, size);
         org.springframework.data.domain.Page<Cliente> pagina;
         if (filter != null && !filter.trim().isEmpty()) {
-            pagina = clienteRepository.search(SearchNormalizer.normalizeFilter(filter), pageRequest);
+            pagina = clienteRepository.search(SearchNormalizer.normalizeFilter(filtroDocumento(filter)), pageRequest);
         } else {
-            pagina = listarPaginado(pageRequest);
+            pagina = clienteRepository.findRecientes(pageRequest);
         }
         return new com.dev.ultron.generic.PageResponse<>(
             pagina.map(clienteMapper::toOutput)
@@ -140,6 +141,18 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
     @Transactional(readOnly = true)
     public ClienteOutput buscarClientePorDocumento(String documento) {
         return buscarEntidadPorDocumento(documento).map(clienteMapper::toOutput).orElse(null);
+    }
+
+    /**
+     * Un C.I./RUC tipeado como "6.124.099" o "6124099-5" se busca como "6124099",
+     * así coincide con el documento y con el RUC guardado.
+     */
+    private static String filtroDocumento(String filter) {
+        String trimmed = filter.trim();
+        if (!trimmed.matches("^[\\d.\\s]+(-\\d)?$")) {
+            return filter;
+        }
+        return trimmed.replaceAll("[\\s.]", "").replaceFirst("-\\d$", "");
     }
 
     private Optional<Cliente> buscarEntidadPorDocumento(String documento) {
