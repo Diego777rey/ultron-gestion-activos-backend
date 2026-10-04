@@ -46,6 +46,19 @@ public interface TimbradoRepository extends JpaRepository<Timbrado, Long> {
     @Query("""
             SELECT t FROM Timbrado t
             WHERE t.empresa.id_empresa = :idEmpresa
+            AND t.activo = true
+            AND (t.tipo_factura IS NULL OR t.tipo_factura = 'PAPEL')
+            AND CURRENT_DATE BETWEEN t.fecha_inicio_vigencia AND t.fecha_fin_vigencia
+            AND t.numero_actual IS NOT NULL
+            AND t.numero_actual <= t.numero_final
+            ORDER BY t.fecha_inicio_vigencia DESC
+            LIMIT 1
+            """)
+    Optional<Timbrado> findTimbradoPapelDisponible(@Param("idEmpresa") Long idEmpresa);
+
+    @Query("""
+            SELECT t FROM Timbrado t
+            WHERE t.empresa.id_empresa = :idEmpresa
             ORDER BY t.fecha_creacion DESC
             """)
     List<Timbrado> findAllByEmpresa(@Param("idEmpresa") Long idEmpresa);

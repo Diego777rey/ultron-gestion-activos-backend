@@ -72,6 +72,14 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
 
     @Query("""
             SELECT f FROM Factura f
+            LEFT JOIN FETCH f.empresa
+            LEFT JOIN FETCH f.timbradoEntity
+            WHERE f.venta.id_venta = :idVenta
+            """)
+    Optional<Factura> findByVentaConEmisor(@Param("idVenta") Long idVenta);
+
+    @Query("""
+            SELECT f FROM Factura f
             WHERE f.empresa.id_empresa = :idEmpresa
             AND (
                 LOWER(f.numero_factura) LIKE LOWER(CONCAT('%', :filter, '%'))

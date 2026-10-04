@@ -73,6 +73,11 @@ public class FacturacionGraphQLController {
     }
 
     @QueryMapping
+    public FacturaOutput facturaPorVenta(@Argument Long idVenta) {
+        return facturaService.obtenerPorVenta(idVenta);
+    }
+
+    @QueryMapping
     public Map<String, Object> facturas(@Argument Integer page, @Argument Integer size) {
         int p = page != null ? page : 0;
         int s = size != null ? size : 10;

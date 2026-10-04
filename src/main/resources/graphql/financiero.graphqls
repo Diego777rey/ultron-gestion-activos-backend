@@ -132,6 +132,11 @@ type VentaOutput {
     detalles: [DetalleVentaOutput!]
 }
 
+type VentaConFacturaOutput {
+    venta: VentaOutput!
+    factura: FacturaOutput!
+}
+
 type VentaPageResponse {
     content: [VentaOutput!]!
     pageInfo: PageInfo!
@@ -232,6 +237,7 @@ extend type Mutation {
     cerrarCaja(input: CerrarCajaInput!): SesionCajaOutput
 
     registrarVenta(input: VentaInput!): VentaOutput
+    registrarVentaConFactura(input: VentaInput!): VentaConFacturaOutput!
 
     crearCotizacion(input: CotizacionInput!): CotizacionOutput
     actualizarCotizacion(id: ID!, input: CotizacionInput!): CotizacionOutput

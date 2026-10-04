@@ -3,6 +3,8 @@ package com.dev.ultron.config;
 import graphql.GraphQLError;
 import graphql.GraphqlErrorBuilder;
 import graphql.schema.DataFetchingEnvironment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter;
 import org.springframework.graphql.execution.ErrorType;
@@ -28,13 +30,15 @@ import com.dev.ultron.generic.EntityNotFoundException;
 @Component
 public class GraphQLExceptionHandler extends DataFetcherExceptionResolverAdapter {
 
+    private static final Logger log = LoggerFactory.getLogger(GraphQLExceptionHandler.class);
+
     @Override
     protected GraphQLError resolveToSingleError(Throwable ex, DataFetchingEnvironment env) {
         if (ex instanceof EntityNotFoundException) {
             return buildError(env, ex.getMessage(), ErrorType.NOT_FOUND, "ENTITY_NOT_FOUND");
         }
 
-        if (ex instanceof IllegalArgumentException) {
+        if (ex instanceof IllegalArgumentException || ex instanceof IllegalStateException) {
             return buildError(env, ex.getMessage(), ErrorType.BAD_REQUEST, "VALIDATION_ERROR");
         }
 
@@ -50,6 +54,7 @@ public class GraphQLExceptionHandler extends DataFetcherExceptionResolverAdapter
             return buildError(env, message, ErrorType.BAD_REQUEST, "DATA_INTEGRITY_VIOLATION");
         }
 
+        log.error("Error no controlado en GraphQL", ex);
         return buildError(
                 env,
                 "Ocurrió un error interno en el servidor. Inténtelo nuevamente más tarde.",
