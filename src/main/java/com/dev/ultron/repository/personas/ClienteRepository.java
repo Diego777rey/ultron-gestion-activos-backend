@@ -35,8 +35,14 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
                 OR LOWER(CONCAT(c.persona.nombre, ' ', c.persona.apellido)) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(c.persona.documento) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(c.ruc) LIKE LOWER(CONCAT('%', :filter, '%'))
+            ORDER BY c.id_cliente DESC
             """)
     org.springframework.data.domain.Page<Cliente> search(@org.springframework.data.repository.query.Param("filter") String filter, org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query(
+            value = "SELECT c FROM Cliente c ORDER BY c.id_cliente DESC",
+            countQuery = "SELECT COUNT(c) FROM Cliente c")
+    org.springframework.data.domain.Page<Cliente> findRecientes(org.springframework.data.domain.Pageable pageable);
 
     @org.springframework.data.jpa.repository.Query("""
             SELECT c FROM Cliente c
