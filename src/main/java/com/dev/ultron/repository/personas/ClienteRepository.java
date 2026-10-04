@@ -13,6 +13,18 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     Optional<Cliente> findByRuc(String ruc);
 
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT c FROM Cliente c
+            JOIN FETCH c.persona p
+            WHERE UPPER(p.documento) IN :documentos
+                OR UPPER(c.ruc) IN :documentos
+                OR c.ruc LIKE :prefijoRuc
+            ORDER BY c.id_cliente
+            """)
+    java.util.List<Cliente> buscarPorDocumentoORuc(
+            @org.springframework.data.repository.query.Param("documentos") java.util.Collection<String> documentos,
+            @org.springframework.data.repository.query.Param("prefijoRuc") String prefijoRuc);
+
     @org.springframework.data.jpa.repository.Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Cliente c WHERE c.persona.documento = :documento")
     boolean existsByPersonaDocumento(@org.springframework.data.repository.query.Param("documento") String documento);
 
