@@ -7,6 +7,7 @@ import com.dev.ultron.dto.personas.mapper.ClienteMapper;
 import com.dev.ultron.dto.personas.mapper.PersonaMapper;
 import com.dev.ultron.dto.personas.output.ClienteOutput;
 import com.dev.ultron.generic.GenericCrudService;
+import com.dev.ultron.generic.SearchNormalizer;
 import com.dev.ultron.repository.personas.ClienteRepository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Servicio de Cliente que extiende el CRUD genérico.
@@ -56,6 +58,9 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
     @Transactional
     public ClienteOutput registrarCliente(ClienteInput input) {
         String documento = input.persona().documento();
+        if (buscarEntidadPorDocumento(documento).isPresent()) {
+            throw new IllegalArgumentException("Ya existe un cliente registrado con el documento " + documento.trim());
+        }
         Persona persona = personaService.buscarPorDocumento(documento).orElse(null);
 
         if (persona == null) {
@@ -111,7 +116,7 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
         org.springframework.data.domain.PageRequest pageRequest = org.springframework.data.domain.PageRequest.of(page, size);
         org.springframework.data.domain.Page<Cliente> pagina;
         if (filter != null && !filter.trim().isEmpty()) {
-            pagina = clienteRepository.search(com.dev.ultron.generic.SearchNormalizer.normalizeFilter(filter), pageRequest);
+            pagina = clienteRepository.search(SearchNormalizer.normalizeFilter(filter), pageRequest);
         } else {
             pagina = listarPaginado(pageRequest);
         }
@@ -126,6 +131,28 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
     @Transactional(readOnly = true)
     public ClienteOutput buscarClientePorId(Long id) {
         return clienteMapper.toOutput(buscarPorIdOrThrow(id));
+    }
+
+    /**
+     * Busca un cliente por CI o RUC, con o sin dígito verificador
+     * (80012345, 80012345-0 y el RUC guardado aparte se consideran el mismo).
+     */
+    @Transactional(readOnly = true)
+    public ClienteOutput buscarClientePorDocumento(String documento) {
+        return buscarEntidadPorDocumento(documento).map(clienteMapper::toOutput).orElse(null);
+    }
+
+    private Optional<Cliente> buscarEntidadPorDocumento(String documento) {
+        String normalizado = SearchNormalizer.normalize(documento);
+        if (normalizado == null) {
+            return Optional.empty();
+        }
+        normalizado = normalizado.replaceAll("[\\s.]", "");
+        String base = normalizado.replaceFirst("-\\d$", "");
+        return clienteRepository
+                .buscarPorDocumentoORuc(List.of(normalizado, base), base + "-_")
+                .stream()
+                .findFirst();
     }
 
     /**
