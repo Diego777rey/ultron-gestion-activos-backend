@@ -1,6 +1,7 @@
 package com.dev.ultron.controller.financiero;
 
 import com.dev.ultron.dto.financiero.input.VentaInput;
+import com.dev.ultron.dto.financiero.output.VentaConFacturaOutput;
 import com.dev.ultron.dto.financiero.output.VentaOutput;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.service.financiero.VentaService;
@@ -37,8 +38,18 @@ public class VentaGraphQLController {
         return service.findById(id);
     }
 
+    @QueryMapping
+    public List<VentaOutput> listarVentasPorSesion(@Argument Long idSesionCaja) {
+        return service.findBySesion(idSesionCaja);
+    }
+
     @MutationMapping
     public VentaOutput registrarVenta(@Argument VentaInput input) {
         return service.registrarVenta(input);
+    }
+
+    @MutationMapping
+    public VentaConFacturaOutput registrarVentaConFactura(@Argument VentaInput input) {
+        return service.registrarVentaConFactura(input);
     }
 }

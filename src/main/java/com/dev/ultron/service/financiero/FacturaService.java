@@ -14,13 +14,15 @@ import com.dev.ultron.dto.financiero.mapper.FacturaMapper;
 import com.dev.ultron.dto.financiero.output.FacturaOutput;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.repository.financiero.FacturaRepository;
+import com.dev.ultron.repository.financiero.SesionCajaRepository;
 import com.dev.ultron.repository.financiero.TimbradoRepository;
+import com.dev.ultron.repository.financiero.VentaRepository;
 import com.dev.ultron.repository.inventario.PresentacionProductoRepository;
 import com.dev.ultron.repository.inventario.ProductoRepository;
 import com.dev.ultron.repository.inventario.ServicioRepository;
 import com.dev.ultron.repository.personas.ClienteRepository;
 import com.dev.ultron.repository.personas.EmpresaRepository;
-import com.dev.ultron.service.seguridad.AuthService;
+import com.dev.ultron.service.security.AuthService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,6 +33,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,8 +44,14 @@ import java.util.stream.Collectors;
 @Service
 public class FacturaService extends GenericCrudService<Factura, Long> {
 
+    private static final String IVA_10 = "10";
+    private static final BigDecimal DIVISOR_IVA_10 = new BigDecimal("11");
+    private static final BigDecimal DIVISOR_IVA_5 = new BigDecimal("21");
+
     private final FacturaRepository facturaRepository;
     private final TimbradoRepository timbradoRepository;
+    private final VentaRepository ventaRepository;
+    private final SesionCajaRepository sesionCajaRepository;
     private final ClienteRepository clienteRepository;
     private final EmpresaRepository empresaRepository;
     private final ProductoRepository productoRepository;
@@ -54,6 +63,8 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
 
     public FacturaService(FacturaRepository facturaRepository,
                          TimbradoRepository timbradoRepository,
+                         VentaRepository ventaRepository,
+                         SesionCajaRepository sesionCajaRepository,
                          ClienteRepository clienteRepository,
                          EmpresaRepository empresaRepository,
                          ProductoRepository productoRepository,
@@ -64,6 +75,8 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
                          AuthService authService) {
         this.facturaRepository = facturaRepository;
         this.timbradoRepository = timbradoRepository;
+        this.ventaRepository = ventaRepository;
+        this.sesionCajaRepository = sesionCajaRepository;
         this.clienteRepository = clienteRepository;
         this.empresaRepository = empresaRepository;
         this.productoRepository = productoRepository;
@@ -89,12 +102,26 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
         
         Empresa empresa = empresaRepository.findById(input.idEmpresa())
                 .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada"));
+        if (timbrado.getEmpresa() == null
+                || !empresa.getId_empresa().equals(timbrado.getEmpresa().getId_empresa())) {
+            throw new IllegalArgumentException("El timbrado no pertenece a la empresa registrada");
+        }
         
         Cliente cliente = input.idCliente() != null ?
                 clienteRepository.findById(input.idCliente()).orElse(null) : null;
-        
-        Venta venta = null;
-        SesionCaja sesionCaja = null;
+
+        if (input.idVenta() != null && facturaRepository.findByVenta(input.idVenta()).isPresent()) {
+            throw new IllegalStateException("Esta venta ya tiene una factura emitida");
+        }
+
+        Venta venta = input.idVenta() != null
+                ? ventaRepository.findById(input.idVenta())
+                    .orElseThrow(() -> new IllegalArgumentException("Venta no encontrada"))
+                : null;
+        SesionCaja sesionCaja = input.idSesionCaja() != null
+                ? sesionCajaRepository.findById(input.idSesionCaja())
+                    .orElseThrow(() -> new IllegalArgumentException("Sesión de caja no encontrada"))
+                : null;
         
         Usuario usuarioEmisor = authService.getAuthenticatedUser();
         
@@ -125,6 +152,9 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
     @Transactional
     private synchronized String generarNumeroFactura(Timbrado timbrado) {
         Integer numeroActual = timbrado.getNumero_actual();
+        if (numeroActual == null) {
+            throw new IllegalStateException("El timbrado no tiene definido el próximo número");
+        }
         
         if (numeroActual > timbrado.getNumero_final()) {
             throw new IllegalStateException(
@@ -154,8 +184,16 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
         Timbrado timbrado = timbradoRepository.findById(idTimbrado)
                 .orElseThrow(() -> new IllegalArgumentException("Timbrado no encontrado"));
         
-        if (!timbrado.getActivo()) {
+        if (!Boolean.TRUE.equals(timbrado.getActivo())) {
             throw new IllegalStateException("El timbrado no está activo");
+        }
+        if (timbrado.getTipo_factura() != null && !"PAPEL".equalsIgnoreCase(timbrado.getTipo_factura())) {
+            throw new IllegalStateException(
+                    "La facturación electrónica todavía no está habilitada. Usá un timbrado de factura en papel"
+            );
+        }
+        if (timbrado.getNumero_actual() == null) {
+            throw new IllegalStateException("El timbrado no tiene definido el próximo número");
         }
         
         LocalDateTime hoy = LocalDateTime.now().toLocalDate().atStartOfDay();
@@ -178,14 +216,14 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
      */
     private void completarDatosCliente(Factura factura, Cliente cliente, FacturaInput input) {
         if (cliente != null && cliente.getPersona() != null) {
-            factura.setCliente_nombre(
-                    cliente.getPersona().getNombre() + " " + cliente.getPersona().getApellido()
-            );
+            String nombre = unir(cliente.getPersona().getNombre(), cliente.getPersona().getApellido());
+            factura.setCliente_nombre(nombre.isBlank() ? "SIN NOMBRE" : nombre);
             factura.setCliente_documento(cliente.getPersona().getDocumento());
-            factura.setCliente_ruc(cliente.getRuc());
+            factura.setCliente_ruc(cliente.getRuc() != null ? cliente.getRuc() : cliente.getPersona().getDocumento());
             factura.setCliente_direccion(cliente.getPersona().getDireccion());
         } else {
-            factura.setCliente_nombre(input.clienteNombre());
+            String nombre = input.clienteNombre();
+            factura.setCliente_nombre(nombre == null || nombre.isBlank() ? "SIN NOMBRE" : nombre);
             factura.setCliente_documento(input.clienteDocumento());
             factura.setCliente_ruc(input.clienteRuc());
             factura.setCliente_direccion(input.clienteDireccion());
@@ -241,18 +279,16 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
      */
     private void calcularTotalesDetalle(DetalleFactura detalle) {
         BigDecimal subtotal = detalle.getCantidad().multiply(detalle.getPrecio_unitario())
-                .setScale(2, RoundingMode.HALF_UP);
+                .setScale(0, RoundingMode.HALF_UP);
         detalle.setSubtotal(subtotal);
         
         BigDecimal montoIva = BigDecimal.ZERO;
         String tipoIva = detalle.getTipo_iva();
         
         if ("5".equals(tipoIva)) {
-            montoIva = subtotal.multiply(new BigDecimal("0.05"))
-                    .divide(new BigDecimal("1.05"), 2, RoundingMode.HALF_UP);
+            montoIva = subtotal.divide(DIVISOR_IVA_5, 0, RoundingMode.HALF_UP);
         } else if ("10".equals(tipoIva)) {
-            montoIva = subtotal.multiply(new BigDecimal("0.10"))
-                    .divide(new BigDecimal("1.10"), 2, RoundingMode.HALF_UP);
+            montoIva = subtotal.divide(DIVISOR_IVA_10, 0, RoundingMode.HALF_UP);
         }
         
         detalle.setMonto_iva(montoIva);
@@ -364,5 +400,170 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
         return facturas.stream()
                 .map(facturaMapper::toOutput)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Emite la factura en papel de una venta ya cobrada, usando la empresa
+     * registrada y el timbrado activo, vigente y con próximo número.
+     */
+    @Transactional
+    public FacturaOutput emitirDesdeVenta(Venta venta) {
+        if (venta == null || venta.getId_venta() == null) {
+            throw new IllegalArgumentException("La venta es obligatoria para emitir la factura");
+        }
+        Empresa empresa = resolverEmpresaRegistrada();
+        Timbrado timbrado = timbradoRepository.findTimbradoPapelDisponible(empresa.getId_empresa())
+                .orElseThrow(() -> new IllegalStateException(
+                        "No hay un timbrado de factura en papel activo, vigente y con el próximo número definido. "
+                                + "Cargalo en Timbrados"
+                ));
+        Long idCliente = venta.getCliente() != null ? venta.getCliente().getId_cliente() : null;
+        Long idSesion = venta.getSesionCaja() != null ? venta.getSesionCaja().getId_sesion_caja() : null;
+        String formaPago = venta.getFormaPago() != null ? venta.getFormaPago() : "EFECTIVO";
+        FacturaInput input = new FacturaInput(
+                timbrado.getId_timbrado(),
+                idCliente,
+                venta.getId_venta(),
+                idSesion,
+                empresa.getId_empresa(),
+                null,
+                null,
+                null,
+                null,
+                formaPago,
+                "PYG",
+                null,
+                detallesDesdeVenta(venta)
+        );
+        return emitirFactura(input);
+    }
+
+    @Transactional(readOnly = true)
+    public FacturaOutput obtenerPorVenta(Long idVenta) {
+        if (idVenta == null) {
+            return null;
+        }
+        return facturaRepository.findByVentaConEmisor(idVenta)
+                .map(factura -> {
+                    factura.getDetalles().size();
+                    return facturaMapper.toOutput(factura);
+                })
+                .orElse(null);
+    }
+
+    private Empresa resolverEmpresaRegistrada() {
+        return empresaRepository.findAll().stream()
+                .filter(empresa -> !Boolean.FALSE.equals(empresa.getActiva()))
+                .min(Comparator.comparing(Empresa::getId_empresa))
+                .orElseThrow(() -> new IllegalStateException(
+                        "No hay una empresa registrada. Cargala en Datos de facturación"
+                ));
+    }
+
+    private List<DetalleFacturaInput> detallesDesdeVenta(Venta venta) {
+        List<DetalleVenta> lineas = venta.getDetalles();
+        if (lineas == null || lineas.isEmpty()) {
+            throw new IllegalArgumentException("La venta no tiene ítems para facturar");
+        }
+        BigDecimal descuento = nvl(venta.getDescuento()).setScale(0, RoundingMode.HALF_UP);
+        BigDecimal base = lineas.stream()
+                .map(detalle -> nvl(detalle.getSubtotal()).setScale(0, RoundingMode.HALF_UP))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal objetivo = base.subtract(descuento);
+        if (objetivo.signum() < 0) {
+            throw new IllegalArgumentException("El descuento no puede superar el total de la factura");
+        }
+
+        List<DetalleFacturaInput> detalles = new ArrayList<>();
+        BigDecimal acumulado = BigDecimal.ZERO;
+        for (int i = 0; i < lineas.size(); i++) {
+            DetalleVenta detalle = lineas.get(i);
+            BigDecimal bruto = nvl(detalle.getSubtotal()).setScale(0, RoundingMode.HALF_UP);
+            BigDecimal neto = i == lineas.size() - 1
+                    ? objetivo.subtract(acumulado)
+                    : (base.signum() == 0
+                        ? BigDecimal.ZERO
+                        : bruto.multiply(objetivo).divide(base, 0, RoundingMode.HALF_UP));
+            if (neto.signum() < 0) {
+                neto = BigDecimal.ZERO;
+            }
+            if (i < lineas.size() - 1) {
+                acumulado = acumulado.add(neto);
+            }
+
+            BigDecimal cantidad = nvl(detalle.getCantidad());
+            if (cantidad.signum() <= 0) {
+                cantidad = BigDecimal.ONE;
+            }
+            BigDecimal precio = detalle.getPrecioUnitario() != null ? detalle.getPrecioUnitario() : neto;
+            String descripcion = descripcionLinea(detalle);
+            if (descuento.signum() > 0) {
+                BigDecimal producido = precioEntero(cantidad, neto).multiply(cantidad).setScale(0, RoundingMode.HALF_UP);
+                if (producido.compareTo(neto) == 0) {
+                    precio = precioEntero(cantidad, neto);
+                } else {
+                    descripcion = cantidad.stripTrailingZeros().toPlainString() + " x " + descripcion;
+                    cantidad = BigDecimal.ONE;
+                    precio = neto;
+                }
+            }
+            detalles.add(new DetalleFacturaInput(
+                    detalle.getProducto() != null ? detalle.getProducto().getId_producto() : null,
+                    detalle.getServicio() != null ? detalle.getServicio().getId_servicio() : null,
+                    detalle.getPresentacion() != null ? detalle.getPresentacion().getId_presentacion_producto() : null,
+                    descripcion,
+                    detalle.getProducto() != null ? detalle.getProducto().getCodigo() : null,
+                    cantidad,
+                    precio,
+                    tipoIvaDe(detalle)
+            ));
+        }
+        return detalles;
+    }
+
+    private static BigDecimal precioEntero(BigDecimal cantidad, BigDecimal neto) {
+        return neto.divide(cantidad, 0, RoundingMode.HALF_UP);
+    }
+
+    private static BigDecimal nvl(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
+    }
+
+    private static String tipoIvaDe(DetalleVenta detalle) {
+        if (detalle.getProducto() == null || detalle.getProducto().getTipoIva() == null
+                || detalle.getProducto().getTipoIva().isBlank()) {
+            return IVA_10;
+        }
+        String valor = detalle.getProducto().getTipoIva().trim().toUpperCase();
+        if ("5".equals(valor) || "10".equals(valor) || "EXENTA".equals(valor)) {
+            return valor;
+        }
+        return IVA_10;
+    }
+
+    private static String descripcionLinea(DetalleVenta detalle) {
+        if (detalle.getDescripcion() != null && !detalle.getDescripcion().isBlank()) {
+            return detalle.getDescripcion();
+        }
+        if (detalle.getProducto() != null) {
+            String nombre = detalle.getProducto().getNombre() != null ? detalle.getProducto().getNombre() : "ITEM";
+            if (detalle.getPresentacion() != null && detalle.getPresentacion().getDescripcion() != null) {
+                return nombre + " " + detalle.getPresentacion().getDescripcion();
+            }
+            return nombre;
+        }
+        if (detalle.getServicio() != null && detalle.getServicio().getNombre() != null) {
+            return detalle.getServicio().getNombre();
+        }
+        if (detalle.getOrdenTrabajo() != null && detalle.getOrdenTrabajo().getNumeroOrden() != null) {
+            return "ORDEN " + detalle.getOrdenTrabajo().getNumeroOrden();
+        }
+        return "ITEM";
+    }
+
+    private static String unir(String nombre, String apellido) {
+        String primero = nombre != null ? nombre.trim() : "";
+        String segundo = apellido != null ? apellido.trim() : "";
+        return (primero + " " + segundo).trim();
     }
 }

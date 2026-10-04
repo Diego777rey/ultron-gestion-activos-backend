@@ -2,6 +2,7 @@ package com.dev.ultron.controller.financiero;
 
 import com.dev.ultron.dto.financiero.input.CotizacionInput;
 import com.dev.ultron.dto.financiero.output.CotizacionOutput;
+import com.dev.ultron.dto.financiero.output.MontoCotizadoOutput;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.service.financiero.CotizacionService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Controller
@@ -36,6 +38,11 @@ public class CotizacionGraphQLController {
     @QueryMapping
     public CotizacionOutput obtenerCotizacionPorId(@Argument Long id) {
         return service.findById(id);
+    }
+
+    @QueryMapping
+    public List<MontoCotizadoOutput> cotizarTotal(@Argument BigDecimal totalPyg) {
+        return service.cotizarTotal(totalPyg);
     }
 
     @MutationMapping

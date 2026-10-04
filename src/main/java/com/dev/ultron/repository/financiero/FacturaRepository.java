@@ -15,7 +15,14 @@ import java.util.Optional;
 @Repository
 public interface FacturaRepository extends JpaRepository<Factura, Long> {
 
-    Optional<Factura> findByNumero_facturaAndTimbrado(String numeroFactura, String timbrado);
+    @Query("""
+            SELECT f FROM Factura f
+            WHERE f.numero_factura = :numeroFactura
+            AND f.timbrado = :timbrado
+            """)
+    Optional<Factura> findByNumero_facturaAndTimbrado(
+            @Param("numeroFactura") String numeroFactura,
+            @Param("timbrado") String timbrado);
 
     @Query("""
             SELECT f FROM Factura f
@@ -62,6 +69,14 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
             WHERE f.venta.id_venta = :idVenta
             """)
     Optional<Factura> findByVenta(@Param("idVenta") Long idVenta);
+
+    @Query("""
+            SELECT f FROM Factura f
+            LEFT JOIN FETCH f.empresa
+            LEFT JOIN FETCH f.timbradoEntity
+            WHERE f.venta.id_venta = :idVenta
+            """)
+    Optional<Factura> findByVentaConEmisor(@Param("idVenta") Long idVenta);
 
     @Query("""
             SELECT f FROM Factura f

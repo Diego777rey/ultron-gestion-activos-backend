@@ -69,4 +69,28 @@ public class ClienteGraphQLControllerTest {
                 .path("listarClientes[0].persona.direccion").entity(String.class)
                 .isEqualTo("Av. Siempre Viva 123");
     }
+
+    @Test
+    void buscarClientePorDocumentoDevuelveElClienteONull() {
+        ClienteOutput cliente = ClienteOutput.builder()
+                .id_cliente(7L)
+                .ruc("80012345-0")
+                .persona(PersonaOutput.builder().nombre("COMERCIO Y FINANZAS SA").documento("80012345").build())
+                .build();
+        when(clienteService.buscarClientePorDocumento("80012345-0")).thenReturn(cliente);
+
+        graphQlTester.document("""
+                        query { buscarClientePorDocumento(documento: "80012345-0") { id_cliente persona { nombre } } }
+                        """)
+                .execute()
+                .path("buscarClientePorDocumento.id_cliente").entity(String.class).isEqualTo("7")
+                .path("buscarClientePorDocumento.persona.nombre").entity(String.class)
+                .isEqualTo("COMERCIO Y FINANZAS SA");
+
+        graphQlTester.document("""
+                        query { buscarClientePorDocumento(documento: "999") { id_cliente } }
+                        """)
+                .execute()
+                .path("buscarClientePorDocumento").valueIsNull();
+    }
 }

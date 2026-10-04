@@ -23,6 +23,7 @@ public interface ProductoMapper extends BaseMapper<Producto, ProductoInput, Prod
     @Mapping(target = "codigoBarras", source = "input.codigoBarras")
     @Mapping(target = "estado", source = "input.estado")
     @Mapping(target = "ubicacion", source = "input.ubicacion", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "tipoIva", source = "input.tipoIva", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "categoriaProducto", source = "categoria")
     Producto toEntity(ProductoInput input, CategoriaProducto categoria);
 
@@ -38,6 +39,7 @@ public interface ProductoMapper extends BaseMapper<Producto, ProductoInput, Prod
     @Mapping(target = "codigoBarras", source = "input.codigoBarras")
     @Mapping(target = "estado", source = "input.estado")
     @Mapping(target = "ubicacion", source = "input.ubicacion", qualifiedByName = MappingHelper.TO_UPPER_CASE)
+    @Mapping(target = "tipoIva", source = "input.tipoIva", qualifiedByName = MappingHelper.TO_UPPER_CASE)
     @Mapping(target = "categoriaProducto", source = "categoria")
     void updateEntity(@MappingTarget Producto entidad, ProductoInput input, CategoriaProducto categoria);
 }

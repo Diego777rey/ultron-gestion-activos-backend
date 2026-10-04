@@ -48,6 +48,8 @@ public class Producto implements Serializable {
     private String ubicacion;
     private boolean estado;
     private String imagen;
+    /** 10, 5 o EXENTA. El precio de venta ya incluye el IVA. */
+    private String tipoIva;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_categoria_producto", nullable = false)

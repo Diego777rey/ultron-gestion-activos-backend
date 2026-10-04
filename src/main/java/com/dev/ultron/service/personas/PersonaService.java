@@ -34,9 +34,6 @@ public class PersonaService extends GenericCrudService<Persona, Long> {
         if (persona.getNombre() == null || persona.getNombre().isBlank()) {
             throw new IllegalArgumentException("El nombre de la persona es obligatorio");
         }
-        if (persona.getApellido() == null || persona.getApellido().isBlank()) {
-            throw new IllegalArgumentException("El apellido de la persona es obligatorio");
-        }
         if (persona.getDocumento() == null || persona.getDocumento().isBlank()) {
             throw new IllegalArgumentException("El documento de la persona es obligatorio");
         }

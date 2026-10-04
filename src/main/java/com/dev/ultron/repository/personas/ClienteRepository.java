@@ -13,18 +13,47 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     Optional<Cliente> findByRuc(String ruc);
 
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT c FROM Cliente c
+            JOIN FETCH c.persona p
+            WHERE UPPER(p.documento) IN :documentos
+                OR UPPER(c.ruc) IN :documentos
+                OR c.ruc LIKE :prefijoRuc
+            ORDER BY c.id_cliente
+            """)
+    java.util.List<Cliente> buscarPorDocumentoORuc(
+            @org.springframework.data.repository.query.Param("documentos") java.util.Collection<String> documentos,
+            @org.springframework.data.repository.query.Param("prefijoRuc") String prefijoRuc);
+
     @org.springframework.data.jpa.repository.Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Cliente c WHERE c.persona.documento = :documento")
     boolean existsByPersonaDocumento(@org.springframework.data.repository.query.Param("documento") String documento);
 
-    @org.springframework.data.jpa.repository.Query("""
-            SELECT c FROM Cliente c
-            WHERE LOWER(c.persona.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(c.persona.apellido) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(CONCAT(c.persona.nombre, ' ', c.persona.apellido)) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(c.persona.documento) LIKE LOWER(CONCAT('%', :filter, '%'))
-                OR LOWER(c.ruc) LIKE LOWER(CONCAT('%', :filter, '%'))
-            """)
+    @org.springframework.data.jpa.repository.Query(
+            value = """
+                    SELECT c FROM Cliente c
+                    JOIN FETCH c.persona p
+                    WHERE LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                        OR LOWER(p.apellido) LIKE LOWER(CONCAT('%', :filter, '%'))
+                        OR LOWER(CONCAT(p.nombre, ' ', p.apellido)) LIKE LOWER(CONCAT('%', :filter, '%'))
+                        OR LOWER(p.documento) LIKE LOWER(CONCAT('%', :filter, '%'))
+                        OR LOWER(c.ruc) LIKE LOWER(CONCAT('%', :filter, '%'))
+                    ORDER BY c.id_cliente DESC
+                    """,
+            countQuery = """
+                    SELECT COUNT(c) FROM Cliente c
+                    JOIN c.persona p
+                    WHERE LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                        OR LOWER(p.apellido) LIKE LOWER(CONCAT('%', :filter, '%'))
+                        OR LOWER(CONCAT(p.nombre, ' ', p.apellido)) LIKE LOWER(CONCAT('%', :filter, '%'))
+                        OR LOWER(p.documento) LIKE LOWER(CONCAT('%', :filter, '%'))
+                        OR LOWER(c.ruc) LIKE LOWER(CONCAT('%', :filter, '%'))
+                    """)
     org.springframework.data.domain.Page<Cliente> search(@org.springframework.data.repository.query.Param("filter") String filter, org.springframework.data.domain.Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Query(
+            value = "SELECT c FROM Cliente c JOIN FETCH c.persona ORDER BY c.id_cliente DESC",
+            countQuery = "SELECT COUNT(c) FROM Cliente c")
+    org.springframework.data.domain.Page<Cliente> findRecientes(org.springframework.data.domain.Pageable pageable);
 
     @org.springframework.data.jpa.repository.Query("""
             SELECT c FROM Cliente c

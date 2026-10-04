@@ -9,7 +9,7 @@ import com.dev.ultron.dto.financiero.output.TimbradoOutput;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.repository.financiero.TimbradoRepository;
 import com.dev.ultron.repository.personas.EmpresaRepository;
-import com.dev.ultron.service.seguridad.AuthService;
+import com.dev.ultron.service.security.AuthService;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +57,13 @@ public class TimbradoService extends GenericCrudService<Timbrado, Long> {
         if (timbrado.getPunto_expedicion() == null || timbrado.getPunto_expedicion().isEmpty()) {
             throw new IllegalArgumentException("El punto de expedición es obligatorio");
         }
+
+        timbrado.setEstablecimiento(normalizarCodigoPunto(timbrado.getEstablecimiento(), "establecimiento"));
+        timbrado.setPunto_expedicion(normalizarCodigoPunto(timbrado.getPunto_expedicion(), "punto de expedición"));
+
+        if (timbrado.getTipo_factura() == null || timbrado.getTipo_factura().isBlank()) {
+            timbrado.setTipo_factura("PAPEL");
+        }
         
         if (timbrado.getNumero_inicial() == null || timbrado.getNumero_final() == null) {
             throw new IllegalArgumentException("El rango de numeración es obligatorio");
@@ -74,11 +81,16 @@ public class TimbradoService extends GenericCrudService<Timbrado, Long> {
             throw new IllegalArgumentException("La fecha de inicio no puede ser posterior a la fecha de fin");
         }
         
-        boolean existe = timbradoRepository.existsByNumeroAndEstablecimientoAndPunto(
-                timbrado.getNumero_timbrado(),
-                timbrado.getEstablecimiento(),
-                timbrado.getPunto_expedicion()
-        );
+        boolean existe = timbrado.getId_timbrado() == null
+                ? timbradoRepository.existsByNumeroAndEstablecimientoAndPunto(
+                        timbrado.getNumero_timbrado(),
+                        timbrado.getEstablecimiento(),
+                        timbrado.getPunto_expedicion())
+                : timbradoRepository.existsOtroConMismoPunto(
+                        timbrado.getNumero_timbrado(),
+                        timbrado.getEstablecimiento(),
+                        timbrado.getPunto_expedicion(),
+                        timbrado.getId_timbrado());
         
         if (existe) {
             throw new IllegalArgumentException(
@@ -203,6 +215,14 @@ public class TimbradoService extends GenericCrudService<Timbrado, Long> {
         timbrado.setActivo(true);
         timbrado = actualizar(timbrado);
         return timbradoMapper.toOutput(timbrado);
+    }
+
+    private static String normalizarCodigoPunto(String valor, String campo) {
+        String digitos = valor.replaceAll("\\D", "");
+        if (digitos.isEmpty() || digitos.length() > 3) {
+            throw new IllegalArgumentException("El " + campo + " debe tener de 1 a 3 dígitos");
+        }
+        return String.format("%03d", Integer.parseInt(digitos));
     }
 
     /**

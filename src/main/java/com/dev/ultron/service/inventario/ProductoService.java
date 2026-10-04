@@ -63,6 +63,7 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
         if (entidad.getStock() == null) {
             entidad.setStock(BigDecimal.ZERO);
         }
+        entidad.setTipoIva(normalizarTipoIva(entidad.getTipoIva()));
         sincronizarPresentaciones(entidad, input.getPresentaciones());
         reflejarPresentacionPrincipal(entidad, input.getPresentaciones());
         validarCodigosBarras(entidad);
@@ -82,6 +83,7 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
             categoria = entidad.getCategoriaProducto();
         }
         mapper.updateEntity(entidad, input, categoria);
+        entidad.setTipoIva(normalizarTipoIva(entidad.getTipoIva()));
         sincronizarPresentaciones(entidad, input.getPresentaciones());
         reflejarPresentacionPrincipal(entidad, input.getPresentaciones());
         validarCodigosBarras(entidad);
@@ -241,6 +243,17 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
 
     private String normalizarCodigo(String codigo) {
         return codigo == null ? "" : codigo.trim();
+    }
+
+    private static String normalizarTipoIva(String tipo) {
+        if (tipo == null || tipo.isBlank()) {
+            return "10";
+        }
+        String valor = tipo.trim().toUpperCase();
+        if ("5".equals(valor) || "10".equals(valor) || "EXENTA".equals(valor)) {
+            return valor;
+        }
+        throw new IllegalArgumentException("El IVA del producto tiene que ser 10%, 5% o exenta");
     }
 
     private void validarCodigosBarras(Producto producto) {

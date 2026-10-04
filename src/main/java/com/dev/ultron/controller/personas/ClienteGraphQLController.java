@@ -40,6 +40,11 @@ public class ClienteGraphQLController {
         return clienteService.buscarClientePorId(id);
     }
 
+    @QueryMapping
+    public ClienteOutput buscarClientePorDocumento(@Argument String documento) {
+        return clienteService.buscarClientePorDocumento(documento);
+    }
+
     // ==================== MUTATIONS ====================
 
     @MutationMapping

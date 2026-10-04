@@ -132,6 +132,11 @@ type VentaOutput {
     detalles: [DetalleVentaOutput!]
 }
 
+type VentaConFacturaOutput {
+    venta: VentaOutput!
+    factura: FacturaOutput!
+}
+
 type VentaPageResponse {
     content: [VentaOutput!]!
     pageInfo: PageInfo!
@@ -182,6 +187,7 @@ extend type Query {
 
     listarVentas: [VentaOutput!]!
     listarVentasPaginado(page: Int!, size: Int!, filter: String, idSesionCaja: ID): VentaPageResponse!
+    listarVentasPorSesion(idSesionCaja: ID!): [VentaOutput!]!
     buscarVentaPorId(id: ID!): VentaOutput
 }
 
@@ -204,11 +210,18 @@ input CotizacionInput {
     activa: Boolean
 }
 
+type MontoCotizado {
+    moneda: String!
+    valorCotizacion: BigDecimal
+    monto: BigDecimal!
+}
+
 extend type Query {
     listarCotizaciones: [CotizacionOutput!]!
     listarCotizacionesActivas: [CotizacionOutput!]!
     listarCotizacionesPaginado(page: Int!, size: Int!, filter: String): CotizacionPageResponse!
     obtenerCotizacionPorId(id: ID!): CotizacionOutput
+    cotizarTotal(totalPyg: BigDecimal!): [MontoCotizado!]!
 }
 
 extend type Mutation {
@@ -224,6 +237,7 @@ extend type Mutation {
     cerrarCaja(input: CerrarCajaInput!): SesionCajaOutput
 
     registrarVenta(input: VentaInput!): VentaOutput
+    registrarVentaConFactura(input: VentaInput!): VentaConFacturaOutput!
 
     crearCotizacion(input: CotizacionInput!): CotizacionOutput
     actualizarCotizacion(id: ID!, input: CotizacionInput!): CotizacionOutput

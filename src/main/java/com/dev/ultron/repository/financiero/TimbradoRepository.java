@@ -12,7 +12,8 @@ import java.util.Optional;
 @Repository
 public interface TimbradoRepository extends JpaRepository<Timbrado, Long> {
 
-    Optional<Timbrado> findByNumero_timbrado(String numeroTimbrado);
+    @Query("SELECT t FROM Timbrado t WHERE t.numero_timbrado = :numeroTimbrado")
+    Optional<Timbrado> findByNumero_timbrado(@Param("numeroTimbrado") String numeroTimbrado);
 
     @Query("""
             SELECT t FROM Timbrado t
@@ -45,6 +46,19 @@ public interface TimbradoRepository extends JpaRepository<Timbrado, Long> {
     @Query("""
             SELECT t FROM Timbrado t
             WHERE t.empresa.id_empresa = :idEmpresa
+            AND t.activo = true
+            AND (t.tipo_factura IS NULL OR t.tipo_factura = 'PAPEL')
+            AND CURRENT_DATE BETWEEN t.fecha_inicio_vigencia AND t.fecha_fin_vigencia
+            AND t.numero_actual IS NOT NULL
+            AND t.numero_actual <= t.numero_final
+            ORDER BY t.fecha_inicio_vigencia DESC
+            LIMIT 1
+            """)
+    Optional<Timbrado> findTimbradoPapelDisponible(@Param("idEmpresa") Long idEmpresa);
+
+    @Query("""
+            SELECT t FROM Timbrado t
+            WHERE t.empresa.id_empresa = :idEmpresa
             ORDER BY t.fecha_creacion DESC
             """)
     List<Timbrado> findAllByEmpresa(@Param("idEmpresa") Long idEmpresa);
@@ -60,5 +74,20 @@ public interface TimbradoRepository extends JpaRepository<Timbrado, Long> {
             @Param("numeroTimbrado") String numeroTimbrado,
             @Param("establecimiento") String establecimiento,
             @Param("puntoExpedicion") String puntoExpedicion
+    );
+
+    @Query("""
+            SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END
+            FROM Timbrado t
+            WHERE t.numero_timbrado = :numeroTimbrado
+            AND t.establecimiento = :establecimiento
+            AND t.punto_expedicion = :puntoExpedicion
+            AND t.id_timbrado <> :idExcluir
+            """)
+    boolean existsOtroConMismoPunto(
+            @Param("numeroTimbrado") String numeroTimbrado,
+            @Param("establecimiento") String establecimiento,
+            @Param("puntoExpedicion") String puntoExpedicion,
+            @Param("idExcluir") Long idExcluir
     );
 }
