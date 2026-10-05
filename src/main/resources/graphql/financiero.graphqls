@@ -129,6 +129,16 @@ type VentaOutput {
     formaPago: String
     moneda: String
     montoMonedaOriginal: BigDecimal
+    # Efectivo entregado por el cliente, en la moneda de la venta (`moneda`).
+    montoRecibido: BigDecimal
+    # Equivalente en guaraníes del monto recibido.
+    montoRecibidoPyg: BigDecimal
+    # Moneda en la que se entregó el vuelto.
+    monedaVuelto: String
+    # Vuelto entregado, en monedaVuelto.
+    vuelto: BigDecimal
+    # Vuelto en guaraníes.
+    vueltoPyg: BigDecimal
     detalles: [DetalleVentaOutput!]
 }
 
@@ -159,6 +169,11 @@ input VentaInput {
     formaPago: String
     moneda: String
     montoMonedaOriginal: BigDecimal
+    # Efectivo entregado por el cliente, en la moneda de la venta (`moneda`, PYG por defecto).
+    # Solo aplica a EFECTIVO; el vuelto lo calcula el backend.
+    montoRecibido: BigDecimal
+    # Moneda en la que el cajero entrega el vuelto (PYG por defecto).
+    monedaVuelto: String
     detalles: [DetalleVentaInput!]!
 }
 
@@ -216,12 +231,65 @@ type MontoCotizado {
     monto: BigDecimal!
 }
 
+# Billete o moneda que forma parte del vuelto.
+type DenominacionVuelto {
+    valor: BigDecimal!
+    # BILLETE o MONEDA
+    tipo: String!
+    cantidad: Int!
+    subtotal: BigDecimal!
+}
+
+# Vuelto de un cobro en efectivo. El cliente puede pagar en PYG o en una moneda con
+# cotización activa (USD, BRL...) y el cajero puede devolver en cualquier otra.
+type VueltoOutput {
+    totalPyg: BigDecimal!
+
+    # ---- Lo que entrega el cliente ----
+    monedaRecibida: String!
+    # Guaraníes por unidad de la moneda recibida. Null cuando es PYG.
+    cotizacionRecibida: BigDecimal
+    # Total a cobrar expresado en la moneda recibida.
+    totalMonedaRecibida: BigDecimal!
+    # Lo que entregó el cliente, en la moneda recibida.
+    montoRecibido: BigDecimal
+    # Equivalente en guaraníes del monto recibido.
+    montoRecibidoPyg: BigDecimal
+    # Cuánto falta para cubrir el total, en la moneda recibida.
+    faltante: BigDecimal!
+    suficiente: Boolean!
+    # Importes que el cliente suele entregar, en la moneda recibida; el primero es el exacto.
+    montosSugeridos: [BigDecimal!]!
+
+    # ---- Lo que devuelve el cajero ----
+    monedaVuelto: String!
+    # Guaraníes por unidad de la moneda del vuelto. Null cuando es PYG.
+    cotizacionVuelto: BigDecimal
+    # Vuelto en guaraníes.
+    vueltoPyg: BigDecimal!
+    # Vuelto expresado en monedaVuelto.
+    vuelto: BigDecimal!
+    # False si la moneda del vuelto no tiene catálogo de billetes y monedas.
+    desgloseDisponible: Boolean!
+    desglose: [DenominacionVuelto!]!
+    # Parte del vuelto (en monedaVuelto) que no se puede entregar con denominaciones en circulación.
+    residuo: BigDecimal!
+}
+
 extend type Query {
     listarCotizaciones: [CotizacionOutput!]!
     listarCotizacionesActivas: [CotizacionOutput!]!
     listarCotizacionesPaginado(page: Int!, size: Int!, filter: String): CotizacionPageResponse!
     obtenerCotizacionPorId(id: ID!): CotizacionOutput
     cotizarTotal(totalPyg: BigDecimal!): [MontoCotizado!]!
+    # Calcula el vuelto. monedaRecibida: en qué paga el cliente; monedaVuelto: en qué se devuelve
+    # (ambas PYG por defecto). Sin montoRecibido devuelve solo las sugerencias.
+    calcularVuelto(
+        totalPyg: BigDecimal!,
+        montoRecibido: BigDecimal,
+        monedaRecibida: String,
+        monedaVuelto: String
+    ): VueltoOutput!
 }
 
 extend type Mutation {

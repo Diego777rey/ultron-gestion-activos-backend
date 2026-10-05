@@ -20,5 +20,9 @@ public class VentaInput implements Serializable {
     private String formaPago;
     private String moneda;
     private BigDecimal montoMonedaOriginal;
+    /** Efectivo entregado por el cliente, en la moneda de la venta ({@code moneda}). Solo aplica a EFECTIVO. */
+    private BigDecimal montoRecibido;
+    /** Moneda en la que el cajero entrega el vuelto. PYG por defecto. */
+    private String monedaVuelto;
     private List<DetalleVentaInput> detalles;
 }
