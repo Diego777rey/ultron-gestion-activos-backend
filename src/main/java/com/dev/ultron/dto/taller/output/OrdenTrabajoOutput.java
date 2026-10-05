@@ -3,6 +3,7 @@ package com.dev.ultron.dto.taller.output;
 import com.dev.ultron.dto.personas.output.ClienteOutput;
 import com.dev.ultron.dto.personas.output.FuncionarioOutput;
 import com.dev.ultron.dto.personas.output.UsuarioOutput;
+import com.dev.ultron.dto.patrimonio.output.EquipoOutput;
 import com.dev.ultron.dto.patrimonio.output.VehiculoOutput;
 import com.dev.ultron.dto.sectores.output.SectorOutput;
 import com.dev.ultron.dto.financiero.output.CajaOutput;
@@ -23,7 +24,9 @@ public class OrdenTrabajoOutput implements Serializable {
     private String numero_orden;
     private String etapa;
     private ClienteOutput cliente;
+    private String tipo_recepcion;
     private VehiculoOutput vehiculo;
+    private EquipoOutput equipo;
     private FuncionarioOutput mecanico;
     private List<FuncionarioOutput> mecanicos;
     private SectorOutput sector;

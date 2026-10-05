@@ -44,7 +44,11 @@ public class OrdenTrabajoEtapaValidator {
         if (orden.getCliente() == null) {
             throw new IllegalArgumentException("Debe asignar un cliente antes de pasar a Diagnóstico");
         }
-        if (orden.getVehiculo() == null) {
+        if (orden.recepcionaEquipo()) {
+            if (orden.getEquipo() == null) {
+                throw new IllegalArgumentException("Debe asignar un equipo antes de pasar a Diagnóstico");
+            }
+        } else if (orden.getVehiculo() == null) {
             throw new IllegalArgumentException("Debe asignar un vehículo antes de pasar a Diagnóstico");
         }
         if (orden.mecanicosAsignados().isEmpty()) {
@@ -57,6 +61,7 @@ public class OrdenTrabajoEtapaValidator {
             throw new IllegalArgumentException("Debe registrar la descripción de la falla");
         }
         actoresWriter.validarVehiculoPerteneceACliente(orden.getCliente(), orden.getVehiculo());
+        actoresWriter.validarEquipoPerteneceACliente(orden.getCliente(), orden.getEquipo());
     }
 
     private void validarParaEnProceso(OrdenTrabajo orden) {

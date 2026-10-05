@@ -465,7 +465,8 @@ public class VentaService extends GenericCrudService<Venta, Long> {
     private String descripcionOrden(OrdenTrabajo orden) {
         String numero = orden.getNumeroOrden() != null ? orden.getNumeroOrden() : "OT";
         if (orden.getVehiculo() == null) {
-            return numero;
+            String equipo = orden.getEquipo() != null ? orden.getEquipo().getTipoEquipo() : null;
+            return equipo == null || equipo.isBlank() ? numero : numero + " · " + equipo;
         }
         String chapa = orden.getVehiculo().getChapa();
         if (chapa == null || chapa.isBlank()) {

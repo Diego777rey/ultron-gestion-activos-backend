@@ -46,7 +46,10 @@ type OrdenTrabajoOutput {
     numero_orden: String
     etapa: String
     cliente: ClienteOutput
+    # VEHICULO o EQUIPO
+    tipo_recepcion: String
     vehiculo: VehiculoOutput
+    equipo: EquipoOutput
     mecanico: FuncionarioOutput
     mecanicos: [FuncionarioOutput]
     sector: SectorOutput
@@ -123,7 +126,10 @@ input OrdenTrabajoInput {
     id_sector: ID
     id_responsable: ID
     id_cliente: ID
+    # VEHICULO o EQUIPO. Si viene, id_vehiculo e id_equipo se aplican tal cual (null los quita).
+    tipo_recepcion: String
     id_vehiculo: ID
+    id_equipo: ID
     id_mecanico: ID
     ids_mecanicos: [ID!]
     id_caja: ID
