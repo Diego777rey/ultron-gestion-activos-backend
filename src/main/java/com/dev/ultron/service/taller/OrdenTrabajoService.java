@@ -19,6 +19,7 @@ import com.dev.ultron.service.taller.orden.OrdenTrabajoInputApplier;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -115,7 +116,9 @@ public class OrdenTrabajoService extends GenericCrudService<OrdenTrabajo, Long> 
 
     @Transactional(readOnly = true)
     public PageResponse<OrdenTrabajoOutput> listarOrdenesPorVehiculoPaginado(Long idVehiculo, int page, int size) {
-        Page<OrdenTrabajo> pagina = ordenTrabajoRepository.findByVehiculoId(idVehiculo, PageRequest.of(page, size));
+        Sort recientesPrimero = Sort.by(Sort.Direction.DESC, "fechaCreacion");
+        Page<OrdenTrabajo> pagina = ordenTrabajoRepository.findByVehiculoId(
+                idVehiculo, PageRequest.of(page, size, recientesPrimero));
         return new PageResponse<>(pagina.map(ordenTrabajoMapper::toOutput));
     }
 

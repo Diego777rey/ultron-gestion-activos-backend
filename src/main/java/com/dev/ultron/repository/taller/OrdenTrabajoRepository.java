@@ -41,7 +41,7 @@ public interface OrdenTrabajoRepository extends JpaRepository<OrdenTrabajo, Long
     @Query("SELECT ot FROM OrdenTrabajo ot WHERE ot.cliente.id_cliente = :idCliente ORDER BY ot.fechaCreacion DESC")
     Page<OrdenTrabajo> findByClienteId(@Param("idCliente") Long idCliente, Pageable pageable);
 
-    @Query("SELECT ot FROM OrdenTrabajo ot WHERE ot.vehiculo.id_bien = :idVehiculo ORDER BY ot.fechaCreacion DESC")
+    @Query("SELECT ot FROM OrdenTrabajo ot WHERE ot.vehiculo.id_bien = :idVehiculo")
     Page<OrdenTrabajo> findByVehiculoId(@Param("idVehiculo") Long idVehiculo, Pageable pageable);
 
     @Query("""
