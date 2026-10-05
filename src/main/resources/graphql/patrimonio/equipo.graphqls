@@ -1,0 +1,39 @@
+# =============================================================
+# Schema de Equipo - CRUD completo
+# Un equipo pertenece a un cliente y puede estar montado en un vehículo.
+# =============================================================
+
+type EquipoOutput {
+    id_equipo: ID
+    cliente: ClienteOutput
+    vehiculo: VehiculoOutput
+    tipo_equipo: String
+    marca: String
+    modelo: String
+    numero_serie: String
+    descripcion: String
+    estado: String
+    fecha_registro: String
+}
+
+type EquipoPageResponse {
+    content: [EquipoOutput!]!
+    pageInfo: PageInfo!
+}
+
+input EquipoInput {
+    id_cliente: ID!
+    id_vehiculo: ID
+    tipo_equipo: String!
+    marca: String
+    modelo: String
+    numero_serie: String
+    descripcion: String
+    estado: String
+}
+
+extend type Mutation {
+    registrarEquipo(input: EquipoInput!): EquipoOutput
+    actualizarEquipo(id: ID!, input: EquipoInput!): EquipoOutput
+    eliminarEquipo(id: ID!): Boolean
+}

@@ -39,6 +39,12 @@ type Query {
     listarVehiculosPorClientePaginado(idCliente: ID!, page: Int!, size: Int!, filter: String): VehiculoPageResponse!
     buscarVehiculoPorId(id: ID!): VehiculoOutput
 
+    # ---- Patrimonio: Equipos ----
+    listarEquipos: [EquipoOutput!]!
+    listarEquiposPaginado(page: Int!, size: Int!, filter: String): EquipoPageResponse!
+    listarEquiposPorClientePaginado(idCliente: ID!, page: Int!, size: Int!, filter: String): EquipoPageResponse!
+    buscarEquipoPorId(id: ID!): EquipoOutput
+
     # ---- Taller: Órdenes de Trabajo ----
     listarOrdenesTrabajoPaginado(page: Int!, size: Int!, filter: String, fechaDesde: String, fechaHasta: String): OrdenTrabajoPageResponse!
     listarOrdenesTrabajoPorEtapa(etapa: String!): [OrdenTrabajoOutput!]!

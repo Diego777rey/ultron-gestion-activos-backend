@@ -1,5 +1,6 @@
 package com.dev.ultron.service.taller.orden;
 
+import com.dev.ultron.domain.patrimonio.Equipo;
 import com.dev.ultron.domain.patrimonio.Vehiculo;
 import com.dev.ultron.domain.personas.Cliente;
 import com.dev.ultron.domain.personas.Funcionario;
@@ -11,6 +12,7 @@ import com.dev.ultron.generic.EntityNotFoundException;
 import com.dev.ultron.repository.personas.FuncionarioRepository;
 import com.dev.ultron.repository.personas.UsuarioRepository;
 import com.dev.ultron.repository.sectores.SectorRepository;
+import com.dev.ultron.service.patrimonio.EquipoService;
 import com.dev.ultron.service.patrimonio.VehiculoService;
 import com.dev.ultron.service.personas.ClienteService;
 
@@ -30,6 +32,7 @@ public class OrdenTrabajoActoresWriter {
 
     private final ClienteService clienteService;
     private final VehiculoService vehiculoService;
+    private final EquipoService equipoService;
     private final FuncionarioRepository funcionarioRepo;
     private final SectorRepository sectorRepo;
     private final UsuarioRepository usuarioRepo;
@@ -38,12 +41,14 @@ public class OrdenTrabajoActoresWriter {
     public OrdenTrabajoActoresWriter(
             ClienteService clienteService,
             VehiculoService vehiculoService,
+            EquipoService equipoService,
             FuncionarioRepository funcionarioRepo,
             SectorRepository sectorRepo,
             UsuarioRepository usuarioRepo,
             OrdenTrabajoCajaResolver cajaResolver) {
         this.clienteService = clienteService;
         this.vehiculoService = vehiculoService;
+        this.equipoService = equipoService;
         this.funcionarioRepo = funcionarioRepo;
         this.sectorRepo = sectorRepo;
         this.usuarioRepo = usuarioRepo;
@@ -65,8 +70,15 @@ public class OrdenTrabajoActoresWriter {
         if (input.id_cliente() != null) {
             orden.setCliente(clienteService.buscarPorIdOrThrow(input.id_cliente()));
         }
-        if (input.id_vehiculo() != null) {
-            orden.setVehiculo(vehiculoService.buscarPorIdOrThrow(input.id_vehiculo()));
+        if (input.tipo_recepcion() != null) {
+            aplicarRecepcion(orden, input);
+        } else {
+            if (input.id_vehiculo() != null) {
+                orden.setVehiculo(vehiculoService.buscarPorIdOrThrow(input.id_vehiculo()));
+            }
+            if (input.id_equipo() != null) {
+                orden.setEquipo(equipoService.buscarPorIdOrThrow(input.id_equipo()));
+            }
         }
         aplicarMecanicos(orden, input, creando);
         if (input.id_caja() != null) {
@@ -80,9 +92,33 @@ public class OrdenTrabajoActoresWriter {
             orden.setObservacionesFinalizacion(input.observaciones_finalizacion());
         }
 
-        if (creando || input.id_cliente() != null || input.id_vehiculo() != null) {
+        if (creando || input.id_cliente() != null || input.id_vehiculo() != null
+                || input.id_equipo() != null || input.tipo_recepcion() != null) {
             validarVehiculoPerteneceACliente(orden.getCliente(), orden.getVehiculo());
+            validarEquipoPerteneceACliente(orden.getCliente(), orden.getEquipo());
         }
+    }
+
+    /**
+     * Recepción de vehículo: sin equipo. Recepción de equipo: el vehículo es opcional
+     * y, si no se indica, se toma el del equipo.
+     */
+    private void aplicarRecepcion(OrdenTrabajo orden, OrdenTrabajoInput input) {
+        String tipo = input.tipo_recepcion().trim().toUpperCase();
+        if (!OrdenTrabajo.TIPO_RECEPCION_VEHICULO.equals(tipo) && !OrdenTrabajo.TIPO_RECEPCION_EQUIPO.equals(tipo)) {
+            throw new IllegalArgumentException("Tipo de recepción inválido: " + input.tipo_recepcion());
+        }
+        orden.setTipoRecepcion(tipo);
+
+        Equipo equipo = OrdenTrabajo.TIPO_RECEPCION_EQUIPO.equals(tipo) && input.id_equipo() != null
+                ? equipoService.buscarPorIdOrThrow(input.id_equipo())
+                : null;
+        orden.setEquipo(equipo);
+
+        Vehiculo vehiculo = input.id_vehiculo() != null
+                ? vehiculoService.buscarPorIdOrThrow(input.id_vehiculo())
+                : equipo != null ? equipo.getVehiculo() : null;
+        orden.setVehiculo(vehiculo);
     }
 
     private void aplicarMecanicos(OrdenTrabajo orden, OrdenTrabajoInput input, boolean creando) {
@@ -156,6 +192,16 @@ public class OrdenTrabajoActoresWriter {
         if (vehiculo.getCliente() == null
                 || !Objects.equals(vehiculo.getCliente().getId_cliente(), cliente.getId_cliente())) {
             throw new IllegalArgumentException("El vehículo no pertenece al cliente seleccionado");
+        }
+    }
+
+    public void validarEquipoPerteneceACliente(Cliente cliente, Equipo equipo) {
+        if (cliente == null || equipo == null) {
+            return;
+        }
+        if (equipo.getCliente() == null
+                || !Objects.equals(equipo.getCliente().getId_cliente(), cliente.getId_cliente())) {
+            throw new IllegalArgumentException("El equipo no pertenece al cliente seleccionado");
         }
     }
 }
