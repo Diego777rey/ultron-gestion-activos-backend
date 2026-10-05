@@ -72,6 +72,11 @@ public class TimbradoService extends GenericCrudService<Timbrado, Long> {
         if (timbrado.getNumero_inicial() > timbrado.getNumero_final()) {
             throw new IllegalArgumentException("El número inicial no puede ser mayor que el número final");
         }
+
+        Integer actual = timbrado.getNumero_actual();
+        if (actual != null && (actual < timbrado.getNumero_inicial() || actual > timbrado.getNumero_final() + 1)) {
+            throw new IllegalArgumentException("El próximo número tiene que estar dentro del rango autorizado");
+        }
         
         if (timbrado.getFecha_inicio_vigencia() == null || timbrado.getFecha_fin_vigencia() == null) {
             throw new IllegalArgumentException("Las fechas de vigencia son obligatorias");

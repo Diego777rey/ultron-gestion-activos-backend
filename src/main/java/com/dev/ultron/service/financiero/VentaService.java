@@ -61,6 +61,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
     private final OrdenTrabajoFlujoService ordenTrabajoFlujoService;
     private final CotizacionService cotizacionService;
     private final FacturaService facturaService;
+    private final VueltoService vueltoService;
 
     public VentaService(
             VentaRepository repository,
@@ -76,7 +77,8 @@ public class VentaService extends GenericCrudService<Venta, Long> {
             OrdenTrabajoRepository ordenTrabajoRepository,
             OrdenTrabajoFlujoService ordenTrabajoFlujoService,
             CotizacionService cotizacionService,
-            FacturaService facturaService) {
+            FacturaService facturaService,
+            VueltoService vueltoService) {
         this.repository = repository;
         this.mapper = mapper;
         this.sesionCajaRepository = sesionCajaRepository;
@@ -91,6 +93,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         this.ordenTrabajoFlujoService = ordenTrabajoFlujoService;
         this.cotizacionService = cotizacionService;
         this.facturaService = facturaService;
+        this.vueltoService = vueltoService;
     }
 
     @Override
@@ -232,6 +235,7 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         venta.setTotal(total);
 
         BigDecimal totalEnPyg = total;
+        BigDecimal valorCotizacion = null;
         if (!"PYG".equalsIgnoreCase(moneda)) {
             var cotizacion = cotizacionService.buscarActiva(moneda);
             if (cotizacion == null) {
@@ -239,11 +243,14 @@ public class VentaService extends GenericCrudService<Venta, Long> {
                         "No se encontró una cotización activa para la moneda " + moneda);
             }
             moneda = cotizacion.getMoneda();
-            montoMonedaOriginal = cotizacionService.convertirDesdePyg(total, cotizacion.getValor());
+            valorCotizacion = cotizacion.getValor();
+            montoMonedaOriginal = cotizacionService.convertirDesdePyg(total, valorCotizacion);
             venta.setMoneda(moneda);
             venta.setMontoMonedaOriginal(montoMonedaOriginal);
         }
-        
+
+        aplicarVuelto(venta, input, formaPago, new VueltoService.Moneda(moneda, valorCotizacion), totalEnPyg);
+
         venta = guardar(venta);
 
         for (Long idOrden : ordenesAFacturar) {
@@ -301,6 +308,33 @@ public class VentaService extends GenericCrudService<Venta, Long> {
         ingresoRepository.save(ingreso);
 
         return venta;
+    }
+
+    /**
+     * El vuelto solo existe para cobros en efectivo con monto recibido informado.
+     * El cliente paga en la moneda de la venta (PYG, USD, BRL...) y el cajero devuelve
+     * en {@code input.monedaVuelto} (PYG por defecto). El frontend nunca manda el vuelto.
+     *
+     * @param recibida moneda de la venta con su cotización ya resuelta ({@code null} cuando es PYG).
+     */
+    private void aplicarVuelto(Venta venta, VentaInput input, String formaPago,
+                               VueltoService.Moneda recibida, BigDecimal totalEnPyg) {
+        if (input.getMontoRecibido() == null || !"EFECTIVO".equals(formaPago)) {
+            return;
+        }
+        VueltoService.Moneda monedaVuelto = vueltoService.resolver(input.getMonedaVuelto());
+        var calculo = vueltoService.calcular(totalEnPyg, input.getMontoRecibido(), recibida, monedaVuelto);
+        if (!Boolean.TRUE.equals(calculo.getSuficiente())) {
+            throw new IllegalArgumentException(
+                    "El monto recibido (" + calculo.getMonedaRecibida() + " " + calculo.getMontoRecibido().toPlainString()
+                            + ", equivalente a Gs. " + calculo.getMontoRecibidoPyg().toPlainString()
+                            + ") no cubre el total de la venta (Gs. " + calculo.getTotalPyg().toPlainString() + ")");
+        }
+        venta.setMontoRecibido(calculo.getMontoRecibido());
+        venta.setMontoRecibidoPyg(calculo.getMontoRecibidoPyg());
+        venta.setMonedaVuelto(calculo.getMonedaVuelto());
+        venta.setVuelto(calculo.getVuelto());
+        venta.setVueltoPyg(calculo.getVueltoPyg());
     }
 
     @Transactional(readOnly = true)

@@ -53,6 +53,16 @@ public class Venta implements Serializable {
     private String formaPago;
     private String moneda;
     private BigDecimal montoMonedaOriginal;
+    /** Efectivo entregado por el cliente, en la moneda de la venta ({@link #moneda}). Null si no se informó. */
+    private BigDecimal montoRecibido;
+    /** Equivalente en guaraníes de {@link #montoRecibido}. */
+    private BigDecimal montoRecibidoPyg;
+    /** Moneda en la que se entregó el vuelto. */
+    private String monedaVuelto;
+    /** Vuelto entregado al cliente, en {@link #monedaVuelto}. Null si no se informó el monto recibido. */
+    private BigDecimal vuelto;
+    /** Equivalente en guaraníes de {@link #vuelto}. */
+    private BigDecimal vueltoPyg;
 
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("id_detalle_venta ASC")
