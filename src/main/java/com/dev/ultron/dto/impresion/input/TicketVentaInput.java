@@ -23,5 +23,8 @@ public class TicketVentaInput implements Serializable {
     private List<TicketLineaInput> lineas;
     private BigDecimal descuento;
     private BigDecimal total;
+    /** Efectivo recibido y vuelto; el frontend arma el ticket, acá solo se aceptan para no romper el input. */
+    private BigDecimal montoRecibido;
+    private BigDecimal vuelto;
     private String pie;
 }

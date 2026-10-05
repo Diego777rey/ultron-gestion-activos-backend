@@ -26,5 +26,12 @@ public class VentaOutput implements Serializable {
     private BigDecimal total;
     private String estado;
     private String formaPago;
+    private String moneda;
+    private BigDecimal montoMonedaOriginal;
+    private BigDecimal montoRecibido;
+    private BigDecimal montoRecibidoPyg;
+    private String monedaVuelto;
+    private BigDecimal vuelto;
+    private BigDecimal vueltoPyg;
     private List<DetalleVentaOutput> detalles;
 }

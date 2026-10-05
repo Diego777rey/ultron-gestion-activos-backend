@@ -30,6 +30,8 @@ input TicketVentaInput {
     lineas: [TicketLineaInput!]!
     descuento: BigDecimal
     total: BigDecimal
+    montoRecibido: BigDecimal
+    vuelto: BigDecimal
     pie: String
 }
 
