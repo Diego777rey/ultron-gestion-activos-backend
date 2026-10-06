@@ -1,6 +1,7 @@
 package com.dev.ultron.domain.taller;
 
 import com.dev.ultron.domain.financiero.Caja;
+import com.dev.ultron.domain.patrimonio.Equipo;
 import com.dev.ultron.domain.patrimonio.Vehiculo;
 import com.dev.ultron.domain.personas.Cliente;
 import com.dev.ultron.domain.personas.Funcionario;
@@ -46,6 +47,14 @@ public class OrdenTrabajo implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_vehiculo")
     private Vehiculo vehiculo;
+
+    /** VEHICULO o EQUIPO: qué se recepciona y qué ticket se imprime. */
+    @Column(name = "tipo_recepcion", nullable = false)
+    private String tipoRecepcion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_equipo")
+    private Equipo equipo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_mecanico")
@@ -151,6 +160,16 @@ public class OrdenTrabajo implements Serializable {
         if (etapa == null) {
             etapa = "RECEPCION";
         }
+        if (tipoRecepcion == null) {
+            tipoRecepcion = TIPO_RECEPCION_VEHICULO;
+        }
+    }
+
+    public static final String TIPO_RECEPCION_VEHICULO = "VEHICULO";
+    public static final String TIPO_RECEPCION_EQUIPO = "EQUIPO";
+
+    public boolean recepcionaEquipo() {
+        return TIPO_RECEPCION_EQUIPO.equals(tipoRecepcion);
     }
 
     public List<Funcionario> mecanicosAsignados() {

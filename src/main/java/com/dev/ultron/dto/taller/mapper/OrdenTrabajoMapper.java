@@ -15,6 +15,7 @@ import com.dev.ultron.dto.taller.output.OrdenTrabajoOutput;
 import com.dev.ultron.dto.personas.mapper.ClienteMapper;
 import com.dev.ultron.dto.personas.mapper.FuncionarioMapper;
 import com.dev.ultron.dto.personas.mapper.UsuarioMapper;
+import com.dev.ultron.dto.patrimonio.mapper.EquipoMapper;
 import com.dev.ultron.dto.patrimonio.mapper.VehiculoMapper;
 import com.dev.ultron.dto.sectores.mapper.SectorMapper;
 import com.dev.ultron.dto.financiero.mapper.CajaMapper;
@@ -30,6 +31,7 @@ import java.util.List;
 @Mapper(config = MapStructConfig.class, uses = {
         ClienteMapper.class,
         VehiculoMapper.class,
+        EquipoMapper.class,
         FuncionarioMapper.class,
         SectorMapper.class,
         UsuarioMapper.class,
@@ -39,6 +41,7 @@ public interface OrdenTrabajoMapper {
 
     @Mapping(target = "id_orden_trabajo", source = "id_orden_trabajo")
     @Mapping(target = "numero_orden", source = "numeroOrden")
+    @Mapping(target = "tipo_recepcion", source = "tipoRecepcion")
     @Mapping(target = "fecha_creacion", source = "fechaCreacion", qualifiedByName = "formatDateTime")
     @Mapping(target = "fecha_finalizacion", source = "fechaFinalizacion", qualifiedByName = "formatDateTime")
     @Mapping(target = "monto_pago", source = "montoPago")

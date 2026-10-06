@@ -90,15 +90,12 @@ public final class ReporteOtDetalleMapper {
         linea(sb, "Documento", cliente != null ? nvl(cliente.getDocumento()) : "");
         linea(sb, "Vehículo", vehiculoTexto(vehiculo));
         linea(sb, "Chapa", vehiculo != null ? nvl(vehiculo.getChapa()) : "");
-        linea(sb, "Sector", orden.getSector() != null ? nvl(orden.getSector().getNombre()) : "");
         linea(sb, "Mecánicos", nombresMecanicos(orden));
         linea(sb, "Responsable", responsable != null ? nvl(responsable.getUsername()) : "");
         linea(sb, "Falla", recepcion != null ? nvl(recepcion.getDescripcionFalla()) : "");
         if (diagnostico != null) {
             linea(sb, "Inicio estimado", nvl(DateUtil.format(diagnostico.getFechaInicioEstimada())));
             linea(sb, "Fin estimado", nvl(DateUtil.format(diagnostico.getFechaFinEstimada())));
-            linea(sb, "Presupuesto", formatGs(diagnostico.getTotalPresupuesto())
-                    + (diagnostico.isPresupuestoAprobado() ? " (aprobado)" : ""));
             linea(sb, "Observaciones", nvl(diagnostico.getObservaciones()));
         }
         linea(sb, "Estado del vehículo", estadoVehiculo(orden.getEstadoVehiculo()));
@@ -181,10 +178,7 @@ public final class ReporteOtDetalleMapper {
         }
         Servicio servicio = detalle.getServicio();
         if (servicio != null && servicio.getNombre() != null && !servicio.getNombre().isBlank()) {
-            String mecanico = detalle.getMecanico() != null
-                    ? nombreCompleto(detalle.getMecanico().getPersona())
-                    : "";
-            return mecanico.isBlank() ? servicio.getNombre() : servicio.getNombre() + " — " + mecanico;
+            return servicio.getNombre();
         }
         return nvl(detalle.getDescripcion());
     }

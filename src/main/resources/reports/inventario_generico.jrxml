@@ -23,13 +23,13 @@
     <property name="com.jaspersoft.studio.unit." value="pixel"/>
 
     <style name="Default" isDefault="true" fontName="DejaVu Sans" fontSize="8" hTextAlign="Left" vTextAlign="Middle"/>
-    <style name="Titulo" fontName="DejaVu Sans" fontSize="16" isBold="true" forecolor="#F4F7FB"/>
-    <style name="Subtitulo" fontName="DejaVu Sans" fontSize="9" forecolor="#C5D0DC"/>
-    <style name="Meta" fontName="DejaVu Sans" fontSize="8" forecolor="#A8B6C4"/>
-    <style name="ColHeader" fontName="DejaVu Sans" fontSize="8" isBold="true" forecolor="#F4F7FB" hTextAlign="Left" vTextAlign="Middle"/>
-    <style name="Celda" fontName="DejaVu Sans" fontSize="8" forecolor="#1B2430" hTextAlign="Left" vTextAlign="Middle"/>
+    <style name="Titulo" fontName="DejaVu Sans" fontSize="15" isBold="true" forecolor="#1A1A1A"/>
+    <style name="Subtitulo" fontName="DejaVu Sans" fontSize="9" forecolor="#333333"/>
+    <style name="Meta" fontName="DejaVu Sans" fontSize="8" forecolor="#333333"/>
+    <style name="ColHeader" fontName="DejaVu Sans" fontSize="8" isBold="true" forecolor="#1A1A1A" hTextAlign="Left" vTextAlign="Middle"/>
+    <style name="Celda" fontName="DejaVu Sans" fontSize="8" forecolor="#1A1A1A" hTextAlign="Left" vTextAlign="Middle"/>
     <style name="CeldaNumero" style="Celda" hTextAlign="Right"/>
-    <style name="Pie" fontName="DejaVu Sans" fontSize="7" forecolor="#6B7785"/>
+    <style name="Pie" fontName="DejaVu Sans" fontSize="7" forecolor="#4A5560"/>
 
     <parameter name="TITULO" class="java.lang.String"/>
     <parameter name="SUBTITULO" class="java.lang.String"/>
@@ -38,6 +38,8 @@
     <parameter name="COLUMNA_EXTRA" class="java.lang.String"/>
     <parameter name="CANTIDAD" class="java.lang.Integer"/>
     <parameter name="FILTRO" class="java.lang.String"/>
+    <parameter name="USUARIO" class="java.lang.String"/>
+    <parameter name="LOGO" class="java.io.InputStream"/>
 
     <field name="numero" class="java.lang.Integer"/>
     <field name="codigo" class="java.lang.String"/>
@@ -57,58 +59,38 @@
         <band splitType="Stretch"/>
     </background>
 
-    <title>
-        <band height="62" splitType="Stretch">
-            <rectangle radius="4">
-                <reportElement x="0" y="0" width="802" height="58" backcolor="#1A2332" forecolor="#1A2332" uuid="b3d1e8c0-4a72-4f1e-91aa-2c7e0b5d9f10"/>
-                <graphicElement>
-                    <pen lineWidth="0.0"/>
-                </graphicElement>
-            </rectangle>
+    <pageHeader>
+        <band height="120" splitType="Stretch">
+            <image scaleImage="RetainShape" hAlign="Left" vAlign="Middle" onErrorType="Blank">
+                <reportElement x="0" y="0" width="108" height="108" uuid="11a9c2e4-8b70-4d3f-a6c1-7e4f0d2b91aa"/>
+                <imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
+            </image>
+            <textField isBlankWhenNull="true" textAdjust="ScaleFont">
+                <reportElement style="Titulo" x="124" y="28" width="678" height="22" uuid="c8e4a1d6-2f90-4b7c-8e3a-5d1c9f0b74e2"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[$P{TITULO}]]></textFieldExpression>
+            </textField>
             <staticText>
-                <reportElement style="Meta" x="16" y="8" width="220" height="14" uuid="11a9c2e4-8b70-4d3f-a6c1-7e4f0d2b91aa"/>
+                <reportElement style="Meta" x="124" y="64" width="68" height="14" uuid="e4b9c7a1-6d32-4e80-bf15-8a0c3d5e7194"/>
                 <textElement>
                     <font isBold="true"/>
                 </textElement>
-                <text><![CDATA[ULTRON]]></text>
+                <text><![CDATA[Generado]]></text>
             </staticText>
-            <textField>
-                <reportElement style="Titulo" x="16" y="22" width="520" height="22" uuid="c8e4a1d6-2f90-4b7c-8e3a-5d1c9f0b74e2"/>
-                <textFieldExpression><![CDATA[$P{TITULO}]]></textFieldExpression>
-            </textField>
-            <textField>
-                <reportElement style="Subtitulo" x="16" y="42" width="520" height="12" uuid="a0d7b5c3-1e84-4f26-9c58-3b2a7e91d046"/>
-                <textFieldExpression><![CDATA[$P{SUBTITULO}]]></textFieldExpression>
-            </textField>
-            <textField>
-                <reportElement style="Meta" x="540" y="12" width="246" height="14" uuid="e4b9c7a1-6d32-4e80-bf15-8a0c3d5e7194"/>
-                <textElement textAlignment="Right"/>
-                <textFieldExpression><![CDATA[$P{SISTEMA}]]></textFieldExpression>
-            </textField>
-            <textField>
-                <reportElement style="Meta" x="540" y="28" width="246" height="14" uuid="9f2c8d10-5a47-4b91-ae33-0c6e1d8b4527"/>
-                <textElement textAlignment="Right"/>
-                <textFieldExpression><![CDATA["Generado: " + $P{FECHA_GENERACION}]]></textFieldExpression>
-            </textField>
-        </band>
-    </title>
-
-    <pageHeader>
-        <band height="16" splitType="Stretch">
-            <printWhenExpression><![CDATA[$V{PAGE_NUMBER} > 1
-                    || ($P{FILTRO} != null && !$P{FILTRO}.trim().isEmpty())]]></printWhenExpression>
             <textField isBlankWhenNull="true">
-                <reportElement style="Pie" x="0" y="1" width="802" height="14" uuid="d1a6e3b8-4c29-4f70-9e12-7b5a0c8d3641">
-                    <printWhenExpression><![CDATA[$V{PAGE_NUMBER} > 1]]></printWhenExpression>
-                </reportElement>
-                <textFieldExpression><![CDATA[$P{TITULO} + "  ·  continúa"]]></textFieldExpression>
+                <reportElement style="Meta" x="194" y="64" width="200" height="14" uuid="9f2c8d10-5a47-4b91-ae33-0c6e1d8b4527"/>
+                <textFieldExpression><![CDATA[$P{FECHA_GENERACION}]]></textFieldExpression>
             </textField>
+            <staticText>
+                <reportElement style="Meta" x="430" y="64" width="58" height="14" uuid="b3d1e8c0-4a72-4f1e-91aa-2c7e0b5d9f10"/>
+                <textElement>
+                    <font isBold="true"/>
+                </textElement>
+                <text><![CDATA[Usuario]]></text>
+            </staticText>
             <textField isBlankWhenNull="true">
-                <reportElement style="Pie" x="0" y="1" width="802" height="14" uuid="d1a6e3b8-4c29-4f70-9e12-7b5a0c8d3642">
-                    <printWhenExpression><![CDATA[$V{PAGE_NUMBER} == 1
-                            && $P{FILTRO} != null && !$P{FILTRO}.trim().isEmpty()]]></printWhenExpression>
-                </reportElement>
-                <textFieldExpression><![CDATA["Filtro aplicado: " + $P{FILTRO}]]></textFieldExpression>
+                <reportElement style="Meta" x="490" y="64" width="300" height="14" uuid="d1a6e3b8-4c29-4f70-9e12-7b5a0c8d3641"/>
+                <textFieldExpression><![CDATA[$P{USUARIO} == null || $P{USUARIO}.isBlank() ? "—" : $P{USUARIO}]]></textFieldExpression>
             </textField>
         </band>
     </pageHeader>
@@ -116,9 +98,9 @@
     <columnHeader>
         <band height="22" splitType="Stretch">
             <rectangle>
-                <reportElement x="0" y="0" width="802" height="22" backcolor="#2C3E50" forecolor="#2C3E50" uuid="5e8a2c14-9b06-4d3f-a721-8f4c0e6b1935"/>
+                <reportElement x="0" y="0" width="802" height="22" backcolor="#E6E6E6" forecolor="#1A1A1A" uuid="5e8a2c14-9b06-4d3f-a721-8f4c0e6b1936"/>
                 <graphicElement>
-                    <pen lineWidth="0.0"/>
+                    <pen lineWidth="0.6" lineColor="#1A1A1A"/>
                 </graphicElement>
             </rectangle>
             <staticText>
@@ -162,7 +144,7 @@
     <detail>
         <band height="18" splitType="Stretch">
             <rectangle>
-                <reportElement x="0" y="0" width="802" height="18" backcolor="#EEF2F6" forecolor="#EEF2F6" uuid="294b5d6f-7890-43b2-04de-5f670819ab23">
+                <reportElement x="0" y="0" width="802" height="18" backcolor="#F7F7F7" forecolor="#F7F7F7" uuid="294b5d6f-7890-43b2-04de-5f670819ab23">
                     <printWhenExpression><![CDATA[$V{REPORT_COUNT} % 2 == 0]]></printWhenExpression>
                 </reportElement>
                 <graphicElement>
@@ -215,7 +197,7 @@
         <band height="22" splitType="Stretch">
             <textField>
                 <reportElement style="Pie" x="0" y="6" width="400" height="14" uuid="c345f709-789a-4d5c-ae78-f901a2b354cd"/>
-                <textFieldExpression><![CDATA[$P{SISTEMA} + "  ·  Documento interno"]]></textFieldExpression>
+                <textFieldExpression><![CDATA["CH Service"]]></textFieldExpression>
             </textField>
             <textField>
                 <reportElement style="Pie" x="502" y="6" width="240" height="14" uuid="d456081a-89ab-4e6d-bf89-0a12b3c465de"/>
