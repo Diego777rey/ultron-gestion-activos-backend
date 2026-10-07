@@ -142,8 +142,10 @@ extend type Query {
     factura(id: ID!): FacturaOutput
     facturas(page: Int, size: Int): FacturaPageResponse!
     facturasPorEmpresaYEstado(idEmpresa: ID!, estado: String!, page: Int, size: Int): FacturaPageResponse!
+    facturasConVentaPorEmpresaYEstado(idEmpresa: ID!, estado: String!, page: Int, size: Int): FacturaPageResponse!
     facturasPorCliente(idCliente: ID!, page: Int, size: Int): FacturaPageResponse!
     buscarFacturas(idEmpresa: ID!, filtro: String!, page: Int, size: Int): FacturaPageResponse!
+    buscarFacturasConVenta(idEmpresa: ID!, filtro: String!, page: Int, size: Int): FacturaPageResponse!
     facturasParaLibroVentas(idEmpresa: ID!, fechaInicio: String!, fechaFin: String!): [FacturaOutput!]!
     facturaPorVenta(idVenta: ID!): FacturaOutput
 }
