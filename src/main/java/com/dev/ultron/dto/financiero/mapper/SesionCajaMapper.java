@@ -12,6 +12,11 @@ import org.mapstruct.Mapping;
 @Mapper(config = MapStructConfig.class, uses = {CajaMapper.class, MaletinMapper.class, PersonaMapper.class})
 public interface SesionCajaMapper {
 
+    @Mapping(target = "idSesionAnterior", source = "sesionAnterior.id_sesion_caja")
+    @Mapping(target = "fechaCierreAnterior", source = "sesionAnterior.fechaCierre")
+    @Mapping(target = "montoCierreAnteriorPyg", source = "sesionAnterior.montoFinalPyg")
+    @Mapping(target = "montoCierreAnteriorUsd", source = "sesionAnterior.montoFinalUsd")
+    @Mapping(target = "montoCierreAnteriorBrl", source = "sesionAnterior.montoFinalBrl")
     SesionCajaOutput toOutput(SesionCaja entity);
 
     @Mapping(target = "valorDenominacion", source = "valorDenominacion")
