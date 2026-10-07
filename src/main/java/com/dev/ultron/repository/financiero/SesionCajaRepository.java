@@ -1,9 +1,11 @@
 package com.dev.ultron.repository.financiero;
 
 import com.dev.ultron.domain.financiero.SesionCaja;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -14,6 +16,11 @@ import java.util.Optional;
 
 @Repository
 public interface SesionCajaRepository extends JpaRepository<SesionCaja, Long> {
+
+    /** Serializa retiros y cierre de una misma sesión para que el arqueo no se calcule con datos a medias. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT s FROM SesionCaja s WHERE s.id_sesion_caja = :id")
+    Optional<SesionCaja> bloquearPorId(@Param("id") Long id);
 
     @Query("SELECT s FROM SesionCaja s WHERE s.estado = :estado ORDER BY s.fechaApertura DESC")
     List<SesionCaja> listarPorEstado(@Param("estado") String estado, Pageable pageable);
@@ -36,6 +43,14 @@ public interface SesionCajaRepository extends JpaRepository<SesionCaja, Long> {
             ORDER BY COALESCE(s.fechaCierre, s.fechaApertura) DESC
             """)
     List<SesionCaja> findUltimaPorMaletin(@Param("idMaletin") Long idMaletin, Pageable pageable);
+
+    @Query("""
+            SELECT s FROM SesionCaja s
+            WHERE s.maletin.id_maletin = :idMaletin
+            AND s.estado = 'CERRADA'
+            ORDER BY s.fechaCierre DESC, s.id_sesion_caja DESC
+            """)
+    List<SesionCaja> findUltimoCierrePorMaletin(@Param("idMaletin") Long idMaletin, Pageable pageable);
 
     @Query("""
             SELECT s FROM SesionCaja s

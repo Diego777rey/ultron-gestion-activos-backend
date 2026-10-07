@@ -30,8 +30,20 @@ public class SesionCajaOutput implements Serializable {
     private BigDecimal diferenciaPyg;
     private BigDecimal diferenciaUsd;
     private BigDecimal diferenciaBrl;
+    private BigDecimal esperadoCierrePyg;
+    private BigDecimal esperadoCierreUsd;
+    private BigDecimal esperadoCierreBrl;
+    private BigDecimal diferenciaArqueoPyg;
+    private BigDecimal diferenciaArqueoUsd;
+    private BigDecimal diferenciaArqueoBrl;
     private BigDecimal totalVentasPyg;
     private LocalDateTime fechaApertura;
     private LocalDateTime fechaCierre;
+    /** Cierre con el que se comparó la apertura; null si el maletín no tenía cierres. */
+    private Long idSesionAnterior;
+    private LocalDateTime fechaCierreAnterior;
+    private BigDecimal montoCierreAnteriorPyg;
+    private BigDecimal montoCierreAnteriorUsd;
+    private BigDecimal montoCierreAnteriorBrl;
     private List<ConteoDenominacionOutput> conteos;
 }
