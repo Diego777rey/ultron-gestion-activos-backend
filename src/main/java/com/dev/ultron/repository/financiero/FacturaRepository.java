@@ -45,6 +45,23 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
             Pageable pageable
     );
 
+    /**
+     * Lista facturas de una empresa filtradas por estado, incluyendo solo las que tienen venta asociada.
+     * Útil para listar facturas legales emitidas desde el punto de venta.
+     */
+    @Query("""
+            SELECT f FROM Factura f
+            WHERE f.empresa.id_empresa = :idEmpresa
+            AND f.estado = :estado
+            AND f.venta IS NOT NULL
+            ORDER BY f.fecha_emision DESC
+            """)
+    Page<Factura> findFacturasConVentaPorEmpresaYEstado(
+            @Param("idEmpresa") Long idEmpresa,
+            @Param("estado") String estado,
+            Pageable pageable
+    );
+
     @Query("""
             SELECT f FROM Factura f
             WHERE f.empresa.id_empresa = :idEmpresa
@@ -90,6 +107,28 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
             ORDER BY f.fecha_emision DESC
             """)
     Page<Factura> searchByEmpresa(
+            @Param("idEmpresa") Long idEmpresa,
+            @Param("filter") String filter,
+            Pageable pageable
+    );
+
+    /**
+     * Busca facturas con venta asociada usando un filtro de texto.
+     * Busca en: número de factura, nombre del cliente, RUC y documento.
+     */
+    @Query("""
+            SELECT f FROM Factura f
+            WHERE f.empresa.id_empresa = :idEmpresa
+            AND f.venta IS NOT NULL
+            AND (
+                LOWER(f.numero_factura) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(f.cliente_nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(f.cliente_ruc) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(f.cliente_documento) LIKE LOWER(CONCAT('%', :filter, '%'))
+            )
+            ORDER BY f.fecha_emision DESC
+            """)
+    Page<Factura> searchFacturasConVentaByEmpresa(
             @Param("idEmpresa") Long idEmpresa,
             @Param("filter") String filter,
             Pageable pageable

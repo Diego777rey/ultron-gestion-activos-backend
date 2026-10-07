@@ -374,11 +374,31 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
     }
 
     /**
+     * Lista facturas legales con venta asociada por empresa y estado.
+     * Útil para el listado de facturas emitidas desde el punto de venta.
+     */
+    @Transactional(readOnly = true)
+    public Page<FacturaOutput> listarFacturasConVentaPorEmpresaYEstado(Long idEmpresa, String estado, Pageable pageable) {
+        Page<Factura> facturas = facturaRepository.findFacturasConVentaPorEmpresaYEstado(idEmpresa, estado, pageable);
+        return facturas.map(facturaMapper::toOutput);
+    }
+
+    /**
      * Busca facturas con un filtro de texto.
      */
     @Transactional(readOnly = true)
     public Page<FacturaOutput> buscarConFiltro(Long idEmpresa, String filtro, Pageable pageable) {
         Page<Factura> facturas = facturaRepository.searchByEmpresa(idEmpresa, filtro, pageable);
+        return facturas.map(facturaMapper::toOutput);
+    }
+
+    /**
+     * Busca facturas con venta asociada usando un filtro de texto.
+     * Busca en número de factura, nombre del cliente, RUC y documento.
+     */
+    @Transactional(readOnly = true)
+    public Page<FacturaOutput> buscarFacturasConVentaConFiltro(Long idEmpresa, String filtro, Pageable pageable) {
+        Page<Factura> facturas = facturaRepository.searchFacturasConVentaByEmpresa(idEmpresa, filtro, pageable);
         return facturas.map(facturaMapper::toOutput);
     }
 

@@ -105,6 +105,21 @@ public class FacturacionGraphQLController {
     }
 
     @QueryMapping
+    public Map<String, Object> facturasConVentaPorEmpresaYEstado(
+            @Argument Long idEmpresa,
+            @Argument String estado,
+            @Argument Integer page,
+            @Argument Integer size) {
+        int p = page != null ? page : 0;
+        int s = size != null ? size : 10;
+        Pageable pageable = PageRequest.of(p, s);
+        
+        Page<FacturaOutput> result = facturaService.listarFacturasConVentaPorEmpresaYEstado(idEmpresa, estado, pageable);
+        
+        return buildPageResponse(result);
+    }
+
+    @QueryMapping
     public Map<String, Object> facturasPorCliente(
             @Argument Long idCliente,
             @Argument Integer page,
@@ -129,6 +144,21 @@ public class FacturacionGraphQLController {
         Pageable pageable = PageRequest.of(p, s);
         
         Page<FacturaOutput> result = facturaService.buscarConFiltro(idEmpresa, filtro, pageable);
+        
+        return buildPageResponse(result);
+    }
+
+    @QueryMapping
+    public Map<String, Object> buscarFacturasConVenta(
+            @Argument Long idEmpresa,
+            @Argument String filtro,
+            @Argument Integer page,
+            @Argument Integer size) {
+        int p = page != null ? page : 0;
+        int s = size != null ? size : 10;
+        Pageable pageable = PageRequest.of(p, s);
+        
+        Page<FacturaOutput> result = facturaService.buscarFacturasConVentaConFiltro(idEmpresa, filtro, pageable);
         
         return buildPageResponse(result);
     }
