@@ -5,6 +5,7 @@ import com.dev.ultron.dto.inventario.input.CategoriaProductoInput;
 import com.dev.ultron.dto.inventario.output.CategoriaProductoOutput;
 import com.dev.ultron.dto.inventario.mapper.CategoriaProductoMapper;
 import com.dev.ultron.repository.inventario.CategoriaProductoRepository;
+import com.dev.ultron.repository.inventario.ProductoRepository;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.generic.EntityNotFoundException;
@@ -20,15 +21,33 @@ public class CategoriaProductoService extends GenericCrudService<CategoriaProduc
 
     private final CategoriaProductoRepository repository;
     private final CategoriaProductoMapper mapper;
+    private final ProductoRepository productoRepository;
 
-    public CategoriaProductoService(CategoriaProductoRepository repository, CategoriaProductoMapper mapper) {
+    public CategoriaProductoService(
+            CategoriaProductoRepository repository,
+            CategoriaProductoMapper mapper,
+            ProductoRepository productoRepository
+    ) {
         this.repository = repository;
         this.mapper = mapper;
+        this.productoRepository = productoRepository;
     }
 
     @Override
     protected JpaRepository<CategoriaProducto, Long> getRepository() {
         return repository;
+    }
+
+    @Override
+    protected void validarAntesDeEliminar(Long id) {
+        if (repository.existsSubcategorias(id)) {
+            throw new IllegalArgumentException(
+                    "No se puede eliminar la categoría porque tiene subcategorías. Eliminálas primero");
+        }
+        if (productoRepository.existsByCategoria(id)) {
+            throw new IllegalArgumentException(
+                    "No se puede eliminar la categoría porque hay productos vinculados. Los productos no se borran con la categoría");
+        }
     }
 
     @Transactional

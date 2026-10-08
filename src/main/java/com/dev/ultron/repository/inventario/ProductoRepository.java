@@ -77,4 +77,11 @@ public interface ProductoRepository extends JpaRepository<Producto, Long>, JpaSp
             WHERE p.id_producto = :id
             """)
     Optional<Producto> findParaReporte(@Param("id") Long id);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END
+            FROM Producto p
+            WHERE p.categoriaProducto.id_categoria_producto = :idCategoria
+            """)
+    boolean existsByCategoria(@Param("idCategoria") Long idCategoria);
 }

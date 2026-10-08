@@ -8,9 +8,15 @@ import com.dev.ultron.dto.inventario.input.ProductoInput;
 import com.dev.ultron.dto.inventario.output.PresentacionProductoOutput;
 import com.dev.ultron.dto.inventario.output.ProductoOutput;
 import com.dev.ultron.dto.inventario.mapper.ProductoMapper;
+import com.dev.ultron.repository.financiero.DetalleFacturaRepository;
+import com.dev.ultron.repository.financiero.DetalleVentaRepository;
 import com.dev.ultron.repository.inventario.PresentacionProductoRepository;
 import com.dev.ultron.repository.inventario.ProductoRepository;
 import com.dev.ultron.repository.inventario.CategoriaProductoRepository;
+import com.dev.ultron.repository.operaciones.StockProductoSectorRepository;
+import com.dev.ultron.repository.operaciones.TransferenciaDetalleRepository;
+import com.dev.ultron.repository.taller.OrdenTrabajoDetalleRepository;
+import com.dev.ultron.repository.taller.SolicitudRepuestoDetalleRepository;
 import com.dev.ultron.service.operaciones.StockProductoSectorService;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
@@ -35,24 +41,73 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
     private final ProductoMapper mapper;
     private final CategoriaProductoRepository categoriaProductoRepository;
     private final StockProductoSectorService stockProductoSectorService;
+    private final StockProductoSectorRepository stockProductoSectorRepository;
+    private final DetalleVentaRepository detalleVentaRepository;
+    private final DetalleFacturaRepository detalleFacturaRepository;
+    private final OrdenTrabajoDetalleRepository ordenTrabajoDetalleRepository;
+    private final TransferenciaDetalleRepository transferenciaDetalleRepository;
+    private final SolicitudRepuestoDetalleRepository solicitudRepuestoDetalleRepository;
 
     public ProductoService(
             ProductoRepository repository,
             PresentacionProductoRepository presentacionProductoRepository,
             ProductoMapper mapper,
             CategoriaProductoRepository categoriaProductoRepository,
-            StockProductoSectorService stockProductoSectorService
+            StockProductoSectorService stockProductoSectorService,
+            StockProductoSectorRepository stockProductoSectorRepository,
+            DetalleVentaRepository detalleVentaRepository,
+            DetalleFacturaRepository detalleFacturaRepository,
+            OrdenTrabajoDetalleRepository ordenTrabajoDetalleRepository,
+            TransferenciaDetalleRepository transferenciaDetalleRepository,
+            SolicitudRepuestoDetalleRepository solicitudRepuestoDetalleRepository
     ) {
         this.repository = repository;
         this.presentacionProductoRepository = presentacionProductoRepository;
         this.mapper = mapper;
         this.categoriaProductoRepository = categoriaProductoRepository;
         this.stockProductoSectorService = stockProductoSectorService;
+        this.stockProductoSectorRepository = stockProductoSectorRepository;
+        this.detalleVentaRepository = detalleVentaRepository;
+        this.detalleFacturaRepository = detalleFacturaRepository;
+        this.ordenTrabajoDetalleRepository = ordenTrabajoDetalleRepository;
+        this.transferenciaDetalleRepository = transferenciaDetalleRepository;
+        this.solicitudRepuestoDetalleRepository = solicitudRepuestoDetalleRepository;
     }
 
     @Override
     protected JpaRepository<Producto, Long> getRepository() {
         return repository;
+    }
+
+    /**
+     * Borra el producto y su stock. La categoría vinculada no se toca.
+     * Un producto ya vendido, facturado o usado en taller/transferencias no se puede borrar.
+     */
+    @Override
+    @Transactional
+    public void eliminarPorId(Long id) {
+        if (!repository.existsById(id)) {
+            throw new EntityNotFoundException("No se puede eliminar. Registro no encontrado con ID: " + id);
+        }
+        validarAntesDeEliminar(id);
+        stockProductoSectorRepository.deleteByProductoId(id);
+        super.eliminarPorId(id);
+    }
+
+    @Override
+    protected void validarAntesDeEliminar(Long id) {
+        if (detalleVentaRepository.existsByProducto(id) || detalleFacturaRepository.existsByProducto(id)) {
+            throw new IllegalArgumentException("No se puede eliminar el producto porque ya fue vendido");
+        }
+        if (ordenTrabajoDetalleRepository.existsByProducto(id)) {
+            throw new IllegalArgumentException("No se puede eliminar el producto porque figura en una orden de trabajo");
+        }
+        if (transferenciaDetalleRepository.existsByProducto(id)) {
+            throw new IllegalArgumentException("No se puede eliminar el producto porque figura en una transferencia");
+        }
+        if (solicitudRepuestoDetalleRepository.existsByProducto(id)) {
+            throw new IllegalArgumentException("No se puede eliminar el producto porque figura en una solicitud de repuesto");
+        }
     }
 
     @Transactional
