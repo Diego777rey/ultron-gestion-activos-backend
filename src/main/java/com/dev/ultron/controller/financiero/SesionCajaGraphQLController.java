@@ -57,6 +57,15 @@ public class SesionCajaGraphQLController {
         return service.findAllPaginated(page, size, filter, idCaja, estado, fechaDesde, fechaHasta);
     }
 
+    @QueryMapping
+    public PageResponse<SesionCajaOutput> listarMisSesionesCajaCerradas(
+            @Argument int page,
+            @Argument int size,
+            @Argument String fechaDesde,
+            @Argument String fechaHasta) {
+        return service.misSesionesCerradas(page, size, fechaDesde, fechaHasta);
+    }
+
     @MutationMapping
     public SesionCajaOutput abrirCaja(@Argument AbrirCajaInput input) {
         return service.abrirCaja(input);

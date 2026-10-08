@@ -52,6 +52,27 @@ public interface SesionCajaRepository extends JpaRepository<SesionCaja, Long> {
             """)
     List<SesionCaja> findUltimoCierrePorMaletin(@Param("idMaletin") Long idMaletin, Pageable pageable);
 
+    @Query(value = """
+            SELECT s FROM SesionCaja s
+            WHERE s.persona.id_persona = :idPersona
+            AND s.estado = 'CERRADA'
+            AND s.fechaCierre >= :fechaDesde
+            AND s.fechaCierre <= :fechaHasta
+            ORDER BY s.fechaCierre DESC, s.id_sesion_caja DESC
+            """,
+            countQuery = """
+            SELECT COUNT(s) FROM SesionCaja s
+            WHERE s.persona.id_persona = :idPersona
+            AND s.estado = 'CERRADA'
+            AND s.fechaCierre >= :fechaDesde
+            AND s.fechaCierre <= :fechaHasta
+            """)
+    Page<SesionCaja> findCerradasPorPersona(
+            @Param("idPersona") Long idPersona,
+            @Param("fechaDesde") LocalDateTime fechaDesde,
+            @Param("fechaHasta") LocalDateTime fechaHasta,
+            Pageable pageable);
+
     @Query("""
             SELECT s FROM SesionCaja s
             WHERE (:filter IS NULL OR :filter = ''

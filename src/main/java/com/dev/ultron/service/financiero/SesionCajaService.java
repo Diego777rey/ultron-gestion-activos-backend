@@ -293,6 +293,22 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
         return new PageResponse<>(repository.buscar(filter, pageable).map(mapper::toOutput));
     }
 
+    /** Sesiones cerradas del cajero logueado en el rango de fecha de cierre, la más reciente primero. */
+     @Transactional(readOnly = true)
+    public PageResponse<SesionCajaOutput> misSesionesCerradas(int page, int size, String fechaDesde, String fechaHasta) {
+        Persona persona = personaLogueada();
+        if (persona == null) {
+            throw new IllegalArgumentException("Debe iniciar sesión para ver sus cajas");
+        }
+        return new PageResponse<>(repository
+                .findCerradasPorPersona(
+                        persona.getId_persona(),
+                        parseDesde(fechaDesde),
+                        parseHasta(fechaHasta),
+                        PageRequest.of(page, size))
+                .map(mapper::toOutput));
+    }
+
     private static final LocalDateTime FECHA_MIN = LocalDateTime.of(1970, 1, 1, 0, 0);
     private static final LocalDateTime FECHA_MAX = LocalDateTime.of(2999, 12, 31, 23, 59, 59);
 
@@ -319,21 +335,30 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
     }
 
     private Persona resolverPersonaLogueada(Long idPersonaInput) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth != null ? auth.getName() : null;
-        if (username != null && !username.isBlank() && !"anonymousUser".equalsIgnoreCase(username)) {
-            Usuario usuario = usuarioRepository.findByUsernameWithPersona(username)
-                    .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario logueado"));
-            if (usuario.getFuncionario() == null || usuario.getFuncionario().getPersona() == null) {
-                throw new IllegalArgumentException("El usuario logueado no tiene un funcionario asociado");
-            }
-            return usuario.getFuncionario().getPersona();
+        Persona logueada = personaLogueada();
+        if (logueada != null) {
+            return logueada;
         }
         if (idPersonaInput != null) {
             return personaRepository.findById(idPersonaInput)
                     .orElseThrow(() -> new EntityNotFoundException("Persona no encontrada con id: " + idPersonaInput));
         }
         throw new IllegalArgumentException("Debe iniciar sesión para abrir la caja");
+    }
+
+    /** Persona del funcionario del usuario del token; {@code null} si no hay sesión iniciada. */
+    private Persona personaLogueada() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth != null ? auth.getName() : null;
+        if (username == null || username.isBlank() || "anonymousUser".equalsIgnoreCase(username)) {
+            return null;
+        }
+        Usuario usuario = usuarioRepository.findByUsernameWithPersona(username)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario logueado"));
+        if (usuario.getFuncionario() == null || usuario.getFuncionario().getPersona() == null) {
+            throw new IllegalArgumentException("El usuario logueado no tiene un funcionario asociado");
+        }
+        return usuario.getFuncionario().getPersona();
     }
 
     private String mensajeOcupada(String prefijo, SesionCaja sesion) {
