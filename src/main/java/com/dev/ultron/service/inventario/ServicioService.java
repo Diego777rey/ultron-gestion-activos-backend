@@ -5,8 +5,11 @@ import com.dev.ultron.domain.inventario.CategoriaServicio;
 import com.dev.ultron.dto.inventario.input.ServicioInput;
 import com.dev.ultron.dto.inventario.output.ServicioOutput;
 import com.dev.ultron.dto.inventario.mapper.ServicioMapper;
+import com.dev.ultron.repository.financiero.DetalleFacturaRepository;
+import com.dev.ultron.repository.financiero.DetalleVentaRepository;
 import com.dev.ultron.repository.inventario.ServicioRepository;
 import com.dev.ultron.repository.inventario.CategoriaServicioRepository;
+import com.dev.ultron.repository.taller.OrdenTrabajoDetalleRepository;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.generic.SearchNormalizer;
@@ -24,16 +27,43 @@ public class ServicioService extends GenericCrudService<Servicio, Long> {
     private final ServicioRepository repository;
     private final ServicioMapper mapper;
     private final CategoriaServicioRepository categoriaServicioRepository;
+    private final DetalleVentaRepository detalleVentaRepository;
+    private final DetalleFacturaRepository detalleFacturaRepository;
+    private final OrdenTrabajoDetalleRepository ordenTrabajoDetalleRepository;
 
-    public ServicioService(ServicioRepository repository, ServicioMapper mapper, CategoriaServicioRepository categoriaServicioRepository) {
+    public ServicioService(
+            ServicioRepository repository,
+            ServicioMapper mapper,
+            CategoriaServicioRepository categoriaServicioRepository,
+            DetalleVentaRepository detalleVentaRepository,
+            DetalleFacturaRepository detalleFacturaRepository,
+            OrdenTrabajoDetalleRepository ordenTrabajoDetalleRepository
+    ) {
         this.repository = repository;
         this.mapper = mapper;
         this.categoriaServicioRepository = categoriaServicioRepository;
+        this.detalleVentaRepository = detalleVentaRepository;
+        this.detalleFacturaRepository = detalleFacturaRepository;
+        this.ordenTrabajoDetalleRepository = ordenTrabajoDetalleRepository;
     }
 
     @Override
     protected JpaRepository<Servicio, Long> getRepository() {
         return repository;
+    }
+
+    /**
+     * Borra el servicio. La categoría vinculada no se toca.
+     * Un servicio ya vendido, facturado o usado en una orden de trabajo no se puede borrar.
+     */
+    @Override
+    protected void validarAntesDeEliminar(Long id) {
+        if (detalleVentaRepository.existsByServicio(id) || detalleFacturaRepository.existsByServicio(id)) {
+            throw new IllegalArgumentException("No se puede eliminar el servicio porque ya fue vendido");
+        }
+        if (ordenTrabajoDetalleRepository.existsByServicio(id)) {
+            throw new IllegalArgumentException("No se puede eliminar el servicio porque figura en una orden de trabajo");
+        }
     }
 
     @Transactional

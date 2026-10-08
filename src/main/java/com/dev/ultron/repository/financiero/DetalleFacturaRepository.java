@@ -26,4 +26,18 @@ public interface DetalleFacturaRepository extends JpaRepository<DetalleFactura, 
             ORDER BY d.numero_linea ASC
             """)
     List<DetalleFactura> findByFacturaWithDetails(@Param("idFactura") Long idFactura);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(d) > 0 THEN true ELSE false END
+            FROM DetalleFactura d
+            WHERE d.producto.id_producto = :idProducto
+            """)
+    boolean existsByProducto(@Param("idProducto") Long idProducto);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(d) > 0 THEN true ELSE false END
+            FROM DetalleFactura d
+            WHERE d.servicio.id_servicio = :idServicio
+            """)
+    boolean existsByServicio(@Param("idServicio") Long idServicio);
 }

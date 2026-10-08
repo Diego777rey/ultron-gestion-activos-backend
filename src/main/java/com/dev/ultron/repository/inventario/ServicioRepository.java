@@ -38,4 +38,11 @@ public interface ServicioRepository extends JpaRepository<Servicio, Long>, JpaSp
             WHERE s.id_servicio = :id
             """)
     Optional<Servicio> findParaReporte(@Param("id") Long id);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END
+            FROM Servicio s
+            WHERE s.categoriaServicio.id_categoria_servicio = :idCategoria
+            """)
+    boolean existsByCategoria(@Param("idCategoria") Long idCategoria);
 }

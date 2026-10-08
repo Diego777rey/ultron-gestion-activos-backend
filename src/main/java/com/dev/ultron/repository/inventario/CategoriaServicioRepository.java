@@ -22,4 +22,11 @@ public interface CategoriaServicioRepository extends JpaRepository<CategoriaServ
 
     @Query("SELECT c FROM CategoriaServicio c WHERE c.categoriaPadre IS NULL")
     Page<CategoriaServicio> findRaicesPaginado(Pageable pageable);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END
+            FROM CategoriaServicio c
+            WHERE c.categoriaPadre.id_categoria_servicio = :idCategoria
+            """)
+    boolean existsSubcategorias(@Param("idCategoria") Long idCategoria);
 }

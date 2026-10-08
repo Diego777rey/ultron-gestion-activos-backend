@@ -5,6 +5,7 @@ import com.dev.ultron.dto.inventario.input.CategoriaServicioInput;
 import com.dev.ultron.dto.inventario.output.CategoriaServicioOutput;
 import com.dev.ultron.dto.inventario.mapper.CategoriaServicioMapper;
 import com.dev.ultron.repository.inventario.CategoriaServicioRepository;
+import com.dev.ultron.repository.inventario.ServicioRepository;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.generic.EntityNotFoundException;
@@ -20,15 +21,33 @@ public class CategoriaServicioService extends GenericCrudService<CategoriaServic
 
     private final CategoriaServicioRepository repository;
     private final CategoriaServicioMapper mapper;
+    private final ServicioRepository servicioRepository;
 
-    public CategoriaServicioService(CategoriaServicioRepository repository, CategoriaServicioMapper mapper) {
+    public CategoriaServicioService(
+            CategoriaServicioRepository repository,
+            CategoriaServicioMapper mapper,
+            ServicioRepository servicioRepository
+    ) {
         this.repository = repository;
         this.mapper = mapper;
+        this.servicioRepository = servicioRepository;
     }
 
     @Override
     protected JpaRepository<CategoriaServicio, Long> getRepository() {
         return repository;
+    }
+
+    @Override
+    protected void validarAntesDeEliminar(Long id) {
+        if (repository.existsSubcategorias(id)) {
+            throw new IllegalArgumentException(
+                    "No se puede eliminar la categoría porque tiene subcategorías. Eliminálas primero");
+        }
+        if (servicioRepository.existsByCategoria(id)) {
+            throw new IllegalArgumentException(
+                    "No se puede eliminar la categoría porque hay servicios vinculados. Los servicios no se borran con la categoría");
+        }
     }
 
     @Transactional
