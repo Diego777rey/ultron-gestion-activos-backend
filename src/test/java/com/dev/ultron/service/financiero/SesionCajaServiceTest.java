@@ -4,7 +4,9 @@ import com.dev.ultron.domain.financiero.Caja;
 import com.dev.ultron.domain.financiero.ConteoDenominacion;
 import com.dev.ultron.domain.financiero.Maletin;
 import com.dev.ultron.domain.financiero.SesionCaja;
+import com.dev.ultron.domain.personas.Funcionario;
 import com.dev.ultron.domain.personas.Persona;
+import com.dev.ultron.domain.personas.Usuario;
 import com.dev.ultron.domain.sectores.Sector;
 import com.dev.ultron.dto.financiero.input.AbrirCajaInput;
 import com.dev.ultron.dto.financiero.input.CerrarCajaInput;
@@ -20,6 +22,9 @@ import com.dev.ultron.repository.personas.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
@@ -31,10 +36,13 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -45,13 +53,14 @@ class SesionCajaServiceTest {
     private final MaletinRepository maletinRepository = mock(MaletinRepository.class);
     private final PersonaRepository personaRepository = mock(PersonaRepository.class);
     private final ArqueoCajaService arqueoCajaService = mock(ArqueoCajaService.class);
+    private final UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
     private final SesionCajaService service = new SesionCajaService(
             repository,
             mock(SesionCajaMapper.class),
             cajaRepository,
             maletinRepository,
             personaRepository,
-            mock(UsuarioRepository.class),
+            usuarioRepository,
             mock(MovimientoCajaRepository.class),
             arqueoCajaService);
 
@@ -135,6 +144,34 @@ class SesionCajaServiceTest {
         assertEquals(0, new BigDecimal("10").compareTo(abierta.getDiferenciaArqueoBrl()));
         assertEquals(0, abierta.getDiferenciaArqueoUsd().signum());
         assertEquals(new BigDecimal("15000"), abierta.getDiferenciaPyg());
+    }
+
+    @Test
+    void misCajasCerradasSonLasDelUsuarioDelToken() {
+        Persona cajero = Persona.builder().id_persona(42L).build();
+        Usuario usuario = Usuario.builder()
+                .username("cajero1")
+                .funcionario(Funcionario.builder().persona(cajero).build())
+                .build();
+        when(usuarioRepository.findByUsernameWithPersona("cajero1")).thenReturn(Optional.of(usuario));
+        when(repository.findCerradasPorPersona(anyLong(), any(), any(), any())).thenReturn(Page.empty());
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("cajero1", null, List.of()));
+
+        service.misSesionesCerradas(0, 15, "2026-10-06", "2026-10-08");
+
+        verify(repository).findCerradasPorPersona(
+                eq(42L),
+                eq(LocalDateTime.of(2026, 10, 6, 0, 0)),
+                eq(LocalDateTime.of(2026, 10, 8, 23, 59, 59)),
+                eq(PageRequest.of(0, 15)));
+    }
+
+    @Test
+    void sinUsuarioLogueadoNoListaCajas() {
+        assertThrows(IllegalArgumentException.class,
+                () -> service.misSesionesCerradas(0, 15, "2026-10-06", "2026-10-08"));
+        verify(repository, never()).findCerradasPorPersona(anyLong(), any(), any(), any());
     }
 
     private static ArqueoMonedaOutput esperado(String moneda, String monto) {

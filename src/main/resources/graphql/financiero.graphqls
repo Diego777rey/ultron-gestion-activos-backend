@@ -313,6 +313,13 @@ extend type Query {
         fechaDesde: String,
         fechaHasta: String
     ): SesionCajaPageResponse!
+    # Cierres del usuario logueado, el más reciente primero. Fechas yyyy-MM-dd sobre la fecha de cierre.
+    listarMisSesionesCajaCerradas(
+        page: Int!,
+        size: Int!,
+        fechaDesde: String,
+        fechaHasta: String
+    ): SesionCajaPageResponse!
 
     listarVentas: [VentaOutput!]!
     listarVentasPaginado(page: Int!, size: Int!, filter: String, idSesionCaja: ID): VentaPageResponse!
