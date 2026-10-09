@@ -6,6 +6,7 @@ import com.dev.ultron.domain.taller.OrdenEstadoVehiculo;
 import com.dev.ultron.domain.taller.OrdenRecepcion;
 import com.dev.ultron.domain.taller.OrdenTrabajo;
 import com.dev.ultron.domain.taller.OrdenTrabajoDetalle;
+import com.dev.ultron.dto.patrimonio.output.EquipoOutput;
 import com.dev.ultron.dto.taller.output.OrdenDiagnosticoHallazgoOutput;
 import com.dev.ultron.dto.taller.output.OrdenDiagnosticoOutput;
 import com.dev.ultron.dto.taller.output.OrdenEstadoVehiculoOutput;
@@ -20,8 +21,10 @@ import com.dev.ultron.dto.patrimonio.mapper.VehiculoMapper;
 import com.dev.ultron.dto.sectores.mapper.SectorMapper;
 import com.dev.ultron.dto.financiero.mapper.CajaMapper;
 import com.dev.ultron.generic.mapper.MapStructConfig;
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
 import java.time.LocalDateTime;
@@ -42,6 +45,7 @@ public interface OrdenTrabajoMapper {
     @Mapping(target = "id_orden_trabajo", source = "id_orden_trabajo")
     @Mapping(target = "numero_orden", source = "numeroOrden")
     @Mapping(target = "tipo_recepcion", source = "tipoRecepcion")
+    @Mapping(target = "equipo", ignore = true)
     @Mapping(target = "fecha_creacion", source = "fechaCreacion", qualifiedByName = "formatDateTime")
     @Mapping(target = "fecha_finalizacion", source = "fechaFinalizacion", qualifiedByName = "formatDateTime")
     @Mapping(target = "monto_pago", source = "montoPago")
@@ -52,6 +56,12 @@ public interface OrdenTrabajoMapper {
     @Mapping(target = "detalles", source = "detalles")
     @Mapping(target = "hallazgos", source = "hallazgos")
     OrdenTrabajoOutput toOutput(OrdenTrabajo ordenTrabajo);
+
+    @AfterMapping
+    default void completarEquipoPrincipal(@MappingTarget OrdenTrabajoOutput output) {
+        List<EquipoOutput> equipos = output.getEquipos();
+        output.setEquipo(equipos == null || equipos.isEmpty() ? null : equipos.get(0));
+    }
 
     List<OrdenTrabajoOutput> toOutputList(List<OrdenTrabajo> ordenes);
 
