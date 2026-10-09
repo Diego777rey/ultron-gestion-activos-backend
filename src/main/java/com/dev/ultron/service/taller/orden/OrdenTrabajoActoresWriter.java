@@ -70,14 +70,15 @@ public class OrdenTrabajoActoresWriter {
         if (input.id_cliente() != null) {
             orden.setCliente(clienteService.buscarPorIdOrThrow(input.id_cliente()));
         }
+        List<Long> idsEquipos = idsEquipos(input);
         if (input.tipo_recepcion() != null) {
-            aplicarRecepcion(orden, input);
+            aplicarRecepcion(orden, input, idsEquipos);
         } else {
             if (input.id_vehiculo() != null) {
                 orden.setVehiculo(vehiculoService.buscarPorIdOrThrow(input.id_vehiculo()));
             }
-            if (input.id_equipo() != null) {
-                orden.setEquipo(equipoService.buscarPorIdOrThrow(input.id_equipo()));
+            if (idsEquipos != null) {
+                reemplazarEquipos(orden, resolverEquipos(idsEquipos));
             }
         }
         aplicarMecanicos(orden, input, creando);
@@ -93,32 +94,75 @@ public class OrdenTrabajoActoresWriter {
         }
 
         if (creando || input.id_cliente() != null || input.id_vehiculo() != null
-                || input.id_equipo() != null || input.tipo_recepcion() != null) {
+                || idsEquipos != null || input.tipo_recepcion() != null) {
             validarVehiculoPerteneceACliente(orden.getCliente(), orden.getVehiculo());
-            validarEquipoPerteneceACliente(orden.getCliente(), orden.getEquipo());
+            validarEquiposPertenecenACliente(orden.getCliente(), orden.getEquipos());
         }
     }
 
     /**
-     * Recepción de vehículo: sin equipo. Recepción de equipo: el vehículo es opcional
-     * y, si no se indica, se toma el del equipo.
+     * Recepción de vehículo: sin equipos. Recepción de equipos: el vehículo es opcional
+     * y, si no se indica, se toma el vehículo donde están montados los equipos (si es uno solo).
      */
-    private void aplicarRecepcion(OrdenTrabajo orden, OrdenTrabajoInput input) {
+    private void aplicarRecepcion(OrdenTrabajo orden, OrdenTrabajoInput input, List<Long> idsEquipos) {
         String tipo = input.tipo_recepcion().trim().toUpperCase();
         if (!OrdenTrabajo.TIPO_RECEPCION_VEHICULO.equals(tipo) && !OrdenTrabajo.TIPO_RECEPCION_EQUIPO.equals(tipo)) {
             throw new IllegalArgumentException("Tipo de recepción inválido: " + input.tipo_recepcion());
         }
         orden.setTipoRecepcion(tipo);
 
-        Equipo equipo = OrdenTrabajo.TIPO_RECEPCION_EQUIPO.equals(tipo) && input.id_equipo() != null
-                ? equipoService.buscarPorIdOrThrow(input.id_equipo())
-                : null;
-        orden.setEquipo(equipo);
+        List<Equipo> equipos = OrdenTrabajo.TIPO_RECEPCION_EQUIPO.equals(tipo) && idsEquipos != null
+                ? resolverEquipos(idsEquipos)
+                : List.of();
+        reemplazarEquipos(orden, equipos);
 
         Vehiculo vehiculo = input.id_vehiculo() != null
                 ? vehiculoService.buscarPorIdOrThrow(input.id_vehiculo())
-                : equipo != null ? equipo.getVehiculo() : null;
+                : vehiculoComun(equipos);
         orden.setVehiculo(vehiculo);
+    }
+
+    private List<Long> idsEquipos(OrdenTrabajoInput input) {
+        if (input.ids_equipos() != null) {
+            return input.ids_equipos();
+        }
+        if (input.id_equipo() != null) {
+            return List.of(input.id_equipo());
+        }
+        return null;
+    }
+
+    private List<Equipo> resolverEquipos(List<Long> ids) {
+        List<Equipo> equipos = new ArrayList<>();
+        Set<Long> vistos = new LinkedHashSet<>();
+        for (Long id : ids) {
+            if (id != null && vistos.add(id)) {
+                equipos.add(equipoService.buscarPorIdOrThrow(id));
+            }
+        }
+        return equipos;
+    }
+
+    private void reemplazarEquipos(OrdenTrabajo orden, List<Equipo> equipos) {
+        if (orden.getEquipos() == null) {
+            orden.setEquipos(new ArrayList<>());
+        }
+        orden.getEquipos().clear();
+        orden.getEquipos().addAll(equipos);
+    }
+
+    /** El vehículo donde están montados los equipos, solo si todos los montados comparten el mismo. */
+    private Vehiculo vehiculoComun(List<Equipo> equipos) {
+        List<Vehiculo> vehiculos = equipos.stream()
+                .map(Equipo::getVehiculo)
+                .filter(Objects::nonNull)
+                .toList();
+        if (vehiculos.isEmpty()) {
+            return null;
+        }
+        Long id = vehiculos.get(0).getId_bien();
+        boolean mismo = vehiculos.stream().allMatch(v -> Objects.equals(v.getId_bien(), id));
+        return mismo ? vehiculos.get(0) : null;
     }
 
     private void aplicarMecanicos(OrdenTrabajo orden, OrdenTrabajoInput input, boolean creando) {
@@ -195,13 +239,16 @@ public class OrdenTrabajoActoresWriter {
         }
     }
 
-    public void validarEquipoPerteneceACliente(Cliente cliente, Equipo equipo) {
-        if (cliente == null || equipo == null) {
+    public void validarEquiposPertenecenACliente(Cliente cliente, List<Equipo> equipos) {
+        if (cliente == null || equipos == null) {
             return;
         }
-        if (equipo.getCliente() == null
-                || !Objects.equals(equipo.getCliente().getId_cliente(), cliente.getId_cliente())) {
-            throw new IllegalArgumentException("El equipo no pertenece al cliente seleccionado");
+        for (Equipo equipo : equipos) {
+            if (equipo.getCliente() == null
+                    || !Objects.equals(equipo.getCliente().getId_cliente(), cliente.getId_cliente())) {
+                throw new IllegalArgumentException(
+                        "El equipo " + equipo.getTipoEquipo() + " no pertenece al cliente seleccionado");
+            }
         }
     }
 }

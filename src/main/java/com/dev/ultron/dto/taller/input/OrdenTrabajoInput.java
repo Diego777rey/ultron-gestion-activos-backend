@@ -5,7 +5,8 @@ import java.util.List;
 
 /**
  * Input para crear/actualizar una orden de trabajo (core + piezas anidadas).
- * Si viene {@code tipo_recepcion}, vehículo y equipo se reemplazan tal cual llegan (null los quita).
+ * Si viene {@code tipo_recepcion}, vehículo y equipos se reemplazan tal cual llegan (null los quita).
+ * {@code id_equipo} se acepta solo si no viene {@code ids_equipos}, para clientes anteriores.
  */
 public record OrdenTrabajoInput(
         Long id_sector,
@@ -14,6 +15,7 @@ public record OrdenTrabajoInput(
         String tipo_recepcion,
         Long id_vehiculo,
         Long id_equipo,
+        List<Long> ids_equipos,
         Long id_mecanico,
         List<Long> ids_mecanicos,
         Long id_caja,

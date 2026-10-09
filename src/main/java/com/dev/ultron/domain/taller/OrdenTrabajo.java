@@ -52,9 +52,19 @@ public class OrdenTrabajo implements Serializable {
     @Column(name = "tipo_recepcion", nullable = false)
     private String tipoRecepcion;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_equipo")
-    private Equipo equipo;
+    @ManyToMany
+    @JoinTable(
+            name = "orden_trabajo_equipo",
+            schema = "taller",
+            joinColumns = @JoinColumn(name = "id_orden_trabajo"),
+            inverseJoinColumns = @JoinColumn(name = "id_equipo")
+    )
+    @OrderColumn(name = "orden_recepcion")
+    @org.hibernate.annotations.BatchSize(size = 16)
+    @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<Equipo> equipos = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_mecanico")
