@@ -36,6 +36,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 @Service
 public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
@@ -47,6 +48,7 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
     private final PersonaRepository personaRepository;
     private final UsuarioRepository usuarioRepository;
     private final MovimientoCajaRepository movimientoCajaRepository;
+    private final ArqueoCajaService arqueoCajaService;
 
     public SesionCajaService(
             SesionCajaRepository repository,
@@ -55,7 +57,8 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
             MaletinRepository maletinRepository,
             PersonaRepository personaRepository,
             UsuarioRepository usuarioRepository,
-            MovimientoCajaRepository movimientoCajaRepository) {
+            MovimientoCajaRepository movimientoCajaRepository,
+            ArqueoCajaService arqueoCajaService) {
         this.repository = repository;
         this.mapper = mapper;
         this.cajaRepository = cajaRepository;
@@ -63,6 +66,7 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
         this.personaRepository = personaRepository;
         this.usuarioRepository = usuarioRepository;
         this.movimientoCajaRepository = movimientoCajaRepository;
+        this.arqueoCajaService = arqueoCajaService;
     }
 
     @Override
@@ -110,15 +114,26 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
         Persona persona = resolverPersonaLogueada(input.getIdPersona());
 
         Map<String, BigDecimal> totales = sumarConteos(input.getConteos());
+        BigDecimal inicialPyg = totales.getOrDefault("PYG", BigDecimal.ZERO);
+        BigDecimal inicialUsd = totales.getOrDefault("USD", BigDecimal.ZERO);
+        BigDecimal inicialBrl = totales.getOrDefault("BRL", BigDecimal.ZERO);
+        SesionCaja anterior = repository.findUltimoCierrePorMaletin(maletin.getId_maletin(), PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .orElse(null);
 
         SesionCaja sesion = SesionCaja.builder()
                 .caja(caja)
                 .maletin(maletin)
                 .persona(persona)
+                .sesionAnterior(anterior)
                 .estado("ABIERTA")
-                .montoInicialPyg(totales.getOrDefault("PYG", BigDecimal.ZERO))
-                .montoInicialUsd(totales.getOrDefault("USD", BigDecimal.ZERO))
-                .montoInicialBrl(totales.getOrDefault("BRL", BigDecimal.ZERO))
+                .montoInicialPyg(inicialPyg)
+                .montoInicialUsd(inicialUsd)
+                .montoInicialBrl(inicialBrl)
+                .diferenciaPyg(diferenciaConCierre(inicialPyg, anterior, SesionCaja::getMontoFinalPyg))
+                .diferenciaUsd(diferenciaConCierre(inicialUsd, anterior, SesionCaja::getMontoFinalUsd))
+                .diferenciaBrl(diferenciaConCierre(inicialBrl, anterior, SesionCaja::getMontoFinalBrl))
                 .totalVentasPyg(BigDecimal.ZERO)
                 .fechaApertura(LocalDateTime.now())
                 .build();
@@ -163,7 +178,9 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
             throw new IllegalArgumentException("Debe indicar la sesión de caja a cerrar");
         }
 
-        SesionCaja sesion = buscarPorIdOrThrow(input.getIdSesionCaja());
+        SesionCaja sesion = repository.bloquearPorId(input.getIdSesionCaja())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Sesión de caja no encontrada con id: " + input.getIdSesionCaja()));
         if (!"ABIERTA".equalsIgnoreCase(sesion.getEstado())) {
             throw new IllegalArgumentException("La sesión de caja no está abierta");
         }
@@ -173,16 +190,21 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
         BigDecimal finalUsd = totales.getOrDefault("USD", BigDecimal.ZERO);
         BigDecimal finalBrl = totales.getOrDefault("BRL", BigDecimal.ZERO);
 
-        BigDecimal esperadoPyg = nvl(sesion.getMontoInicialPyg()).add(nvl(sesion.getTotalVentasPyg()));
-        BigDecimal esperadoUsd = nvl(sesion.getMontoInicialUsd());
-        BigDecimal esperadoBrl = nvl(sesion.getMontoInicialBrl());
+        Map<String, BigDecimal> esperado = new HashMap<>();
+        arqueoCajaService.calcular(sesion).forEach(a -> esperado.put(a.getMoneda(), a.getEsperado()));
+        BigDecimal esperadoPyg = esperado.getOrDefault("PYG", BigDecimal.ZERO);
+        BigDecimal esperadoUsd = esperado.getOrDefault("USD", BigDecimal.ZERO);
+        BigDecimal esperadoBrl = esperado.getOrDefault("BRL", BigDecimal.ZERO);
 
         sesion.setMontoFinalPyg(finalPyg);
         sesion.setMontoFinalUsd(finalUsd);
         sesion.setMontoFinalBrl(finalBrl);
-        sesion.setDiferenciaPyg(finalPyg.subtract(esperadoPyg));
-        sesion.setDiferenciaUsd(finalUsd.subtract(esperadoUsd));
-        sesion.setDiferenciaBrl(finalBrl.subtract(esperadoBrl));
+        sesion.setEsperadoCierrePyg(esperadoPyg);
+        sesion.setEsperadoCierreUsd(esperadoUsd);
+        sesion.setEsperadoCierreBrl(esperadoBrl);
+        sesion.setDiferenciaArqueoPyg(finalPyg.subtract(esperadoPyg));
+        sesion.setDiferenciaArqueoUsd(finalUsd.subtract(esperadoUsd));
+        sesion.setDiferenciaArqueoBrl(finalBrl.subtract(esperadoBrl));
         sesion.setFechaCierre(LocalDateTime.now());
         sesion.setEstado("CERRADA");
 
@@ -271,6 +293,22 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
         return new PageResponse<>(repository.buscar(filter, pageable).map(mapper::toOutput));
     }
 
+    /** Sesiones cerradas del cajero logueado en el rango de fecha de cierre, la más reciente primero. */
+     @Transactional(readOnly = true)
+    public PageResponse<SesionCajaOutput> misSesionesCerradas(int page, int size, String fechaDesde, String fechaHasta) {
+        Persona persona = personaLogueada();
+        if (persona == null) {
+            throw new IllegalArgumentException("Debe iniciar sesión para ver sus cajas");
+        }
+        return new PageResponse<>(repository
+                .findCerradasPorPersona(
+                        persona.getId_persona(),
+                        parseDesde(fechaDesde),
+                        parseHasta(fechaHasta),
+                        PageRequest.of(page, size))
+                .map(mapper::toOutput));
+    }
+
     private static final LocalDateTime FECHA_MIN = LocalDateTime.of(1970, 1, 1, 0, 0);
     private static final LocalDateTime FECHA_MAX = LocalDateTime.of(2999, 12, 31, 23, 59, 59);
 
@@ -297,21 +335,30 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
     }
 
     private Persona resolverPersonaLogueada(Long idPersonaInput) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth != null ? auth.getName() : null;
-        if (username != null && !username.isBlank() && !"anonymousUser".equalsIgnoreCase(username)) {
-            Usuario usuario = usuarioRepository.findByUsernameWithPersona(username)
-                    .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario logueado"));
-            if (usuario.getFuncionario() == null || usuario.getFuncionario().getPersona() == null) {
-                throw new IllegalArgumentException("El usuario logueado no tiene un funcionario asociado");
-            }
-            return usuario.getFuncionario().getPersona();
+        Persona logueada = personaLogueada();
+        if (logueada != null) {
+            return logueada;
         }
         if (idPersonaInput != null) {
             return personaRepository.findById(idPersonaInput)
                     .orElseThrow(() -> new EntityNotFoundException("Persona no encontrada con id: " + idPersonaInput));
         }
         throw new IllegalArgumentException("Debe iniciar sesión para abrir la caja");
+    }
+
+    /** Persona del funcionario del usuario del token; {@code null} si no hay sesión iniciada. */
+    private Persona personaLogueada() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth != null ? auth.getName() : null;
+        if (username == null || username.isBlank() || "anonymousUser".equalsIgnoreCase(username)) {
+            return null;
+        }
+        Usuario usuario = usuarioRepository.findByUsernameWithPersona(username)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró el usuario logueado"));
+        if (usuario.getFuncionario() == null || usuario.getFuncionario().getPersona() == null) {
+            throw new IllegalArgumentException("El usuario logueado no tiene un funcionario asociado");
+        }
+        return usuario.getFuncionario().getPersona();
     }
 
     private String mensajeOcupada(String prefijo, SesionCaja sesion) {
@@ -380,7 +427,15 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
         return totales;
     }
 
-    private BigDecimal nvl(BigDecimal value) {
-        return value != null ? value : BigDecimal.ZERO;
+    /** Lo que se contó al abrir menos lo que quedó en el último cierre del maletín. */
+    static BigDecimal diferenciaConCierre(
+            BigDecimal apertura,
+            SesionCaja anterior,
+            Function<SesionCaja, BigDecimal> montoCierre) {
+        if (anterior == null) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal cierre = montoCierre.apply(anterior);
+        return apertura.subtract(cierre != null ? cierre : BigDecimal.ZERO);
     }
 }

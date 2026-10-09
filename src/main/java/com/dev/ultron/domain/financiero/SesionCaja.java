@@ -15,7 +15,9 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -47,6 +49,13 @@ public class SesionCaja implements Serializable {
     @JoinColumn(name = "id_persona")
     private Persona persona;
 
+    /** Último cierre del mismo maletín antes de esta apertura; null si el maletín nunca se cerró. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_sesion_anterior")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private SesionCaja sesionAnterior;
+
     private String estado;
     private BigDecimal montoInicialPyg;
     private BigDecimal montoInicialUsd;
@@ -54,9 +63,18 @@ public class SesionCaja implements Serializable {
     private BigDecimal montoFinalPyg;
     private BigDecimal montoFinalUsd;
     private BigDecimal montoFinalBrl;
+    /** Apertura menos el cierre de {@link #sesionAnterior}. */
     private BigDecimal diferenciaPyg;
     private BigDecimal diferenciaUsd;
     private BigDecimal diferenciaBrl;
+    /** Efectivo que debería haber al cerrar: apertura + cobros en efectivo - vueltos - retiros. */
+    private BigDecimal esperadoCierrePyg;
+    private BigDecimal esperadoCierreUsd;
+    private BigDecimal esperadoCierreBrl;
+    /** Contado al cierre menos {@code esperadoCierre}: negativo es faltante, positivo sobrante. */
+    private BigDecimal diferenciaArqueoPyg;
+    private BigDecimal diferenciaArqueoUsd;
+    private BigDecimal diferenciaArqueoBrl;
     private BigDecimal totalVentasPyg;
     private LocalDateTime fechaApertura;
     private LocalDateTime fechaCierre;

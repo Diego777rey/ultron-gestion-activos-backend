@@ -1,28 +1,24 @@
-package com.dev.ultron.repository.taller;
+package com.dev.ultron.repository.financiero;
 
-import com.dev.ultron.domain.taller.OrdenTrabajoDetalle;
+import com.dev.ultron.domain.financiero.DetalleVenta;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
-public interface OrdenTrabajoDetalleRepository extends JpaRepository<OrdenTrabajoDetalle, Long> {
-    @org.springframework.data.jpa.repository.Query("SELECT d FROM OrdenTrabajoDetalle d WHERE d.ordenTrabajo.id_orden_trabajo = :idOrdenTrabajo ORDER BY d.id_detalle ASC")
-    List<OrdenTrabajoDetalle> findByOrdenTrabajoId_orden_trabajoOrderById_detalleAsc(@Param("idOrdenTrabajo") Long idOrdenTrabajo);
+public interface DetalleVentaRepository extends JpaRepository<DetalleVenta, Long> {
 
     @Query("""
             SELECT CASE WHEN COUNT(d) > 0 THEN true ELSE false END
-            FROM OrdenTrabajoDetalle d
+            FROM DetalleVenta d
             WHERE d.producto.id_producto = :idProducto
             """)
     boolean existsByProducto(@Param("idProducto") Long idProducto);
 
     @Query("""
             SELECT CASE WHEN COUNT(d) > 0 THEN true ELSE false END
-            FROM OrdenTrabajoDetalle d
+            FROM DetalleVenta d
             WHERE d.servicio.id_servicio = :idServicio
             """)
     boolean existsByServicio(@Param("idServicio") Long idServicio);

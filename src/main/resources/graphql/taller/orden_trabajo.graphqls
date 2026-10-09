@@ -49,7 +49,9 @@ type OrdenTrabajoOutput {
     # VEHICULO o EQUIPO
     tipo_recepcion: String
     vehiculo: VehiculoOutput
+    # Primer equipo de "equipos"; se mantiene para clientes anteriores.
     equipo: EquipoOutput
+    equipos: [EquipoOutput]
     mecanico: FuncionarioOutput
     mecanicos: [FuncionarioOutput]
     sector: SectorOutput
@@ -126,10 +128,12 @@ input OrdenTrabajoInput {
     id_sector: ID
     id_responsable: ID
     id_cliente: ID
-    # VEHICULO o EQUIPO. Si viene, id_vehiculo e id_equipo se aplican tal cual (null los quita).
+    # VEHICULO o EQUIPO. Si viene, id_vehiculo e ids_equipos se aplican tal cual (null los quita).
     tipo_recepcion: String
     id_vehiculo: ID
+    # Solo para clientes anteriores; se ignora si viene ids_equipos.
     id_equipo: ID
+    ids_equipos: [ID!]
     id_mecanico: ID
     ids_mecanicos: [ID!]
     id_caja: ID

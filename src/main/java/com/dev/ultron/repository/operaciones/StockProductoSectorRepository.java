@@ -4,6 +4,7 @@ import com.dev.ultron.domain.operaciones.StockProductoSector;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -35,5 +36,9 @@ public interface StockProductoSectorRepository extends JpaRepository<StockProduc
             WHERE s.producto.id_producto = :idProducto
             """)
     BigDecimal sumCantidadByProducto(@Param("idProducto") Long idProducto);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM StockProductoSector s WHERE s.producto.id_producto = :idProducto")
+    void deleteByProductoId(@Param("idProducto") Long idProducto);
 
 }

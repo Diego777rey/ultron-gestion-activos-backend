@@ -8,6 +8,7 @@ import com.dev.ultron.domain.financiero.Venta;
 import com.dev.ultron.domain.inventario.PresentacionProducto;
 import com.dev.ultron.domain.inventario.Producto;
 import com.dev.ultron.domain.inventario.Servicio;
+import com.dev.ultron.domain.patrimonio.Equipo;
 import com.dev.ultron.domain.personas.Cliente;
 import com.dev.ultron.domain.taller.OrdenTrabajo;
 import com.dev.ultron.domain.taller.OrdenTrabajoDetalle;
@@ -43,6 +44,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class VentaService extends GenericCrudService<Venta, Long> {
@@ -465,8 +467,11 @@ public class VentaService extends GenericCrudService<Venta, Long> {
     private String descripcionOrden(OrdenTrabajo orden) {
         String numero = orden.getNumeroOrden() != null ? orden.getNumeroOrden() : "OT";
         if (orden.getVehiculo() == null) {
-            String equipo = orden.getEquipo() != null ? orden.getEquipo().getTipoEquipo() : null;
-            return equipo == null || equipo.isBlank() ? numero : numero + " · " + equipo;
+            String equipos = orden.getEquipos() == null ? "" : orden.getEquipos().stream()
+                    .map(Equipo::getTipoEquipo)
+                    .filter(tipo -> tipo != null && !tipo.isBlank())
+                    .collect(Collectors.joining(", "));
+            return equipos.isEmpty() ? numero : numero + " · " + equipos;
         }
         String chapa = orden.getVehiculo().getChapa();
         if (chapa == null || chapa.isBlank()) {

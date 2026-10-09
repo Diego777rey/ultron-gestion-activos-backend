@@ -76,13 +76,122 @@ type SesionCajaOutput {
     montoFinalPyg: BigDecimal
     montoFinalUsd: BigDecimal
     montoFinalBrl: BigDecimal
+    # Apertura menos el último cierre del mismo maletín (0 si el maletín no tenía cierres).
     diferenciaPyg: BigDecimal
     diferenciaUsd: BigDecimal
     diferenciaBrl: BigDecimal
+    # Efectivo que debería haber al cerrar: apertura + cobros en efectivo - vueltos - retiros.
+    esperadoCierrePyg: BigDecimal
+    esperadoCierreUsd: BigDecimal
+    esperadoCierreBrl: BigDecimal
+    # Contado al cierre menos esperado: negativo es faltante, positivo sobrante.
+    diferenciaArqueoPyg: BigDecimal
+    diferenciaArqueoUsd: BigDecimal
+    diferenciaArqueoBrl: BigDecimal
     totalVentasPyg: BigDecimal
     fechaApertura: String
     fechaCierre: String
     conteos: [ConteoDenominacionOutput!]
+    # Cierre con el que se comparó la apertura; null si el maletín no tenía cierres.
+    idSesionAnterior: ID
+    fechaCierreAnterior: String
+    montoCierreAnteriorPyg: BigDecimal
+    montoCierreAnteriorUsd: BigDecimal
+    montoCierreAnteriorBrl: BigDecimal
+}
+
+type TicketConteoLinea {
+    valor: BigDecimal!
+    cantidad: Int!
+    subtotal: BigDecimal!
+}
+
+type TicketConteoMoneda {
+    moneda: String!
+    # Solo denominaciones con cantidad, de menor a mayor.
+    lineas: [TicketConteoLinea!]!
+    total: BigDecimal!
+}
+
+type TicketVentasFormaPago {
+    formaPago: String!
+    cantidad: Int!
+    # En guaraníes.
+    total: BigDecimal!
+}
+
+# Arqueo de una moneda: esperado = apertura + cobrosEfectivo - vueltos - retiros.
+type ArqueoMonedaOutput {
+    moneda: String!
+    apertura: BigDecimal!
+    cobrosEfectivo: BigDecimal!
+    vueltos: BigDecimal!
+    retiros: BigDecimal!
+    esperado: BigDecimal!
+    # Null mientras la sesión está abierta.
+    contado: BigDecimal
+    # Contado menos esperado (negativo: faltante). Null mientras la sesión está abierta.
+    diferencia: BigDecimal
+}
+
+type RetiroCajaOutput {
+    id_retiro_caja: ID
+    idSesionCaja: ID
+    moneda: String
+    monto: BigDecimal
+    observacion: String
+    fecha: String
+    idUsuarioResponsable: ID
+    responsableUsuario: String
+    responsableNombre: String
+    registradoPor: String
+}
+
+input RetiroCajaInput {
+    idSesionCaja: ID!
+    # PYG, BRL o USD.
+    moneda: String!
+    monto: BigDecimal!
+    observacion: String!
+    idUsuarioResponsable: ID!
+}
+
+type TicketRetiro {
+    # dd/MM HH:mm
+    fecha: String
+    moneda: String!
+    monto: BigDecimal!
+    responsable: String
+    observacion: String
+}
+
+type TicketDiferenciaMoneda {
+    moneda: String!
+    # Null si no hay cierre anterior.
+    cierreAnterior: BigDecimal
+    apertura: BigDecimal!
+    # Apertura menos cierre anterior.
+    diferencia: BigDecimal!
+}
+
+# Datos del ticket térmico de cierre de caja. Las fechas vienen como dd/MM/yyyy HH:mm.
+type TicketCierreCajaOutput {
+    idSesionCaja: ID!
+    caja: String
+    maletin: String
+    cajero: String
+    fechaApertura: String
+    fechaCierre: String
+    conteoApertura: [TicketConteoMoneda!]!
+    conteoCierre: [TicketConteoMoneda!]!
+    cantidadVentas: Int!
+    totalVentasPyg: BigDecimal!
+    ventasPorFormaPago: [TicketVentasFormaPago!]!
+    retiros: [TicketRetiro!]!
+    arqueo: [ArqueoMonedaOutput!]!
+    idSesionAnterior: ID
+    fechaCierreAnterior: String
+    diferencias: [TicketDiferenciaMoneda!]!
 }
 
 type SesionCajaPageResponse {
@@ -190,12 +299,24 @@ extend type Query {
 
     sesionCajaAbierta(idCaja: ID): SesionCajaOutput
     buscarSesionCajaPorId(id: ID!): SesionCajaOutput
+    # Solo para sesiones cerradas.
+    ticketCierreCaja(idSesionCaja: ID!): TicketCierreCajaOutput!
+    # Efectivo esperado por moneda; con la sesión cerrada incluye contado y diferencia.
+    arqueoSesionCaja(idSesionCaja: ID!): [ArqueoMonedaOutput!]!
+    listarRetirosPorSesion(idSesionCaja: ID!): [RetiroCajaOutput!]!
     listarSesionesCajaPaginado(
         page: Int!,
         size: Int!,
         filter: String,
         idCaja: ID,
         estado: String,
+        fechaDesde: String,
+        fechaHasta: String
+    ): SesionCajaPageResponse!
+    # Cierres del usuario logueado, el más reciente primero. Fechas yyyy-MM-dd sobre la fecha de cierre.
+    listarMisSesionesCajaCerradas(
+        page: Int!,
+        size: Int!,
         fechaDesde: String,
         fechaHasta: String
     ): SesionCajaPageResponse!
@@ -303,6 +424,8 @@ extend type Mutation {
 
     abrirCaja(input: AbrirCajaInput!): SesionCajaOutput
     cerrarCaja(input: CerrarCajaInput!): SesionCajaOutput
+    # Retiro de efectivo con la caja abierta; no puede superar lo esperado en esa moneda.
+    registrarRetiroCaja(input: RetiroCajaInput!): RetiroCajaOutput!
 
     registrarVenta(input: VentaInput!): VentaOutput
     registrarVentaConFactura(input: VentaInput!): VentaConFacturaOutput!

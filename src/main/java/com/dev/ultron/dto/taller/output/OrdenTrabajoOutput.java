@@ -26,7 +26,9 @@ public class OrdenTrabajoOutput implements Serializable {
     private ClienteOutput cliente;
     private String tipo_recepcion;
     private VehiculoOutput vehiculo;
+    /** Primer equipo de {@link #equipos}; se mantiene para clientes anteriores. */
     private EquipoOutput equipo;
+    private List<EquipoOutput> equipos;
     private FuncionarioOutput mecanico;
     private List<FuncionarioOutput> mecanicos;
     private SectorOutput sector;
