@@ -1,5 +1,6 @@
 package com.dev.ultron.domain.compras;
 
+import com.dev.ultron.domain.personas.Persona;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,6 +24,12 @@ public class Vendedor implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_proveedor", nullable = false)
     private Proveedor proveedor;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_persona")
+    private Persona persona;
+
+    private String documento;
 
     @Column(nullable = false)
     private String nombre;

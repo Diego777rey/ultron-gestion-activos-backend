@@ -25,6 +25,18 @@ public final class SearchNormalizer {
     }
 
     /**
+     * Documento comparable: sin puntos ni espacios, y sin el dígito verificador.
+     * 6.124.099, 6124099 y 6124099-5 se buscan como 6124099.
+     */
+    public static String documentoBase(String value) {
+        String normalized = normalize(value);
+        if (normalized == null) {
+            return null;
+        }
+        return normalized.replaceAll("[\\s.]", "").replaceFirst("-\\d$", "");
+    }
+
+    /**
      * Normaliza emails para búsqueda exacta.
      * Retorna {@code null} si el valor es nulo o queda vacío tras trim.
      */

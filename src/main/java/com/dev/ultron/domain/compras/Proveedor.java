@@ -1,5 +1,6 @@
 package com.dev.ultron.domain.compras;
 
+import com.dev.ultron.domain.personas.Persona;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +20,10 @@ public class Proveedor implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id_proveedor;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_persona")
+    private Persona persona;
 
     @Column(name = "tipo_persona", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)

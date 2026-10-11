@@ -16,6 +16,7 @@ public class VendedorOutput implements Serializable {
     private String proveedor_nombre;
     private String nombre;
     private String apellido;
+    private String documento;
     private String telefono;
     private String email;
     private String celular;

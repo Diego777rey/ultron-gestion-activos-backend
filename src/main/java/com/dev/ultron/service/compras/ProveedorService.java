@@ -1,16 +1,20 @@
 package com.dev.ultron.service.compras;
 
 import com.dev.ultron.domain.compras.Proveedor;
+import com.dev.ultron.domain.personas.Persona;
 import com.dev.ultron.dto.compras.input.ProveedorInput;
 import com.dev.ultron.dto.compras.mapper.ProveedorMapper;
 import com.dev.ultron.dto.compras.output.ProveedorOutput;
+import com.dev.ultron.dto.personas.input.PersonaInput;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.repository.compras.ProveedorRepository;
+import com.dev.ultron.service.personas.PersonaService;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -21,10 +25,14 @@ public class ProveedorService extends GenericCrudService<Proveedor, Long> {
 
     private final ProveedorRepository proveedorRepository;
     private final ProveedorMapper proveedorMapper;
+    private final PersonaService personaService;
 
-    public ProveedorService(ProveedorRepository proveedorRepository, ProveedorMapper proveedorMapper) {
+    public ProveedorService(ProveedorRepository proveedorRepository,
+                            ProveedorMapper proveedorMapper,
+                            PersonaService personaService) {
         this.proveedorRepository = proveedorRepository;
         this.proveedorMapper = proveedorMapper;
+        this.personaService = personaService;
     }
 
     @Override
@@ -62,19 +70,36 @@ public class ProveedorService extends GenericCrudService<Proveedor, Long> {
     @Transactional
     public ProveedorOutput registrarProveedor(ProveedorInput input) {
         Proveedor proveedor = proveedorMapper.toEntity(input);
+        vincularPersona(proveedor, input);
         proveedor = guardar(proveedor);
         return proveedorMapper.toOutput(proveedor);
     }
 
-    /**
-     * Actualiza un proveedor existente.
-     */
     @Transactional
     public ProveedorOutput actualizarProveedor(Long id, ProveedorInput input) {
         Proveedor proveedor = buscarPorIdOrThrow(id);
         proveedorMapper.updateEntity(proveedor, input);
+        vincularPersona(proveedor, input);
         proveedor = actualizar(proveedor);
         return proveedorMapper.toOutput(proveedor);
+    }
+
+    private void vincularPersona(Proveedor proveedor, ProveedorInput input) {
+        boolean fisica = "FISICA".equalsIgnoreCase(input.tipoPersona());
+        String documento = input.documento() != null && !input.documento().isBlank()
+                ? input.documento()
+                : input.ruc();
+        Persona persona = personaService.reutilizarOCrear(new PersonaInput(
+                fisica ? input.nombre() : input.razonSocial(),
+                fisica ? input.apellido() : null,
+                documento,
+                input.email(),
+                input.telefono(),
+                input.direccion(),
+                null
+        ));
+        proveedor.setPersona(persona);
+        proveedor.setDocumento(persona.getDocumento());
     }
 
     /**
@@ -109,12 +134,23 @@ public class ProveedorService extends GenericCrudService<Proveedor, Long> {
     }
 
     /**
-     * Busca un proveedor por RUC.
+     * Busca un proveedor por RUC, con o sin dígito verificador.
+     * Devuelve null si todavía no está registrado.
      */
     @Transactional(readOnly = true)
     public ProveedorOutput buscarPorRuc(String ruc) {
-        Proveedor proveedor = proveedorRepository.findByRuc(ruc)
-                .orElseThrow(() -> new IllegalArgumentException("No se encontró proveedor con RUC: " + ruc));
-        return proveedorMapper.toOutput(proveedor);
+        return buscarEntidadPorRuc(ruc).map(proveedorMapper::toOutput).orElse(null);
+    }
+
+    private Optional<Proveedor> buscarEntidadPorRuc(String ruc) {
+        if (ruc == null || ruc.isBlank()) {
+            return Optional.empty();
+        }
+        String normalizado = ruc.trim().replaceAll("[\\s.]", "").toUpperCase();
+        String base = normalizado.replaceFirst("-\\d$", "");
+        return proveedorRepository
+                .buscarPorRucFlexible(List.of(normalizado, base), base + "-_")
+                .stream()
+                .findFirst();
     }
 }
