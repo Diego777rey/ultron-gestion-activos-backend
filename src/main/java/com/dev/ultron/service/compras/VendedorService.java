@@ -46,11 +46,11 @@ public class VendedorService extends GenericCrudService<Vendedor, Long> {
 
     @Override
     protected void validarAntesDeGuardar(Vendedor vendedor) {
+        if (vendedor.getApellido() == null) {
+            vendedor.setApellido("");
+        }
         if (vendedor.getNombre() == null || vendedor.getNombre().isEmpty()) {
             throw new IllegalArgumentException("El nombre es obligatorio");
-        }
-        if (vendedor.getApellido() == null || vendedor.getApellido().isEmpty()) {
-            throw new IllegalArgumentException("El apellido es obligatorio");
         }
         if (vendedor.getProveedor() == null) {
             throw new IllegalArgumentException("El proveedor es obligatorio");
