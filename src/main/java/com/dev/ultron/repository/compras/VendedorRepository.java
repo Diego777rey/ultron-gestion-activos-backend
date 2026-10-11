@@ -10,9 +10,7 @@ import java.util.List;
 
 @Repository
 public interface VendedorRepository extends JpaRepository<Vendedor, Long> {
-    
-    List<Vendedor> findByProveedorIdProveedor(Long idProveedor);
-    
+
     List<Vendedor> findByActivoTrue();
     
     @Query("SELECT v FROM Vendedor v WHERE v.proveedor.id_proveedor = :idProveedor AND v.activo = true " +

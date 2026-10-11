@@ -9,6 +9,7 @@ public record VendedorInput(
         Long idProveedor,
         String nombre,
         String apellido,
+        String documento,
         String telefono,
         String email,
         String celular,
