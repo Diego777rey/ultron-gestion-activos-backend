@@ -51,11 +51,11 @@ public class ProveedorService extends GenericCrudService<Proveedor, Long> {
         }
 
         if (proveedor.getTipo_persona() == Proveedor.TipoPersona.FISICA) {
+            if (proveedor.getApellido() == null) {
+                proveedor.setApellido("");
+            }
             if (proveedor.getNombre() == null || proveedor.getNombre().isEmpty()) {
                 throw new IllegalArgumentException("El nombre es obligatorio para persona física");
-            }
-            if (proveedor.getApellido() == null || proveedor.getApellido().isEmpty()) {
-                throw new IllegalArgumentException("El apellido es obligatorio para persona física");
             }
         } else if (proveedor.getTipo_persona() == Proveedor.TipoPersona.JURIDICA) {
             if (proveedor.getRazon_social() == null || proveedor.getRazon_social().isEmpty()) {
