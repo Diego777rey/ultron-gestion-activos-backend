@@ -8,6 +8,8 @@ type CompraOutput {
     proveedor_nombre: String
     id_vendedor: ID
     vendedor_nombre: String
+    id_sector: ID
+    sector_nombre: String
     numero_factura: String
     timbrado: String
     fecha_factura: String
@@ -63,9 +65,10 @@ type ProductoProveedorOutput {
 input CompraInput {
     idProveedor: ID!
     idVendedor: ID
+    idSector: ID
     numeroFactura: String
     timbrado: String
-    fechaFactura: String
+    fechaFactura: Date
     formaPago: String!
     moneda: String
     cotizacion: Float
@@ -79,7 +82,7 @@ input ItemCompraInput {
     cantidad: Float!
     precioCosto: Float!
     tipoIva: String
-    fechaVencimiento: String
+    fechaVencimiento: Date
     lote: String
     observaciones: String
 }
@@ -111,4 +114,8 @@ extend type Mutation {
     actualizarCompra(id: ID!, input: CompraInput!): CompraOutput!
     cambiarEstadoCompra(id: ID!, estado: String!): CompraOutput!
     eliminarCompra(id: ID!): Boolean!
+
+    # Productos por proveedor
+    asociarProductoProveedor(idProducto: ID!, idProveedor: ID!): ProductoProveedorOutput!
+    desasociarProductoProveedor(idProducto: ID!, idProveedor: ID!): Boolean!
 }

@@ -94,6 +94,18 @@ public class CompraGraphQLController {
     }
 
     @MutationMapping
+    public ProductoProveedorOutput asociarProductoProveedor(@Argument Long idProducto, @Argument Long idProveedor) {
+        log.info("GraphQL Mutation: asociarProductoProveedor(idProducto={}, idProveedor={})", idProducto, idProveedor);
+        return productoProveedorService.asociar(idProducto, idProveedor);
+    }
+
+    @MutationMapping
+    public Boolean desasociarProductoProveedor(@Argument Long idProducto, @Argument Long idProveedor) {
+        log.info("GraphQL Mutation: desasociarProductoProveedor(idProducto={}, idProveedor={})", idProducto, idProveedor);
+        return productoProveedorService.desasociar(idProducto, idProveedor);
+    }
+
+    @MutationMapping
     public Boolean eliminarCompra(@Argument Long id) {
         log.info("GraphQL Mutation: eliminarCompra(id={})", id);
         return compraService.eliminarCompra(id);

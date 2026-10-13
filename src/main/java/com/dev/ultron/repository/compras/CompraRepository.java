@@ -17,6 +17,7 @@ public interface CompraRepository extends JpaRepository<Compra, Long> {
         SELECT c FROM Compra c
         LEFT JOIN FETCH c.proveedor
         LEFT JOIN FETCH c.vendedor
+        LEFT JOIN FETCH c.sector
         ORDER BY c.fecha_compra DESC
     """)
     List<Compra> findAllWithDetails();
@@ -25,6 +26,7 @@ public interface CompraRepository extends JpaRepository<Compra, Long> {
         SELECT c FROM Compra c
         LEFT JOIN FETCH c.proveedor
         LEFT JOIN FETCH c.vendedor
+        LEFT JOIN FETCH c.sector
         LEFT JOIN FETCH c.items
         WHERE c.id_compra = :id
     """)
