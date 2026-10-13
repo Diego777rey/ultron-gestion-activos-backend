@@ -18,6 +18,8 @@ public class CompraOutput {
     private String proveedor_nombre;
     private Long id_vendedor;
     private String vendedor_nombre;
+    private Long id_sector;
+    private String sector_nombre;
     private String numero_factura;
     private String timbrado;
     private String fecha_factura;

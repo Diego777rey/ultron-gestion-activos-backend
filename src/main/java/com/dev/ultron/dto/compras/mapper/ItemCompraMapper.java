@@ -5,7 +5,6 @@ import com.dev.ultron.dto.compras.input.ItemCompraInput;
 import com.dev.ultron.dto.compras.output.ItemCompraOutput;
 import org.mapstruct.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -30,8 +29,8 @@ public interface ItemCompraMapper {
     @Mapping(target = "id_item_compra", ignore = true)
     @Mapping(target = "compra", ignore = true)
     @Mapping(target = "producto", ignore = true)
-    @Mapping(target = "subtotal", expression = "java(calcularSubtotal(input))")
-    @Mapping(target = "iva", expression = "java(calcularIva(input))")
+    @Mapping(target = "subtotal", ignore = true)
+    @Mapping(target = "iva", ignore = true)
     @Mapping(target = "fecha_registro", ignore = true)
     @Mapping(target = "tipo_iva", source = "tipoIva")
     @Mapping(target = "precio_costo", source = "precioCosto")
@@ -44,25 +43,5 @@ public interface ItemCompraMapper {
 
     default String formatDateTime(LocalDateTime dateTime) {
         return dateTime != null ? dateTime.format(DATETIME_FORMATTER) : null;
-    }
-
-    default BigDecimal calcularSubtotal(ItemCompraInput input) {
-        if (input.cantidad() == null || input.precioCosto() == null) {
-            return BigDecimal.ZERO;
-        }
-        return input.cantidad().multiply(input.precioCosto());
-    }
-
-    default BigDecimal calcularIva(ItemCompraInput input) {
-        if (input.tipoIva() == null || input.tipoIva().equals("EXENTA")) {
-            return BigDecimal.ZERO;
-        }
-        BigDecimal subtotal = calcularSubtotal(input);
-        BigDecimal tasaIva = switch (input.tipoIva()) {
-            case "10" -> new BigDecimal("0.10");
-            case "5" -> new BigDecimal("0.05");
-            default -> BigDecimal.ZERO;
-        };
-        return subtotal.multiply(tasaIva);
     }
 }

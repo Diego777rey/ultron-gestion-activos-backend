@@ -1,5 +1,6 @@
 package com.dev.ultron.domain.compras;
 
+import com.dev.ultron.domain.sectores.Sector;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,6 +33,11 @@ public class Compra implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_vendedor")
     private Vendedor vendedor;
+
+    /** Lugar físico donde entra la mercadería al stock. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_sector")
+    private Sector sector;
 
     @Column(name = "numero_factura", length = 100)
     private String numero_factura;

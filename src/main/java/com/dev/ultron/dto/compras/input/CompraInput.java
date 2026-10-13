@@ -7,6 +7,7 @@ import java.util.List;
 public record CompraInput(
     Long idProveedor,
     Long idVendedor,
+    Long idSector,
     String numeroFactura,
     String timbrado,
     LocalDate fechaFactura,
