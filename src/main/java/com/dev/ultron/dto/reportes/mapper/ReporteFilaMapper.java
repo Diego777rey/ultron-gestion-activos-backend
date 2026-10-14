@@ -1,5 +1,6 @@
 package com.dev.ultron.dto.reportes.mapper;
 
+import com.dev.ultron.domain.financiero.Factura;
 import com.dev.ultron.domain.inventario.CategoriaProducto;
 import com.dev.ultron.domain.inventario.CategoriaServicio;
 import com.dev.ultron.domain.inventario.Producto;
@@ -68,6 +69,21 @@ public final class ReporteFilaMapper {
                 .precio(formatGs(servicio.getPrecio()))
                 .extra("")
                 .estado(estado(servicio.isEstado()))
+                .build();
+    }
+
+    public static ReporteFila deFactura(Factura factura, int numero) {
+        String documento = firstNonBlank(factura.getCliente_ruc(), factura.getCliente_documento());
+        return ReporteFila.builder()
+                .numero(numero)
+                .codigo(nvl(factura.getNumero_factura()))
+                .nombre(nvl(factura.getCliente_nombre()))
+                .descripcion(documento)
+                .categoria(formatFechaHora(factura.getFecha_emision()))
+                .subcategoria(nvl(factura.getTimbrado()))
+                .precio(formatGs(factura.getTotal()))
+                .extra(formatFormaPago(factura.getForma_pago()))
+                .estado(nvl(factura.getEstado()))
                 .build();
     }
 
@@ -234,6 +250,20 @@ public final class ReporteFilaMapper {
 
     private static String formatFechaHora(LocalDateTime value) {
         return DateUtil.format(value);
+    }
+
+    private static String formatFormaPago(String formaPago) {
+        if (formaPago == null || formaPago.isBlank()) {
+            return "";
+        }
+        return switch (formaPago.trim().toUpperCase(Locale.ROOT)) {
+            case "EFECTIVO" -> "Efectivo";
+            case "TARJETA" -> "Tarjeta";
+            case "TRANSFERENCIA" -> "Transferencia";
+            case "CHEQUE" -> "Cheque";
+            case "CREDITO" -> "Crédito";
+            default -> formaPago.trim();
+        };
     }
 
     private static String[] resolverCategoriaProducto(CategoriaProducto categoria) {
