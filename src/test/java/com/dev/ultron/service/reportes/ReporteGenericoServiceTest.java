@@ -1,5 +1,6 @@
 package com.dev.ultron.service.reportes;
 
+import com.dev.ultron.dto.reportes.FormatoReporte;
 import com.dev.ultron.dto.reportes.TipoReporte;
 import org.junit.jupiter.api.Test;
 
@@ -18,8 +19,9 @@ class ReporteGenericoServiceTest {
         );
 
         assertThat(service.titulo("producto")).isEqualTo("Catálogo de productos");
-        assertThat(service.nombreArchivo("producto", null)).isEqualTo("reporte-productos.pdf");
-        assertThat(service.nombreArchivo("producto", 12L)).isEqualTo("reporte-productos-12.pdf");
+        assertThat(service.nombreArchivo("producto", null, FormatoReporte.PDF)).isEqualTo("reporte-productos.pdf");
+        assertThat(service.nombreArchivo("producto", 12L, FormatoReporte.PDF)).isEqualTo("reporte-productos-12.pdf");
+        assertThat(service.nombreArchivo("producto", null, FormatoReporte.EXCEL)).isEqualTo("reporte-productos.xlsx");
     }
 
     @Test

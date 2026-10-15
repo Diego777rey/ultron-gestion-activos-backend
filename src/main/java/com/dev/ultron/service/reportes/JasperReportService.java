@@ -8,6 +8,10 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
+import net.sf.jasperreports.export.SimpleExporterInput;
+import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
+import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
@@ -16,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -64,6 +69,26 @@ public class JasperReportService {
             return JasperExportManager.exportReportToPdf(rellenar(plantillaClasspath, parametros, filas));
         } catch (JRException ex) {
             throw new IllegalStateException("No se pudo generar el reporte PDF.", ex);
+        }
+    }
+
+    public byte[] exportarExcel(String plantillaClasspath, Map<String, Object> parametros, Collection<?> filas) {
+        try {
+            JasperPrint print = rellenar(plantillaClasspath, parametros, filas);
+            JRXlsxExporter exporter = new JRXlsxExporter();
+            exporter.setExporterInput(new SimpleExporterInput(print));
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(output));
+            SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
+            configuration.setDetectCellType(true);
+            configuration.setCollapseRowSpan(false);
+            configuration.setOnePagePerSheet(false);
+            configuration.setRemoveEmptySpaceBetweenRows(true);
+            exporter.setConfiguration(configuration);
+            exporter.exportReport();
+            return output.toByteArray();
+        } catch (JRException ex) {
+            throw new IllegalStateException("No se pudo generar el reporte Excel.", ex);
         }
     }
 
