@@ -96,6 +96,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout scripts de deploy
+        uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.package.outputs.version }}
+
       - name: Descargar artefacto
         uses: actions/download-artifact@v4
         with:
@@ -139,27 +144,51 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "/opt/ultron/deploy.sh '${REMOTE_TMP}' && rm -f '${REMOTE_TMP}'"
 
+      - name: Instalar instancia Campuzano (8082)
+        run: |
+          set -euo pipefail
+          scp -i ~/.ssh/deploy_key -P "$DEPLOY_PORT" -o IdentitiesOnly=yes \
+            packaging/provision-campuzano.sh \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:/tmp/provision-campuzano.sh"
+          ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" -o IdentitiesOnly=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "bash /tmp/provision-campuzano.sh install"
+
       - name: Health check remoto
         run: |
           set -euo pipefail
           ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" -o IdentitiesOnly=yes \
             "${DEPLOY_USER}@${DEPLOY_HOST}" bash -s <<'EOF'
           set -euo pipefail
-          for i in $(seq 1 60); do
-            if systemctl is-active --quiet ultron; then
-              if curl -fsS -m 5 "http://127.0.0.1:8081/graphql" \
-                   -H 'content-type: application/json' \
-                   -d '{"query":"{ __typename }"}' >/dev/null 2>&1; then
-                echo "Servicio saludable"
-                systemctl --no-pager --full status ultron | head -20
-                exit 0
+          wait_healthy() {
+            local unit="$1"
+            local port="$2"
+            local i
+            for i in $(seq 1 60); do
+              if systemctl is-active --quiet "${unit}"; then
+                if curl -fsS -m 5 "http://127.0.0.1:${port}/graphql" \
+                     -H 'content-type: application/json' \
+                     -d '{"query":"{ __typename }"}' >/dev/null 2>&1; then
+                  echo "Servicio ${unit} saludable en el puerto ${port}"
+                  systemctl --no-pager --full status "${unit}" | head -20
+                  return 0
+                fi
+              else
+                echo "Servicio ${unit} no activo (intento ${i})"
               fi
-            else
-              echo "Servicio no activo (intento $i)"
-            fi
-            sleep 3
-          done
-          echo "Health check falló"
-          journalctl -u ultron -n 80 --no-pager || true
-          exit 1
+              sleep 3
+            done
+            echo "Health check falló para ${unit}"
+            journalctl -u "${unit}" -n 80 --no-pager || true
+            return 1
+          }
+          wait_healthy ultron 8081
+          wait_healthy ultron-campuzano 8082
           EOF
+
+      - name: Usuario inicial de Campuzano
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key -p "$DEPLOY_PORT" -o IdentitiesOnly=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "bash /tmp/provision-campuzano.sh seed && rm -f /tmp/provision-campuzano.sh"

@@ -1,0 +1,64 @@
+# =============================================================
+# Schema de Proveedor - CRUD completo
+# =============================================================
+
+# ---- OUTPUT: Tipo de salida para consultas ----
+type ProveedorOutput {
+    id_proveedor: ID
+    tipo_persona: String
+    nombre: String
+    apellido: String
+    razon_social: String
+    nombre_comercial: String
+    nombre_fantasia: String
+    ruc: String
+    documento: String
+    direccion: String
+    telefono: String
+    email: String
+    ciudad: String
+    pais: String
+    codigo_postal: String
+    sitio_web: String
+    observaciones: String
+    activo: Boolean
+    fecha_registro: String
+    fecha_ultima_modificacion: String
+    nombre_completo: String
+}
+
+# ---- INPUT: Tipo de entrada para mutations ----
+input ProveedorInput {
+    tipoPersona: String!
+    nombre: String
+    apellido: String
+    razonSocial: String
+    nombreComercial: String
+    nombreFantasia: String
+    ruc: String!
+    documento: String
+    direccion: String
+    telefono: String
+    email: String
+    ciudad: String
+    pais: String
+    codigoPostal: String
+    sitioWeb: String
+    observaciones: String
+    activo: Boolean
+}
+
+# ---- QUERIES: Operaciones de lectura ----
+extend type Query {
+    proveedores: [ProveedorOutput!]!
+    proveedoresActivos: [ProveedorOutput!]!
+    proveedor(id: ID!): ProveedorOutput
+    proveedorPorRuc(ruc: String!): ProveedorOutput
+}
+
+# ---- MUTATIONS: Operaciones de escritura ----
+extend type Mutation {
+    registrarProveedor(input: ProveedorInput!): ProveedorOutput
+    actualizarProveedor(id: ID!, input: ProveedorInput!): ProveedorOutput
+    eliminarProveedor(id: ID!): Boolean
+}

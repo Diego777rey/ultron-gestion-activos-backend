@@ -1,0 +1,51 @@
+# =============================================================
+# Schema de Vendedor - CRUD completo
+# =============================================================
+
+# ---- OUTPUT: Tipo de salida para consultas ----
+type VendedorOutput {
+    id_vendedor: ID
+    id_proveedor: ID
+    proveedor_nombre: String
+    nombre: String
+    apellido: String
+    documento: String
+    telefono: String
+    email: String
+    celular: String
+    cargo: String
+    observaciones: String
+    activo: Boolean
+    fecha_registro: String
+    fecha_ultima_modificacion: String
+    nombre_completo: String
+}
+
+# ---- INPUT: Tipo de entrada para mutations ----
+input VendedorInput {
+    idProveedor: ID!
+    nombre: String!
+    apellido: String
+    documento: String
+    telefono: String
+    email: String
+    celular: String
+    cargo: String
+    observaciones: String
+    activo: Boolean
+}
+
+# ---- QUERIES: Operaciones de lectura ----
+extend type Query {
+    vendedores: [VendedorOutput!]!
+    vendedoresActivos: [VendedorOutput!]!
+    vendedoresPorProveedor(idProveedor: ID!): [VendedorOutput!]!
+    vendedor(id: ID!): VendedorOutput
+}
+
+# ---- MUTATIONS: Operaciones de escritura ----
+extend type Mutation {
+    registrarVendedor(input: VendedorInput!): VendedorOutput
+    actualizarVendedor(id: ID!, input: VendedorInput!): VendedorOutput
+    eliminarVendedor(id: ID!): Boolean
+}
