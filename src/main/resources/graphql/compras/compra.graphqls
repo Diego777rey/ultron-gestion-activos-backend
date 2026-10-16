@@ -58,6 +58,11 @@ type ProductoProveedorOutput {
     fecha_registro: String
 }
 
+type ProductoProveedorPageResponse {
+    content: [ProductoProveedorOutput!]!
+    pageInfo: PageInfo!
+}
+
 # =============================================================
 # Inputs para Compras
 # =============================================================
@@ -101,6 +106,7 @@ extend type Query {
     
     # Productos por proveedor
     productosDeProveedor(idProveedor: ID!): [ProductoProveedorOutput!]!
+    productosDeProveedorPaginado(idProveedor: ID!, page: Int!, size: Int!, filter: String): ProductoProveedorPageResponse!
     proveedoresDeProducto(idProducto: ID!): [ProductoProveedorOutput!]!
     historialCompraProducto(idProducto: ID!, idProveedor: ID!): [ItemCompraOutput!]!
 }
