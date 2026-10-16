@@ -4,6 +4,7 @@ import com.dev.ultron.dto.compras.input.CompraInput;
 import com.dev.ultron.dto.compras.output.CompraOutput;
 import com.dev.ultron.dto.compras.output.ItemCompraOutput;
 import com.dev.ultron.dto.compras.output.ProductoProveedorOutput;
+import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.service.compras.CompraService;
 import com.dev.ultron.service.compras.ProductoProveedorService;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +60,16 @@ public class CompraGraphQLController {
     public List<ProductoProveedorOutput> productosDeProveedor(@Argument Long idProveedor) {
         log.info("GraphQL Query: productosDeProveedor(idProveedor={})", idProveedor);
         return productoProveedorService.listarProductosDeProveedor(idProveedor);
+    }
+
+    @QueryMapping
+    public PageResponse<ProductoProveedorOutput> productosDeProveedorPaginado(
+            @Argument Long idProveedor,
+            @Argument int page,
+            @Argument int size,
+            @Argument String filter) {
+        log.info("GraphQL Query: productosDeProveedorPaginado(idProveedor={}, page={}, size={})", idProveedor, page, size);
+        return productoProveedorService.listarProductosDeProveedor(idProveedor, page, size, filter);
     }
 
     @QueryMapping

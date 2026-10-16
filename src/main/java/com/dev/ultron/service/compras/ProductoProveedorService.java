@@ -8,11 +8,13 @@ import com.dev.ultron.dto.compras.mapper.ItemCompraMapper;
 import com.dev.ultron.dto.compras.mapper.ProductoProveedorMapper;
 import com.dev.ultron.dto.compras.output.ItemCompraOutput;
 import com.dev.ultron.dto.compras.output.ProductoProveedorOutput;
+import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.repository.compras.ItemCompraRepository;
 import com.dev.ultron.repository.compras.ProductoProveedorRepository;
 import com.dev.ultron.repository.compras.ProveedorRepository;
 import com.dev.ultron.repository.inventario.ProductoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,16 @@ public class ProductoProveedorService {
     public List<ProductoProveedorOutput> listarProductosDeProveedor(Long idProveedor) {
         List<ProductoProveedor> productos = productoProveedorRepository.findByProveedorActivos(idProveedor);
         return productoProveedorMapper.toOutputList(productos);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ProductoProveedorOutput> listarProductosDeProveedor(Long idProveedor, int page, int size, String filter) {
+        int pagina = Math.max(page, 0);
+        int tamano = Math.min(Math.max(size, 1), 100);
+        String filtro = filter == null ? "" : filter.trim();
+        return new PageResponse<>(productoProveedorRepository
+            .buscarPorProveedor(idProveedor, filtro, PageRequest.of(pagina, tamano))
+            .map(productoProveedorMapper::toOutput));
     }
 
     @Transactional(readOnly = true)
