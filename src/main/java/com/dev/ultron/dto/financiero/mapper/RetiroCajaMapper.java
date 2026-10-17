@@ -12,6 +12,9 @@ import org.mapstruct.Mapping;
 public interface RetiroCajaMapper {
 
     @Mapping(target = "idSesionCaja", source = "sesionCaja.id_sesion_caja")
+    @Mapping(target = "idCaja", source = "sesionCaja.caja.id_caja")
+    @Mapping(target = "cajaNombre", source = "sesionCaja.caja.nombre")
+    @Mapping(target = "sectorNombre", source = "sesionCaja.caja.sector.nombre")
     @Mapping(target = "idUsuarioResponsable", source = "responsable.id")
     @Mapping(target = "responsableUsuario", source = "responsable.username")
     @Mapping(target = "responsableNombre", expression = "java(nombreUsuario(entity.getResponsable()))")
