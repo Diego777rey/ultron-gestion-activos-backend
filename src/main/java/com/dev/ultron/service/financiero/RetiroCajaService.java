@@ -10,12 +10,15 @@ import com.dev.ultron.dto.financiero.input.RetiroCajaInput;
 import com.dev.ultron.dto.financiero.mapper.RetiroCajaMapper;
 import com.dev.ultron.dto.financiero.output.RetiroCajaOutput;
 import com.dev.ultron.generic.EntityNotFoundException;
+import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.repository.financiero.CajaRepository;
 import com.dev.ultron.repository.financiero.MovimientoCajaRepository;
 import com.dev.ultron.repository.financiero.RetiroCajaRepository;
 import com.dev.ultron.repository.financiero.SesionCajaRepository;
 import com.dev.ultron.repository.personas.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -102,6 +106,26 @@ public class RetiroCajaService {
         return repository.listarPorSesion(idSesionCaja).stream().map(mapper::toOutput).toList();
     }
 
+    @Transactional(readOnly = true)
+    public PageResponse<RetiroCajaOutput> listarPaginado(
+            int page,
+            int size,
+            String filter,
+            Long idCaja,
+            Long idSector,
+            String fechaDesde,
+            String fechaHasta) {
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fecha", "id_retiro_caja"));
+        return new PageResponse<>(repository.buscarPaginado(
+                        idCaja,
+                        idSector,
+                        blankToEmpty(filter),
+                        parseDesde(fechaDesde),
+                        parseHasta(fechaHasta),
+                        pageable)
+                .map(mapper::toOutput));
+    }
+
     private void registrarMovimiento(SesionCaja sesion, RetiroCaja retiro) {
         Caja caja = sesion.getCaja();
         String concepto = "Retiro de caja: " + retiro.getObservacion();
@@ -158,5 +182,30 @@ public class RetiroCajaService {
             return null;
         }
         return usuarioRepository.findByUsername(username).orElse(null);
+    }
+
+    private static final LocalDateTime FECHA_MIN = LocalDateTime.of(1970, 1, 1, 0, 0);
+    private static final LocalDateTime FECHA_MAX = LocalDateTime.of(2999, 12, 31, 23, 59, 59);
+
+    private String blankToEmpty(String value) {
+        return value == null || value.isBlank() ? "" : value.trim();
+    }
+
+    private LocalDateTime parseDesde(String value) {
+        LocalDate date = parseIsoDate(value);
+        return date != null ? date.atStartOfDay() : FECHA_MIN;
+    }
+
+    private LocalDateTime parseHasta(String value) {
+        LocalDate date = parseIsoDate(value);
+        return date != null ? date.atTime(23, 59, 59) : FECHA_MAX;
+    }
+
+    private LocalDate parseIsoDate(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String iso = value.length() >= 10 ? value.substring(0, 10) : value;
+        return LocalDate.parse(iso);
     }
 }
