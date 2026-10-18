@@ -370,7 +370,7 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
     @Transactional(readOnly = true)
     public Page<FacturaOutput> buscarPorEmpresaYEstado(Long idEmpresa, String estado, Pageable pageable) {
         Page<Factura> facturas = facturaRepository.findByEmpresaAndEstado(idEmpresa, estado, pageable);
-        return facturas.map(facturaMapper::toOutput);
+        return facturas.map(facturaMapper::toListado);
     }
 
     /**
@@ -380,7 +380,7 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
     @Transactional(readOnly = true)
     public Page<FacturaOutput> listarFacturasConVentaPorEmpresaYEstado(Long idEmpresa, String estado, Pageable pageable) {
         Page<Factura> facturas = facturaRepository.findFacturasConVentaPorEmpresaYEstado(idEmpresa, estado, pageable);
-        return facturas.map(facturaMapper::toOutput);
+        return facturas.map(facturaMapper::toListado);
     }
 
     /**
@@ -389,7 +389,7 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
     @Transactional(readOnly = true)
     public Page<FacturaOutput> buscarConFiltro(Long idEmpresa, String filtro, Pageable pageable) {
         Page<Factura> facturas = facturaRepository.searchByEmpresa(idEmpresa, filtro, pageable);
-        return facturas.map(facturaMapper::toOutput);
+        return facturas.map(facturaMapper::toListado);
     }
 
     /**
@@ -399,7 +399,7 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
     @Transactional(readOnly = true)
     public Page<FacturaOutput> buscarFacturasConVentaConFiltro(Long idEmpresa, String filtro, Pageable pageable) {
         Page<Factura> facturas = facturaRepository.searchFacturasConVentaByEmpresa(idEmpresa, filtro, pageable);
-        return facturas.map(facturaMapper::toOutput);
+        return facturas.map(facturaMapper::toListado);
     }
 
     /**
@@ -408,7 +408,7 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
     @Transactional(readOnly = true)
     public Page<FacturaOutput> obtenerPorCliente(Long idCliente, Pageable pageable) {
         Page<Factura> facturas = facturaRepository.findByCliente(idCliente, pageable);
-        return facturas.map(facturaMapper::toOutput);
+        return facturas.map(facturaMapper::toListado);
     }
 
     /**

@@ -76,4 +76,15 @@ public interface FacturaMapper {
     @Mapping(target = "timbrado_vigencia_inicio", source = "timbradoEntity.fecha_inicio_vigencia", qualifiedByName = MappingHelper.FORMAT_DATE)
     @Mapping(target = "timbrado_vigencia_fin", source = "timbradoEntity.fecha_fin_vigencia", qualifiedByName = MappingHelper.FORMAT_DATE)
     FacturaOutput toOutput(Factura factura);
+
+    /**
+     * Listado: solo columnas de la fila de factura. No toca cliente, venta,
+     * empresa, timbrado, usuarios ni el detalle, para no disparar una consulta por fila.
+     */
+    @Mapping(target = "fecha_emision", source = "fecha_emision", qualifiedByName = MappingHelper.FORMAT_DATETIME)
+    @Mapping(target = "fecha_anulacion", ignore = true)
+    @Mapping(target = "fecha_creacion", ignore = true)
+    @Mapping(target = "cliente", ignore = true)
+    @Mapping(target = "detalles", ignore = true)
+    FacturaOutput toListado(Factura factura);
 }

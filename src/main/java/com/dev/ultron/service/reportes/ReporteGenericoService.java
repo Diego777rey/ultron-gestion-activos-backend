@@ -1,5 +1,6 @@
 package com.dev.ultron.service.reportes;
 
+import com.dev.ultron.dto.reportes.FormatoReporte;
 import com.dev.ultron.dto.reportes.TipoReporte;
 import com.dev.ultron.utilitarios.AppConstants;
 import com.dev.ultron.utilitarios.DateUtil;
@@ -29,18 +30,38 @@ public class ReporteGenericoService {
     }
 
     public byte[] generar(String tipoRaw, String filtro, Long id) {
+        return generar(tipoRaw, filtro, id, null, FormatoReporte.PDF);
+    }
+
+    public byte[] generar(String tipoRaw, String filtro, Long id, Long idEmpresa, FormatoReporte formato) {
         ReporteFuente fuente = resolver(tipoRaw);
-        List<?> filas = id != null ? fuente.buscarPorId(id) : fuente.listar(filtro);
+        List<?> filas = id != null ? fuente.buscarPorId(id) : listar(fuente, filtro, idEmpresa);
         Map<String, Object> parametros = construirParametros(fuente, filtro, filas.size());
+        if (formato == FormatoReporte.EXCEL) {
+            return jasperReportService.exportarExcel(fuente.plantilla(), parametros, filas);
+        }
         return jasperReportService.exportarPdf(fuente.plantilla(), parametros, filas);
     }
 
     public String nombreArchivo(String tipoRaw, Long id) {
+        return nombreArchivo(tipoRaw, id, FormatoReporte.PDF);
+    }
+
+    public String nombreArchivo(String tipoRaw, Long id, FormatoReporte formato) {
         ReporteFuente fuente = resolver(tipoRaw);
+        String extension = formato == FormatoReporte.EXCEL ? ".xlsx" : ".pdf";
+        String base = fuente.nombreArchivo().replaceAll("\\.pdf$", "");
         if (id != null) {
-            return fuente.nombreArchivo().replace(".pdf", "-" + id + ".pdf");
+            return base + "-" + id + extension;
         }
-        return fuente.nombreArchivo();
+        return base + extension;
+    }
+
+    private List<?> listar(ReporteFuente fuente, String filtro, Long idEmpresa) {
+        if (fuente instanceof ReporteFuenteParametrizada parametrizada) {
+            return parametrizada.listar(filtro, idEmpresa);
+        }
+        return fuente.listar(filtro);
     }
 
     public String titulo(String tipoRaw) {
