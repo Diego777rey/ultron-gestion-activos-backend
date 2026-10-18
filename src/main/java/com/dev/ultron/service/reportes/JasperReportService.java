@@ -8,6 +8,10 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.export.ooxml.JRXlsxExporter;
+import net.sf.jasperreports.export.SimpleExporterInput;
+import net.sf.jasperreports.export.SimpleOutputStreamExporterOutput;
+import net.sf.jasperreports.export.SimpleXlsxReportConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
@@ -16,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -32,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class JasperReportService {
 
     public static final String PLANTILLA_INVENTARIO = "reports/inventario_generico.jrxml";
+    public static final String PLANTILLA_FACTURAS = "reports/facturas_legales.jrxml";
     public static final String PLANTILLA_ORDEN_DETALLE = "reports/orden_trabajo_detalle.jrxml";
     public static final String PLANTILLA_TRANSFERENCIA_DETALLE = "reports/transferencia_detalle.jrxml";
     public static final String LOGO_CLASSPATH = "reports/chservice.png";
@@ -44,7 +50,11 @@ public class JasperReportService {
     @PostConstruct
     void precargarPlantillas() {
         long inicio = System.nanoTime();
-        for (String plantilla : List.of(PLANTILLA_INVENTARIO, PLANTILLA_ORDEN_DETALLE, PLANTILLA_TRANSFERENCIA_DETALLE)) {
+        for (String plantilla : List.of(
+                PLANTILLA_INVENTARIO,
+                PLANTILLA_FACTURAS,
+                PLANTILLA_ORDEN_DETALLE,
+                PLANTILLA_TRANSFERENCIA_DETALLE)) {
             try {
                 compilados.computeIfAbsent(plantilla, this::compilar);
             } catch (RuntimeException ex) {
@@ -57,6 +67,27 @@ public class JasperReportService {
             log.warn("No se pudo calentar el motor PDF", ex);
         }
         log.info("Plantillas de reporte listas en {} ms", (System.nanoTime() - inicio) / 1_000_000);
+    }
+
+    public byte[] exportarExcel(String plantillaClasspath, Map<String, Object> parametros, Collection<?> filas) {
+        try {
+            JasperPrint print = rellenar(plantillaClasspath, parametros, filas);
+            JRXlsxExporter exporter = new JRXlsxExporter();
+            exporter.setExporterInput(new SimpleExporterInput(print));
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(output));
+            SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
+            configuration.setDetectCellType(true);
+            configuration.setCollapseRowSpan(true);
+            configuration.setOnePagePerSheet(false);
+            configuration.setRemoveEmptySpaceBetweenRows(true);
+            configuration.setRemoveEmptySpaceBetweenColumns(true);
+            exporter.setConfiguration(configuration);
+            exporter.exportReport();
+            return output.toByteArray();
+        } catch (JRException ex) {
+            throw new IllegalStateException("No se pudo generar el reporte Excel.", ex);
+        }
     }
 
     public byte[] exportarPdf(String plantillaClasspath, Map<String, Object> parametros, Collection<?> filas) {

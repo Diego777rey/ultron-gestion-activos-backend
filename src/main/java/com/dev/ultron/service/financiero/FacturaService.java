@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -370,7 +371,7 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
     @Transactional(readOnly = true)
     public Page<FacturaOutput> buscarPorEmpresaYEstado(Long idEmpresa, String estado, Pageable pageable) {
         Page<Factura> facturas = facturaRepository.findByEmpresaAndEstado(idEmpresa, estado, pageable);
-        return facturas.map(facturaMapper::toOutput);
+        return facturas.map(facturaMapper::toListado);
     }
 
     /**
@@ -378,9 +379,11 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
      * Útil para el listado de facturas emitidas desde el punto de venta.
      */
     @Transactional(readOnly = true)
-    public Page<FacturaOutput> listarFacturasConVentaPorEmpresaYEstado(Long idEmpresa, String estado, Pageable pageable) {
-        Page<Factura> facturas = facturaRepository.findFacturasConVentaPorEmpresaYEstado(idEmpresa, estado, pageable);
-        return facturas.map(facturaMapper::toOutput);
+    public Page<FacturaOutput> listarFacturasConVentaPorEmpresaYEstado(
+            Long idEmpresa, String estado, String fechaDesde, String fechaHasta, Pageable pageable) {
+        Page<Factura> facturas = facturaRepository.findFacturasConVentaPorEmpresaYEstado(
+                idEmpresa, estado, inicioDia(fechaDesde), finDia(fechaHasta), pageable);
+        return facturas.map(facturaMapper::toListado);
     }
 
     /**
@@ -389,7 +392,7 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
     @Transactional(readOnly = true)
     public Page<FacturaOutput> buscarConFiltro(Long idEmpresa, String filtro, Pageable pageable) {
         Page<Factura> facturas = facturaRepository.searchByEmpresa(idEmpresa, filtro, pageable);
-        return facturas.map(facturaMapper::toOutput);
+        return facturas.map(facturaMapper::toListado);
     }
 
     /**
@@ -397,9 +400,32 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
      * Busca en número de factura, nombre del cliente, RUC y documento.
      */
     @Transactional(readOnly = true)
-    public Page<FacturaOutput> buscarFacturasConVentaConFiltro(Long idEmpresa, String filtro, Pageable pageable) {
-        Page<Factura> facturas = facturaRepository.searchFacturasConVentaByEmpresa(idEmpresa, filtro, pageable);
-        return facturas.map(facturaMapper::toOutput);
+    public Page<FacturaOutput> buscarFacturasConVentaConFiltro(
+            Long idEmpresa, String filtro, String fechaDesde, String fechaHasta, Pageable pageable) {
+        Page<Factura> facturas = facturaRepository.searchFacturasConVentaByEmpresa(
+                idEmpresa, filtro, inicioDia(fechaDesde), finDia(fechaHasta), pageable);
+        return facturas.map(facturaMapper::toListado);
+    }
+
+    private static final LocalDateTime FECHA_MIN = LocalDateTime.of(1970, 1, 1, 0, 0);
+    private static final LocalDateTime FECHA_MAX = LocalDateTime.of(2999, 12, 31, 23, 59, 59);
+
+    private static LocalDateTime inicioDia(String value) {
+        LocalDate date = parseIsoDate(value);
+        return date != null ? date.atStartOfDay() : FECHA_MIN;
+    }
+
+    private static LocalDateTime finDia(String value) {
+        LocalDate date = parseIsoDate(value);
+        return date != null ? date.atTime(23, 59, 59) : FECHA_MAX;
+    }
+
+    private static LocalDate parseIsoDate(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String iso = value.length() >= 10 ? value.substring(0, 10) : value;
+        return LocalDate.parse(iso);
     }
 
     /**
@@ -408,7 +434,7 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
     @Transactional(readOnly = true)
     public Page<FacturaOutput> obtenerPorCliente(Long idCliente, Pageable pageable) {
         Page<Factura> facturas = facturaRepository.findByCliente(idCliente, pageable);
-        return facturas.map(facturaMapper::toOutput);
+        return facturas.map(facturaMapper::toListado);
     }
 
     /**

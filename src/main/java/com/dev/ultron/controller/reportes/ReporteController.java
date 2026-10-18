@@ -1,8 +1,8 @@
 package com.dev.ultron.controller.reportes;
 
+import com.dev.ultron.dto.reportes.FormatoReporte;
 import com.dev.ultron.dto.reportes.ReporteHttpHeaders;
 import com.dev.ultron.service.reportes.ReporteGenericoService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,29 +18,43 @@ import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/api/reportes")
-@RequiredArgsConstructor
 public class ReporteController {
 
     private final ReporteGenericoService reporteGenericoService;
+
+    public ReporteController(ReporteGenericoService reporteGenericoService) {
+        this.reporteGenericoService = reporteGenericoService;
+    }
 
     @GetMapping("/{tipo}")
     public ResponseEntity<byte[]> generar(
             @PathVariable String tipo,
             @RequestParam(required = false) String filtro,
-            @RequestParam(required = false) Long id
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) Long idEmpresa,
+            @RequestParam(required = false) String fechaDesde,
+            @RequestParam(required = false) String fechaHasta,
+            @RequestParam(required = false, defaultValue = "pdf") String formato
     ) {
-        byte[] pdf = reporteGenericoService.generar(tipo, filtro, id);
-        String filename = reporteGenericoService.nombreArchivo(tipo, id);
+        FormatoReporte formatoReporte = FormatoReporte.from(formato);
+        byte[] contenido = reporteGenericoService.generar(
+                tipo, filtro, id, idEmpresa, fechaDesde, fechaHasta, formatoReporte);
+        String filename = reporteGenericoService.nombreArchivo(tipo, id, formatoReporte);
         String titulo = encodeHeader(reporteGenericoService.titulo(tipo));
-        ContentDisposition disposition = ContentDisposition.inline()
+        ContentDisposition disposition = (formatoReporte == FormatoReporte.EXCEL
+                ? ContentDisposition.attachment()
+                : ContentDisposition.inline())
                 .filename(filename, StandardCharsets.UTF_8)
                 .build();
+        MediaType mediaType = formatoReporte == FormatoReporte.EXCEL
+                ? MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                : MediaType.APPLICATION_PDF;
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
                 .header(ReporteHttpHeaders.TITULO, titulo)
-                .contentType(MediaType.APPLICATION_PDF)
-                .contentLength(pdf.length)
-                .body(pdf);
+                .contentType(mediaType)
+                .contentLength(contenido.length)
+                .body(contenido);
     }
 
     private static String encodeHeader(String value) {

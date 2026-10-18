@@ -17,7 +17,8 @@ public enum TipoReporte {
     ORDEN_TRABAJO,
     ORDEN_TRABAJO_DETALLE,
     HISTORIAL,
-    VEHICULO;
+    VEHICULO,
+    FACTURA;
 
     public static TipoReporte from(String raw) {
         if (raw == null || raw.isBlank()) {

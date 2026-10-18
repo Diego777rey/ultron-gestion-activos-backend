@@ -54,11 +54,15 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
             WHERE f.empresa.id_empresa = :idEmpresa
             AND f.estado = :estado
             AND f.venta IS NOT NULL
+            AND f.fecha_emision >= :fechaDesde
+            AND f.fecha_emision <= :fechaHasta
             ORDER BY f.fecha_emision DESC
             """)
     Page<Factura> findFacturasConVentaPorEmpresaYEstado(
             @Param("idEmpresa") Long idEmpresa,
             @Param("estado") String estado,
+            @Param("fechaDesde") LocalDateTime fechaDesde,
+            @Param("fechaHasta") LocalDateTime fechaHasta,
             Pageable pageable
     );
 
@@ -120,6 +124,8 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
             SELECT f FROM Factura f
             WHERE f.empresa.id_empresa = :idEmpresa
             AND f.venta IS NOT NULL
+            AND f.fecha_emision >= :fechaDesde
+            AND f.fecha_emision <= :fechaHasta
             AND (
                 LOWER(f.numero_factura) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(f.cliente_nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
@@ -131,6 +137,8 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
     Page<Factura> searchFacturasConVentaByEmpresa(
             @Param("idEmpresa") Long idEmpresa,
             @Param("filter") String filter,
+            @Param("fechaDesde") LocalDateTime fechaDesde,
+            @Param("fechaHasta") LocalDateTime fechaHasta,
             Pageable pageable
     );
 
@@ -153,5 +161,42 @@ public interface FacturaRepository extends JpaRepository<Factura, Long> {
             @Param("idEmpresa") Long idEmpresa,
             @Param("fechaInicio") LocalDateTime fechaInicio,
             @Param("fechaFin") LocalDateTime fechaFin
+    );
+
+    @Query("""
+            SELECT f FROM Factura f
+            WHERE f.empresa.id_empresa = :idEmpresa
+            AND f.estado = :estado
+            AND f.venta IS NOT NULL
+            AND f.fecha_emision >= :fechaDesde
+            AND f.fecha_emision <= :fechaHasta
+            ORDER BY f.fecha_emision DESC, f.numero_factura DESC
+            """)
+    List<Factura> findFacturasConVentaParaReporte(
+            @Param("idEmpresa") Long idEmpresa,
+            @Param("estado") String estado,
+            @Param("fechaDesde") LocalDateTime fechaDesde,
+            @Param("fechaHasta") LocalDateTime fechaHasta
+    );
+
+    @Query("""
+            SELECT f FROM Factura f
+            WHERE f.empresa.id_empresa = :idEmpresa
+            AND f.venta IS NOT NULL
+            AND f.fecha_emision >= :fechaDesde
+            AND f.fecha_emision <= :fechaHasta
+            AND (
+                LOWER(f.numero_factura) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(f.cliente_nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(f.cliente_ruc) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(f.cliente_documento) LIKE LOWER(CONCAT('%', :filter, '%'))
+            )
+            ORDER BY f.fecha_emision DESC, f.numero_factura DESC
+            """)
+    List<Factura> searchFacturasConVentaParaReporte(
+            @Param("idEmpresa") Long idEmpresa,
+            @Param("filter") String filter,
+            @Param("fechaDesde") LocalDateTime fechaDesde,
+            @Param("fechaHasta") LocalDateTime fechaHasta
     );
 }

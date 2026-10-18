@@ -7,7 +7,6 @@ import com.dev.ultron.dto.financiero.output.TimbradoOutput;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.service.financiero.FacturaService;
 import com.dev.ultron.service.financiero.TimbradoService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,11 +24,15 @@ import java.util.List;
  * Maneja timbrados y facturas.
  */
 @Controller
-@RequiredArgsConstructor
 public class FacturacionGraphQLController {
 
     private final TimbradoService timbradoService;
     private final FacturaService facturaService;
+
+    public FacturacionGraphQLController(TimbradoService timbradoService, FacturaService facturaService) {
+        this.timbradoService = timbradoService;
+        this.facturaService = facturaService;
+    }
 
     // ========================================================================
     // QUERIES - TIMBRADOS
@@ -107,13 +110,16 @@ public class FacturacionGraphQLController {
     public PageResponse<FacturaOutput> facturasConVentaPorEmpresaYEstado(
             @Argument Long idEmpresa,
             @Argument String estado,
+            @Argument String fechaDesde,
+            @Argument String fechaHasta,
             @Argument Integer page,
             @Argument Integer size) {
         int p = page != null ? page : 0;
         int s = size != null ? size : 10;
         Pageable pageable = PageRequest.of(p, s);
         
-        Page<FacturaOutput> result = facturaService.listarFacturasConVentaPorEmpresaYEstado(idEmpresa, estado, pageable);
+        Page<FacturaOutput> result = facturaService.listarFacturasConVentaPorEmpresaYEstado(
+                idEmpresa, estado, fechaDesde, fechaHasta, pageable);
         
         return new PageResponse<>(result);
     }
@@ -151,13 +157,16 @@ public class FacturacionGraphQLController {
     public PageResponse<FacturaOutput> buscarFacturasConVenta(
             @Argument Long idEmpresa,
             @Argument String filtro,
+            @Argument String fechaDesde,
+            @Argument String fechaHasta,
             @Argument Integer page,
             @Argument Integer size) {
         int p = page != null ? page : 0;
         int s = size != null ? size : 10;
         Pageable pageable = PageRequest.of(p, s);
         
-        Page<FacturaOutput> result = facturaService.buscarFacturasConVentaConFiltro(idEmpresa, filtro, pageable);
+        Page<FacturaOutput> result = facturaService.buscarFacturasConVentaConFiltro(
+                idEmpresa, filtro, fechaDesde, fechaHasta, pageable);
         
         return new PageResponse<>(result);
     }
