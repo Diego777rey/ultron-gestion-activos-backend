@@ -8,4 +8,8 @@ import java.util.List;
 public interface ReporteFuenteParametrizada extends ReporteFuente {
 
     List<?> listar(String filtro, Long idEmpresa);
+
+    default List<?> listar(String filtro, Long idEmpresa, String fechaDesde, String fechaHasta) {
+        return listar(filtro, idEmpresa);
+    }
 }

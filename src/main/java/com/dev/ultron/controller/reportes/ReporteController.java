@@ -3,7 +3,6 @@ package com.dev.ultron.controller.reportes;
 import com.dev.ultron.dto.reportes.FormatoReporte;
 import com.dev.ultron.dto.reportes.ReporteHttpHeaders;
 import com.dev.ultron.service.reportes.ReporteGenericoService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -19,10 +18,13 @@ import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/api/reportes")
-@RequiredArgsConstructor
 public class ReporteController {
 
     private final ReporteGenericoService reporteGenericoService;
+
+    public ReporteController(ReporteGenericoService reporteGenericoService) {
+        this.reporteGenericoService = reporteGenericoService;
+    }
 
     @GetMapping("/{tipo}")
     public ResponseEntity<byte[]> generar(
@@ -30,10 +32,13 @@ public class ReporteController {
             @RequestParam(required = false) String filtro,
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) Long idEmpresa,
+            @RequestParam(required = false) String fechaDesde,
+            @RequestParam(required = false) String fechaHasta,
             @RequestParam(required = false, defaultValue = "pdf") String formato
     ) {
         FormatoReporte formatoReporte = FormatoReporte.from(formato);
-        byte[] contenido = reporteGenericoService.generar(tipo, filtro, id, idEmpresa, formatoReporte);
+        byte[] contenido = reporteGenericoService.generar(
+                tipo, filtro, id, idEmpresa, fechaDesde, fechaHasta, formatoReporte);
         String filename = reporteGenericoService.nombreArchivo(tipo, id, formatoReporte);
         String titulo = encodeHeader(reporteGenericoService.titulo(tipo));
         ContentDisposition disposition = (formatoReporte == FormatoReporte.EXCEL

@@ -34,8 +34,21 @@ public class ReporteGenericoService {
     }
 
     public byte[] generar(String tipoRaw, String filtro, Long id, Long idEmpresa, FormatoReporte formato) {
+        return generar(tipoRaw, filtro, id, idEmpresa, null, null, formato);
+    }
+
+    public byte[] generar(
+            String tipoRaw,
+            String filtro,
+            Long id,
+            Long idEmpresa,
+            String fechaDesde,
+            String fechaHasta,
+            FormatoReporte formato) {
         ReporteFuente fuente = resolver(tipoRaw);
-        List<?> filas = id != null ? fuente.buscarPorId(id) : listar(fuente, filtro, idEmpresa);
+        List<?> filas = id != null
+                ? fuente.buscarPorId(id)
+                : listar(fuente, filtro, idEmpresa, fechaDesde, fechaHasta);
         Map<String, Object> parametros = construirParametros(fuente, filtro, filas.size());
         if (formato == FormatoReporte.EXCEL) {
             return jasperReportService.exportarExcel(fuente.plantilla(), parametros, filas);
@@ -57,9 +70,14 @@ public class ReporteGenericoService {
         return base + extension;
     }
 
-    private List<?> listar(ReporteFuente fuente, String filtro, Long idEmpresa) {
+    private List<?> listar(
+            ReporteFuente fuente,
+            String filtro,
+            Long idEmpresa,
+            String fechaDesde,
+            String fechaHasta) {
         if (fuente instanceof ReporteFuenteParametrizada parametrizada) {
-            return parametrizada.listar(filtro, idEmpresa);
+            return parametrizada.listar(filtro, idEmpresa, fechaDesde, fechaHasta);
         }
         return fuente.listar(filtro);
     }
