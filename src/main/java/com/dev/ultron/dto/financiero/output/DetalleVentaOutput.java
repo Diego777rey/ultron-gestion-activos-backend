@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -23,4 +24,6 @@ public class DetalleVentaOutput implements Serializable {
     private BigDecimal cantidad;
     private BigDecimal precioUnitario;
     private BigDecimal subtotal;
+    /** Servicios y productos de la orden, cuando el cobro se puede desglosar. */
+    private List<LineaOrdenVentaOutput> lineasOrden;
 }
