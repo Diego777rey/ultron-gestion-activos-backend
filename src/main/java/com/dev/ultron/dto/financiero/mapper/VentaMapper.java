@@ -3,10 +3,14 @@ package com.dev.ultron.dto.financiero.mapper;
 import com.dev.ultron.domain.financiero.DetalleVenta;
 import com.dev.ultron.domain.financiero.Venta;
 import com.dev.ultron.dto.financiero.output.DetalleVentaOutput;
+import com.dev.ultron.dto.financiero.output.LineaOrdenVentaOutput;
 import com.dev.ultron.dto.financiero.output.VentaOutput;
 import com.dev.ultron.generic.mapper.MapStructConfig;
+import com.dev.ultron.service.financiero.OrdenVentaLineas;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+
+import java.util.List;
 
 @Mapper(config = MapStructConfig.class)
 public interface VentaMapper {
@@ -22,7 +26,12 @@ public interface VentaMapper {
     @Mapping(target = "idOrdenTrabajo", source = "ordenTrabajo.id_orden_trabajo")
     @Mapping(target = "idServicio", source = "servicio.id_servicio")
     @Mapping(target = "productoNombre", expression = "java(resolveDetalleNombre(entity))")
+    @Mapping(target = "lineasOrden", expression = "java(resolverLineasOrden(entity))")
     DetalleVentaOutput toDetalleOutput(DetalleVenta entity);
+
+    default List<LineaOrdenVentaOutput> resolverLineasOrden(DetalleVenta entity) {
+        return OrdenVentaLineas.lineasTicket(entity);
+    }
 
     default String resolveDetalleNombre(DetalleVenta entity) {
         if (entity.getProducto() != null && entity.getProducto().getNombre() != null) {

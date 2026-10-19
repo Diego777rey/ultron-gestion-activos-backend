@@ -7,6 +7,8 @@ import com.dev.ultron.domain.inventario.Servicio;
 import com.dev.ultron.domain.personas.Cliente;
 import com.dev.ultron.domain.personas.Empresa;
 import com.dev.ultron.domain.personas.Usuario;
+import com.dev.ultron.domain.taller.OrdenTrabajo;
+import com.dev.ultron.domain.taller.OrdenTrabajoDetalle;
 import com.dev.ultron.dto.financiero.input.DetalleFacturaInput;
 import com.dev.ultron.dto.financiero.input.FacturaInput;
 import com.dev.ultron.dto.financiero.mapper.DetalleFacturaMapper;
@@ -506,7 +508,7 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
                 ));
     }
 
-    private List<DetalleFacturaInput> detallesDesdeVenta(Venta venta) {
+    List<DetalleFacturaInput> detallesDesdeVenta(Venta venta) {
         List<DetalleVenta> lineas = venta.getDetalles();
         if (lineas == null || lineas.isEmpty()) {
             throw new IllegalArgumentException("La venta no tiene ítems para facturar");
@@ -537,34 +539,105 @@ public class FacturaService extends GenericCrudService<Factura, Long> {
                 acumulado = acumulado.add(neto);
             }
 
-            BigDecimal cantidad = nvl(detalle.getCantidad());
-            if (cantidad.signum() <= 0) {
-                cantidad = BigDecimal.ONE;
-            }
-            BigDecimal precio = detalle.getPrecioUnitario() != null ? detalle.getPrecioUnitario() : neto;
-            String descripcion = descripcionLinea(detalle);
-            if (descuento.signum() > 0) {
-                BigDecimal producido = precioEntero(cantidad, neto).multiply(cantidad).setScale(0, RoundingMode.HALF_UP);
-                if (producido.compareTo(neto) == 0) {
-                    precio = precioEntero(cantidad, neto);
-                } else {
-                    descripcion = cantidad.stripTrailingZeros().toPlainString() + " x " + descripcion;
-                    cantidad = BigDecimal.ONE;
-                    precio = neto;
-                }
-            }
-            detalles.add(new DetalleFacturaInput(
-                    detalle.getProducto() != null ? detalle.getProducto().getId_producto() : null,
-                    detalle.getServicio() != null ? detalle.getServicio().getId_servicio() : null,
-                    detalle.getPresentacion() != null ? detalle.getPresentacion().getId_presentacion_producto() : null,
-                    descripcion,
-                    detalle.getProducto() != null ? detalle.getProducto().getCodigo() : null,
-                    cantidad,
-                    precio,
-                    tipoIvaDe(detalle)
-            ));
+            agregarLineasFactura(detalles, detalle, neto, descuento);
         }
         return detalles;
+    }
+
+    /**
+     * Una orden con presupuesto se factura ítem por ítem (servicios y productos).
+     * El neto de la línea —ya con el descuento de la venta— se reparte entre esos ítems.
+     */
+    private void agregarLineasFactura(
+            List<DetalleFacturaInput> detalles,
+            DetalleVenta detalle,
+            BigDecimal neto,
+            BigDecimal descuento) {
+        List<OrdenTrabajoDetalle> partes = OrdenVentaLineas.partes(detalle);
+        BigDecimal base = OrdenVentaLineas.subtotal(partes);
+        if (partes.isEmpty() || (base.signum() <= 0 && neto.signum() > 0)) {
+            detalles.add(lineaDeVenta(detalle, neto, descuento));
+            return;
+        }
+
+        BigDecimal acumulado = BigDecimal.ZERO;
+        for (int i = 0; i < partes.size(); i++) {
+            OrdenTrabajoDetalle parte = partes.get(i);
+            BigDecimal bruto = OrdenVentaLineas.subtotalEntero(parte);
+            BigDecimal netoParte = i == partes.size() - 1
+                    ? neto.subtract(acumulado)
+                    : (base.signum() == 0
+                        ? BigDecimal.ZERO
+                        : bruto.multiply(neto).divide(base, 0, RoundingMode.HALF_UP));
+            if (netoParte.signum() < 0) {
+                netoParte = BigDecimal.ZERO;
+            }
+            if (i < partes.size() - 1) {
+                acumulado = acumulado.add(netoParte);
+            }
+            detalles.add(lineaDeParte(detalle.getOrdenTrabajo(), parte, netoParte));
+        }
+    }
+
+    private DetalleFacturaInput lineaDeVenta(DetalleVenta detalle, BigDecimal neto, BigDecimal descuento) {
+        BigDecimal cantidad = nvl(detalle.getCantidad());
+        if (cantidad.signum() <= 0) {
+            cantidad = BigDecimal.ONE;
+        }
+        BigDecimal precio = detalle.getPrecioUnitario() != null ? detalle.getPrecioUnitario() : neto;
+        String descripcion = descripcionLinea(detalle);
+        if (descuento.signum() > 0) {
+            PrecioLinea ajustado = ajustarPrecio(descripcion, cantidad, precio, neto);
+            descripcion = ajustado.descripcion();
+            cantidad = ajustado.cantidad();
+            precio = ajustado.precio();
+        }
+        return new DetalleFacturaInput(
+                detalle.getProducto() != null ? detalle.getProducto().getId_producto() : null,
+                detalle.getServicio() != null ? detalle.getServicio().getId_servicio() : null,
+                detalle.getPresentacion() != null ? detalle.getPresentacion().getId_presentacion_producto() : null,
+                descripcion,
+                detalle.getProducto() != null ? detalle.getProducto().getCodigo() : null,
+                cantidad,
+                precio,
+                tipoIvaDe(detalle)
+        );
+    }
+
+    private DetalleFacturaInput lineaDeParte(OrdenTrabajo orden, OrdenTrabajoDetalle parte, BigDecimal neto) {
+        BigDecimal cantidad = OrdenVentaLineas.cantidad(parte);
+        BigDecimal precio = parte.getPrecioUnitario() != null ? parte.getPrecioUnitario() : neto;
+        String descripcion = OrdenVentaLineas.descripcion(orden, parte);
+        if (precio.multiply(cantidad).setScale(0, RoundingMode.HALF_UP).compareTo(neto) != 0) {
+            PrecioLinea ajustado = ajustarPrecio(descripcion, cantidad, precio, neto);
+            descripcion = ajustado.descripcion();
+            cantidad = ajustado.cantidad();
+            precio = ajustado.precio();
+        }
+        return new DetalleFacturaInput(
+                OrdenVentaLineas.idProducto(parte),
+                OrdenVentaLineas.idServicio(parte),
+                null,
+                descripcion,
+                OrdenVentaLineas.codigo(parte),
+                cantidad,
+                precio,
+                OrdenVentaLineas.tipoIva(parte)
+        );
+    }
+
+    private static PrecioLinea ajustarPrecio(String descripcion, BigDecimal cantidad, BigDecimal precio, BigDecimal neto) {
+        BigDecimal producido = precioEntero(cantidad, neto).multiply(cantidad).setScale(0, RoundingMode.HALF_UP);
+        if (producido.compareTo(neto) == 0) {
+            return new PrecioLinea(descripcion, cantidad, precioEntero(cantidad, neto));
+        }
+        return new PrecioLinea(
+                cantidad.stripTrailingZeros().toPlainString() + " x " + descripcion,
+                BigDecimal.ONE,
+                neto);
+    }
+
+    private record PrecioLinea(String descripcion, BigDecimal cantidad, BigDecimal precio) {
     }
 
     private static BigDecimal precioEntero(BigDecimal cantidad, BigDecimal neto) {
