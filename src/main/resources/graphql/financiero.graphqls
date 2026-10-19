@@ -219,6 +219,13 @@ input CerrarCajaInput {
     conteos: [ConteoDenominacionInput!]!
 }
 
+type LineaOrdenVentaOutput {
+    descripcion: String
+    cantidad: BigDecimal
+    precioUnitario: BigDecimal
+    subtotal: BigDecimal
+}
+
 type DetalleVentaOutput {
     id_detalle_venta: ID
     idProducto: ID
@@ -230,6 +237,8 @@ type DetalleVentaOutput {
     cantidad: BigDecimal
     precioUnitario: BigDecimal
     subtotal: BigDecimal
+    # Servicios y productos de la orden, para imprimirlos en el ticket.
+    lineasOrden: [LineaOrdenVentaOutput!]
 }
 
 type VentaOutput {
