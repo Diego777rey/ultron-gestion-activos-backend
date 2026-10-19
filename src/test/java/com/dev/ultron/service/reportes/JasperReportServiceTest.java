@@ -1,5 +1,6 @@
 package com.dev.ultron.service.reportes;
 
+import com.dev.ultron.dto.reportes.output.ReporteFacturaFila;
 import com.dev.ultron.dto.reportes.output.ReporteFila;
 import com.dev.ultron.dto.reportes.output.ReporteOtDetalleFila;
 import com.dev.ultron.dto.reportes.output.ReporteTransferenciaDetalleFila;
@@ -150,5 +151,39 @@ class JasperReportServiceTest {
         );
 
         assertThat(print.getPages()).hasSizeGreaterThan(1);
+    }
+
+    @Test
+    void compilaFacturasEnPdfYExcel() {
+        JasperReportService service = new JasperReportService();
+        List<ReporteFacturaFila> filas = List.of(
+                ReporteFacturaFila.builder()
+                        .numeroFactura("001-001-0000010")
+                        .fecha("04/10/2026")
+                        .cliente("PEDRO AMARILLA")
+                        .ruc("81240988")
+                        .timbrado("65449845")
+                        .iva10("8.728")
+                        .iva5("0")
+                        .exenta("0")
+                        .total("96.000 GS")
+                        .formaPago("Efectivo")
+                        .estado("EMITIDA")
+                        .build()
+        );
+        Map<String, Object> parametros = Map.of(
+                "TITULO", "Facturas legales",
+                "SUBTITULO", "Número, timbrado, IVA y total",
+                "SISTEMA", "Ultron System",
+                "FECHA_GENERACION", "18/10/2026 19:00:00",
+                "CANTIDAD", filas.size(),
+                "FILTRO", ""
+        );
+
+        byte[] pdf = service.exportarPdf(JasperReportService.PLANTILLA_FACTURAS, parametros, filas);
+        byte[] excel = service.exportarExcel(JasperReportService.PLANTILLA_FACTURAS, parametros, filas);
+
+        assertThat(pdf).startsWith("%PDF".getBytes());
+        assertThat(excel).startsWith(new byte[] {0x50, 0x4B, 0x03, 0x04});
     }
 }

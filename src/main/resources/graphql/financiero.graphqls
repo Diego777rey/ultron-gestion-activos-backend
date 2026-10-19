@@ -145,6 +145,14 @@ type RetiroCajaOutput {
     responsableUsuario: String
     responsableNombre: String
     registradoPor: String
+    idCaja: ID
+    cajaNombre: String
+    sectorNombre: String
+}
+
+type RetiroCajaPageResponse {
+    content: [RetiroCajaOutput!]!
+    pageInfo: PageInfo!
 }
 
 input RetiroCajaInput {
@@ -304,6 +312,15 @@ extend type Query {
     # Efectivo esperado por moneda; con la sesión cerrada incluye contado y diferencia.
     arqueoSesionCaja(idSesionCaja: ID!): [ArqueoMonedaOutput!]!
     listarRetirosPorSesion(idSesionCaja: ID!): [RetiroCajaOutput!]!
+    listarRetirosCajaPaginado(
+        page: Int!,
+        size: Int!,
+        filter: String,
+        idCaja: ID,
+        idSector: ID,
+        fechaDesde: String,
+        fechaHasta: String
+    ): RetiroCajaPageResponse!
     listarSesionesCajaPaginado(
         page: Int!,
         size: Int!,

@@ -25,4 +25,7 @@ public class RetiroCajaOutput implements Serializable {
     /** Nombre y apellido del funcionario; si no tiene, el usuario. */
     private String responsableNombre;
     private String registradoPor;
+    private Long idCaja;
+    private String cajaNombre;
+    private String sectorNombre;
 }

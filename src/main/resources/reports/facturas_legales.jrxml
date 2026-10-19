@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd"
+              name="facturas_legales"
+              pageWidth="842"
+              pageHeight="595"
+              orientation="Landscape"
+              columnWidth="810"
+              leftMargin="16"
+              rightMargin="16"
+              topMargin="16"
+              bottomMargin="16"
+              whenNoDataType="AllSectionsNoDetail"
+              isIgnorePagination="false"
+              uuid="f9fd2f75-410e-465a-83e5-ed9ac1a3bded">
+
+    <style name="Default" isDefault="true" fontName="DejaVu Sans" fontSize="7" hTextAlign="Left" vTextAlign="Middle"/>
+    <style name="Titulo" fontName="DejaVu Sans" fontSize="15" isBold="true" forecolor="#1A1A1A"/>
+    <style name="Meta" fontName="DejaVu Sans" fontSize="8" forecolor="#333333"/>
+    <style name="ColHeader" fontName="DejaVu Sans" fontSize="7" isBold="true" forecolor="#1A1A1A" hTextAlign="Left" vTextAlign="Middle"/>
+    <style name="Celda" fontName="DejaVu Sans" fontSize="7" forecolor="#1A1A1A" hTextAlign="Left" vTextAlign="Middle"/>
+    <style name="CeldaNumero" style="Celda" hTextAlign="Right"/>
+    <style name="Pie" fontName="DejaVu Sans" fontSize="7" forecolor="#4A5560"/>
+
+    <parameter name="TITULO" class="java.lang.String"/>
+    <parameter name="SUBTITULO" class="java.lang.String"/>
+    <parameter name="SISTEMA" class="java.lang.String"/>
+    <parameter name="FECHA_GENERACION" class="java.lang.String"/>
+    <parameter name="CANTIDAD" class="java.lang.Integer"/>
+    <parameter name="FILTRO" class="java.lang.String"/>
+    <parameter name="USUARIO" class="java.lang.String"/>
+    <parameter name="LOGO" class="java.io.InputStream"/>
+
+    <field name="numeroFactura" class="java.lang.String"/>
+    <field name="fecha" class="java.lang.String"/>
+    <field name="cliente" class="java.lang.String"/>
+    <field name="ruc" class="java.lang.String"/>
+    <field name="timbrado" class="java.lang.String"/>
+    <field name="iva10" class="java.lang.String"/>
+    <field name="iva5" class="java.lang.String"/>
+    <field name="exenta" class="java.lang.String"/>
+    <field name="total" class="java.lang.String"/>
+    <field name="formaPago" class="java.lang.String"/>
+    <field name="estado" class="java.lang.String"/>
+
+    <pageHeader>
+        <band height="96" splitType="Stretch">
+            <image scaleImage="RetainShape" hAlign="Left" vAlign="Middle" onErrorType="Blank">
+                <reportElement x="0" y="0" width="88" height="88" uuid="91f621a8-4aa1-4ab3-9e97-d80a46044da7"/>
+                <imageExpression><![CDATA[$P{LOGO}]]></imageExpression>
+            </image>
+            <textField isBlankWhenNull="true" textAdjust="ScaleFont">
+                <reportElement style="Titulo" x="100" y="18" width="710" height="22" uuid="1ad0af91-313e-4abf-9c37-f726c99734a9"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[$P{TITULO}]]></textFieldExpression>
+            </textField>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Meta" x="100" y="42" width="710" height="14" uuid="65861228-92c6-4156-ae8d-163761dd20c4"/>
+                <textElement textAlignment="Center"/>
+                <textFieldExpression><![CDATA[$P{SUBTITULO}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement style="Meta" x="100" y="64" width="58" height="14" uuid="6d5e14a9-c44b-4602-93bd-c8b15850810e"/>
+                <textElement><font isBold="true"/></textElement>
+                <text><![CDATA[Generado]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Meta" x="160" y="64" width="180" height="14" uuid="76717e12-33ee-4c8a-a9db-e8772aad0428"/>
+                <textFieldExpression><![CDATA[$P{FECHA_GENERACION}]]></textFieldExpression>
+            </textField>
+            <staticText>
+                <reportElement style="Meta" x="360" y="64" width="52" height="14" uuid="aa4a39b2-b8f2-45e2-9a9f-621b9e65371b"/>
+                <textElement><font isBold="true"/></textElement>
+                <text><![CDATA[Usuario]]></text>
+            </staticText>
+            <textField isBlankWhenNull="true">
+                <reportElement style="Meta" x="414" y="64" width="396" height="14" uuid="1a874e7e-1e58-4b90-b60d-081c3aab9ca0"/>
+                <textFieldExpression><![CDATA[$P{USUARIO} == null || $P{USUARIO}.isBlank() ? "—" : $P{USUARIO}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageHeader>
+
+    <columnHeader>
+        <band height="20" splitType="Stretch">
+            <rectangle>
+                <reportElement x="0" y="0" width="810" height="20" backcolor="#E6E6E6" forecolor="#1A1A1A" uuid="85dddd0a-08d3-41f8-af28-d996dac7e8ac"/>
+                <graphicElement><pen lineWidth="0.6" lineColor="#1A1A1A"/></graphicElement>
+            </rectangle>
+            <staticText><reportElement style="ColHeader" x="4" y="0" width="114" height="20" uuid="d1573e80-fc2c-4c45-b80d-406818a8298f"/><text><![CDATA[Número]]></text></staticText>
+            <staticText><reportElement style="ColHeader" x="118" y="0" width="62" height="20" uuid="81bd69f0-448f-4aca-b49d-82fe3b3282b8"/><text><![CDATA[Fecha]]></text></staticText>
+            <staticText><reportElement style="ColHeader" x="180" y="0" width="140" height="20" uuid="37bc1f3a-9c89-47eb-ab4c-5b398716ff54"/><text><![CDATA[Cliente]]></text></staticText>
+            <staticText><reportElement style="ColHeader" x="320" y="0" width="72" height="20" uuid="c6feb31a-c813-4288-a191-bdcafc8f0c5d"/><text><![CDATA[RUC]]></text></staticText>
+            <staticText><reportElement style="ColHeader" x="392" y="0" width="68" height="20" uuid="6312be66-5829-41ad-b440-822225161fdd"/><text><![CDATA[Timbrado]]></text></staticText>
+            <staticText><reportElement style="ColHeader" x="460" y="0" width="58" height="20" uuid="26e0744f-d9e0-45f4-a3c4-b8d3d2754a6b"/><textElement textAlignment="Right"/><text><![CDATA[IVA 10%]]></text></staticText>
+            <staticText><reportElement style="ColHeader" x="518" y="0" width="50" height="20" uuid="0465e213-46d6-42a2-a963-934aace3ef53"/><textElement textAlignment="Right"/><text><![CDATA[IVA 5%]]></text></staticText>
+            <staticText><reportElement style="ColHeader" x="568" y="0" width="54" height="20" uuid="0e353681-b6c8-4f7b-b9cc-00ecade9508e"/><textElement textAlignment="Right"/><text><![CDATA[Exenta]]></text></staticText>
+            <staticText><reportElement style="ColHeader" x="622" y="0" width="70" height="20" uuid="41c6c90f-fbfd-4a77-ab09-c32ec08f51e7"/><textElement textAlignment="Right"/><text><![CDATA[Total]]></text></staticText>
+            <staticText><reportElement style="ColHeader" x="692" y="0" width="64" height="20" uuid="3d429d18-278f-4913-ba63-9ee0ffabf601"/><textElement textAlignment="Center"/><text><![CDATA[Pago]]></text></staticText>
+            <staticText><reportElement style="ColHeader" x="756" y="0" width="50" height="20" uuid="2503dc37-d5d6-43fd-b6e2-874488ceb8dd"/><textElement textAlignment="Center"/><text><![CDATA[Estado]]></text></staticText>
+        </band>
+    </columnHeader>
+
+    <detail>
+        <band height="16" splitType="Stretch">
+            <rectangle>
+                <reportElement x="0" y="0" width="810" height="16" backcolor="#F7F7F7" forecolor="#F7F7F7" uuid="e75afc60-619f-46ba-938e-f791f3935f59">
+                    <printWhenExpression><![CDATA[$V{REPORT_COUNT} % 2 == 0]]></printWhenExpression>
+                </reportElement>
+                <graphicElement><pen lineWidth="0.0"/></graphicElement>
+            </rectangle>
+            <textField isBlankWhenNull="true"><reportElement style="Celda" x="4" y="0" width="114" height="16" uuid="5fccd10f-ea08-4821-9825-edbf01a32afd"/><textFieldExpression><![CDATA[$F{numeroFactura}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement style="Celda" x="118" y="0" width="62" height="16" uuid="6a6abd4a-4d72-4935-bafa-3fccb51adda3"/><textFieldExpression><![CDATA[$F{fecha}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement style="Celda" x="180" y="0" width="140" height="16" uuid="f84f23f7-d420-43bb-95ee-75369236bf64"/><textFieldExpression><![CDATA[$F{cliente}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement style="Celda" x="320" y="0" width="72" height="16" uuid="8c4830f5-45a4-40f8-bac5-f41701beaed4"/><textFieldExpression><![CDATA[$F{ruc}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement style="Celda" x="392" y="0" width="68" height="16" uuid="06ba8df6-f447-4dde-9834-2fdc2427e462"/><textFieldExpression><![CDATA[$F{timbrado}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement style="CeldaNumero" x="460" y="0" width="58" height="16" uuid="d22516f3-3d36-4afe-b83a-b09a00fec31e"/><textFieldExpression><![CDATA[$F{iva10}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement style="CeldaNumero" x="518" y="0" width="50" height="16" uuid="70d34edf-8a3d-4a45-bfde-741aeddd4790"/><textFieldExpression><![CDATA[$F{iva5}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement style="CeldaNumero" x="568" y="0" width="54" height="16" uuid="51558d5c-2eb1-43c4-8143-186c1a3ff72a"/><textFieldExpression><![CDATA[$F{exenta}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement style="CeldaNumero" x="622" y="0" width="70" height="16" uuid="0830cde6-9dd8-4b5f-b907-a41ef324e0ce"/><textFieldExpression><![CDATA[$F{total}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement style="Celda" x="692" y="0" width="64" height="16" uuid="3da31c3b-81fa-4cb9-8655-7596109f24c6"/><textElement textAlignment="Center"/><textFieldExpression><![CDATA[$F{formaPago}]]></textFieldExpression></textField>
+            <textField isBlankWhenNull="true"><reportElement style="Celda" x="756" y="0" width="50" height="16" uuid="802ef2e3-fef9-4973-9058-e06c22a5dc10"/><textElement textAlignment="Center"/><textFieldExpression><![CDATA[$F{estado}]]></textFieldExpression></textField>
+        </band>
+    </detail>
+
+    <pageFooter>
+        <band height="18" splitType="Stretch">
+            <textField>
+                <reportElement style="Pie" x="0" y="4" width="300" height="12" uuid="0b5f489f-3854-420c-a54f-ef6073a84f31"/>
+                <textFieldExpression><![CDATA["CH Service"]]></textFieldExpression>
+            </textField>
+            <textField>
+                <reportElement style="Pie" x="520" y="4" width="230" height="12" uuid="bbabf415-05b9-4b4d-9fc2-4f170cce400e"/>
+                <textElement textAlignment="Right"/>
+                <textFieldExpression><![CDATA["Página " + $V{PAGE_NUMBER} + " de "]]></textFieldExpression>
+            </textField>
+            <textField evaluationTime="Report">
+                <reportElement style="Pie" x="750" y="4" width="60" height="12" uuid="f8ba274c-c9ba-4b47-ba27-03f60c3c68c4"/>
+                <textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+            </textField>
+        </band>
+    </pageFooter>
+
+    <summary>
+        <band height="20" splitType="Stretch">
+            <textField>
+                <reportElement style="Celda" x="0" y="4" width="810" height="14" uuid="4a862fe2-9a7c-40f1-a556-76d8045264ab"/>
+                <textFieldExpression><![CDATA["Total de facturas: " + ($P{CANTIDAD} != null ? $P{CANTIDAD} : $V{REPORT_COUNT})]]></textFieldExpression>
+            </textField>
+        </band>
+    </summary>
+
+    <noData>
+        <band height="36">
+            <staticText>
+                <reportElement style="Celda" x="0" y="8" width="810" height="18" uuid="1f2aa978-bbec-4bdf-9f84-d097cf0c6ac6"/>
+                <textElement textAlignment="Center"/>
+                <text><![CDATA[No hay facturas para el criterio indicado.]]></text>
+            </staticText>
+        </band>
+    </noData>
+</jasperReport>

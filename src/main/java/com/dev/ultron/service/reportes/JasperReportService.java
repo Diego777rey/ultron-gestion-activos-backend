@@ -37,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class JasperReportService {
 
     public static final String PLANTILLA_INVENTARIO = "reports/inventario_generico.jrxml";
+    public static final String PLANTILLA_FACTURAS = "reports/facturas_legales.jrxml";
     public static final String PLANTILLA_ORDEN_DETALLE = "reports/orden_trabajo_detalle.jrxml";
     public static final String PLANTILLA_TRANSFERENCIA_DETALLE = "reports/transferencia_detalle.jrxml";
     public static final String LOGO_CLASSPATH = "reports/chservice.png";
@@ -49,7 +50,11 @@ public class JasperReportService {
     @PostConstruct
     void precargarPlantillas() {
         long inicio = System.nanoTime();
-        for (String plantilla : List.of(PLANTILLA_INVENTARIO, PLANTILLA_ORDEN_DETALLE, PLANTILLA_TRANSFERENCIA_DETALLE)) {
+        for (String plantilla : List.of(
+                PLANTILLA_INVENTARIO,
+                PLANTILLA_FACTURAS,
+                PLANTILLA_ORDEN_DETALLE,
+                PLANTILLA_TRANSFERENCIA_DETALLE)) {
             try {
                 compilados.computeIfAbsent(plantilla, this::compilar);
             } catch (RuntimeException ex) {
@@ -64,14 +69,6 @@ public class JasperReportService {
         log.info("Plantillas de reporte listas en {} ms", (System.nanoTime() - inicio) / 1_000_000);
     }
 
-    public byte[] exportarPdf(String plantillaClasspath, Map<String, Object> parametros, Collection<?> filas) {
-        try {
-            return JasperExportManager.exportReportToPdf(rellenar(plantillaClasspath, parametros, filas));
-        } catch (JRException ex) {
-            throw new IllegalStateException("No se pudo generar el reporte PDF.", ex);
-        }
-    }
-
     public byte[] exportarExcel(String plantillaClasspath, Map<String, Object> parametros, Collection<?> filas) {
         try {
             JasperPrint print = rellenar(plantillaClasspath, parametros, filas);
@@ -81,14 +78,23 @@ public class JasperReportService {
             exporter.setExporterOutput(new SimpleOutputStreamExporterOutput(output));
             SimpleXlsxReportConfiguration configuration = new SimpleXlsxReportConfiguration();
             configuration.setDetectCellType(true);
-            configuration.setCollapseRowSpan(false);
+            configuration.setCollapseRowSpan(true);
             configuration.setOnePagePerSheet(false);
             configuration.setRemoveEmptySpaceBetweenRows(true);
+            configuration.setRemoveEmptySpaceBetweenColumns(true);
             exporter.setConfiguration(configuration);
             exporter.exportReport();
             return output.toByteArray();
         } catch (JRException ex) {
             throw new IllegalStateException("No se pudo generar el reporte Excel.", ex);
+        }
+    }
+
+    public byte[] exportarPdf(String plantillaClasspath, Map<String, Object> parametros, Collection<?> filas) {
+        try {
+            return JasperExportManager.exportReportToPdf(rellenar(plantillaClasspath, parametros, filas));
+        } catch (JRException ex) {
+            throw new IllegalStateException("No se pudo generar el reporte PDF.", ex);
         }
     }
 
