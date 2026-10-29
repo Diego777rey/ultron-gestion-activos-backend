@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 @Service
 public class TokenService {
 
+    private static final long VIDA_TOKEN_HORAS = 9;
+
     private final JwtEncoder encoder;
 
     public TokenService(JwtEncoder encoder) {
@@ -29,7 +31,7 @@ public class TokenService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
                 .issuedAt(now)
-                .expiresAt(now.plus(2, ChronoUnit.HOURS))
+                .expiresAt(now.plus(VIDA_TOKEN_HORAS, ChronoUnit.HOURS))
                 .subject(authentication.getName())
                 .claim("scope", scope)
                 .build();
