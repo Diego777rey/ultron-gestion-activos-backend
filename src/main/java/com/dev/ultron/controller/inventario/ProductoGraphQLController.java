@@ -1,6 +1,8 @@
 package com.dev.ultron.controller.inventario;
 
 import com.dev.ultron.dto.inventario.input.ProductoInput;
+import com.dev.ultron.dto.inventario.output.CategoriaProductoOutput;
+import com.dev.ultron.dto.inventario.output.ProductoCatalogoWebOutput;
 import com.dev.ultron.dto.inventario.output.ProductoOutput;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.service.inventario.ProductoService;
@@ -31,6 +33,21 @@ public class ProductoGraphQLController {
     @QueryMapping
     public ProductoOutput buscarProductoPorId(@Argument Long id) {
         return service.findById(id);
+    }
+
+    @QueryMapping
+    public List<ProductoCatalogoWebOutput> catalogoWebProductos(@Argument String filter) {
+        return service.listarCatalogoWeb(filter);
+    }
+
+    @QueryMapping
+    public ProductoCatalogoWebOutput catalogoWebProductoPorId(@Argument Long id) {
+        return service.buscarCatalogoWebPorId(id);
+    }
+
+    @QueryMapping
+    public List<CategoriaProductoOutput> catalogoWebCategorias() {
+        return service.listarCategoriasCatalogoWeb();
     }
 
     @MutationMapping

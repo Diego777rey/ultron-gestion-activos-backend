@@ -1,0 +1,84 @@
+# =============================================================
+# Comercio web (Red Automotriz): pedidos online y newsletter
+# =============================================================
+
+input DetallePedidoWebInput {
+    idProducto: ID!
+    idPresentacionProducto: ID
+    cantidad: BigDecimal!
+}
+
+input PagoTarjetaInput {
+    titular: String!
+    numero: String!
+    vencimiento: String!
+    cvc: String!
+}
+
+input PedidoWebInput {
+    clienteNombre: String!
+    clienteEmail: String!
+    clienteTelefono: String
+    clienteDocumento: String
+    direccionEnvio: String
+    ciudad: String
+    notas: String
+    formaPago: String
+    pagoTarjeta: PagoTarjetaInput
+    detalles: [DetallePedidoWebInput!]!
+}
+
+input SuscripcionNewsletterInput {
+    email: String!
+    nombre: String
+}
+
+type DetallePedidoWebOutput {
+    id_detalle_pedido_web: ID
+    idProducto: ID
+    idPresentacionProducto: ID
+    nombreProducto: String
+    presentacion: String
+    cantidad: BigDecimal
+    precioUnitario: BigDecimal
+    subtotal: BigDecimal
+}
+
+type PedidoWebOutput {
+    id_pedido_web: ID
+    codigo: String
+    estado: String
+    formaPago: String
+    moneda: String
+    total: BigDecimal
+    clienteNombre: String
+    clienteEmail: String
+    clienteTelefono: String
+    clienteDocumento: String
+    direccionEnvio: String
+    ciudad: String
+    notas: String
+    pagoTransaccionId: String
+    pagoUltimosCuatro: String
+    pagoMensaje: String
+    creadoEn: String
+    detalles: [DetallePedidoWebOutput!]!
+}
+
+type SuscripcionNewsletterOutput {
+    id_suscripcion: ID
+    email: String
+    nombre: String
+    activo: Boolean
+    creadoEn: String
+    mensaje: String
+}
+
+extend type Query {
+    buscarPedidoWebPorCodigo(codigo: String!): PedidoWebOutput
+}
+
+extend type Mutation {
+    registrarPedidoWeb(input: PedidoWebInput!): PedidoWebOutput
+    suscribirNewsletter(input: SuscripcionNewsletterInput!): SuscripcionNewsletterOutput
+}

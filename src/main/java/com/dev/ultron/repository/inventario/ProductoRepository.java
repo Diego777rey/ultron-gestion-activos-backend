@@ -84,4 +84,33 @@ public interface ProductoRepository extends JpaRepository<Producto, Long>, JpaSp
             WHERE p.categoriaProducto.id_categoria_producto = :idCategoria
             """)
     boolean existsByCategoria(@Param("idCategoria") Long idCategoria);
+
+    @Query("""
+            SELECT DISTINCT p FROM Producto p
+            LEFT JOIN FETCH p.categoriaProducto cp
+            LEFT JOIN FETCH cp.categoriaPadre
+            WHERE p.mostrarEnWeb = true
+              AND p.estado = true
+              AND p.imagen IS NOT NULL AND TRIM(p.imagen) <> ''
+              AND p.precioVenta IS NOT NULL AND p.precioVenta > 0
+              AND (:filter IS NULL OR :filter = ''
+                OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(p.codigo) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(COALESCE(p.descripcion, '')) LIKE LOWER(CONCAT('%', :filter, '%'))
+                OR LOWER(cp.nombre) LIKE LOWER(CONCAT('%', :filter, '%')))
+            ORDER BY p.nombre ASC
+            """)
+    List<Producto> buscarCatalogoWeb(@Param("filter") String filter);
+
+    @Query("""
+            SELECT p FROM Producto p
+            LEFT JOIN FETCH p.categoriaProducto cp
+            LEFT JOIN FETCH cp.categoriaPadre
+            WHERE p.id_producto = :id
+              AND p.mostrarEnWeb = true
+              AND p.estado = true
+              AND p.imagen IS NOT NULL AND TRIM(p.imagen) <> ''
+              AND p.precioVenta IS NOT NULL AND p.precioVenta > 0
+            """)
+    Optional<Producto> findCatalogoWebPorId(@Param("id") Long id);
 }
