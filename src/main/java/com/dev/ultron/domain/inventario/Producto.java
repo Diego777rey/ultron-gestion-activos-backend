@@ -48,6 +48,8 @@ public class Producto implements Serializable {
     private String ubicacion;
     private boolean estado;
     private String imagen;
+    /** Si true, el producto puede publicarse en la tienda web (requiere imagen y precio). */
+    private boolean mostrarEnWeb;
     /** 10, 5 o EXENTA. El precio de venta ya incluye el IVA. */
     private String tipoIva;
 

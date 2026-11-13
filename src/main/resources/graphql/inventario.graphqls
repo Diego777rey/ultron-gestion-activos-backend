@@ -55,6 +55,7 @@ type ProductoOutput {
     ubicacion: String
     estado: Boolean
     imagen: String
+    mostrarEnWeb: Boolean
     tipoIva: String
     categoriaProducto: CategoriaProductoOutput
     presentaciones: [PresentacionProductoOutput!]!
@@ -63,6 +64,19 @@ type ProductoOutput {
 type ProductoPageResponse {
     content: [ProductoOutput!]!
     pageInfo: PageInfo!
+}
+
+"""Producto público para la tienda (sin costo ni datos internos)."""
+type ProductoCatalogoWebOutput {
+    id_producto: ID!
+    codigo: String
+    nombre: String!
+    descripcion: String
+    precioVenta: BigDecimal!
+    imagen: String!
+    tipoIva: String
+    categoriaProducto: CategoriaProductoOutput
+    presentaciones: [PresentacionProductoOutput!]!
 }
 
 input ProductoInput {
@@ -77,6 +91,7 @@ input ProductoInput {
     ubicacion: String
     estado: Boolean
     imagen: String
+    mostrarEnWeb: Boolean
     tipoIva: String
     idCategoriaProducto: ID!
     presentaciones: [PresentacionProductoInput!]
@@ -141,6 +156,11 @@ extend type Query {
     listarProductos: [ProductoOutput!]!
     listarProductosPaginado(page: Int!, size: Int!, filter: String): ProductoPageResponse!
     buscarProductoPorId(id: ID!): ProductoOutput
+
+    """Catálogo público de la tienda web: activos con mostrarEnWeb, imagen y precio."""
+    catalogoWebProductos(filter: String): [ProductoCatalogoWebOutput!]!
+    catalogoWebProductoPorId(id: ID!): ProductoCatalogoWebOutput
+    catalogoWebCategorias: [CategoriaProductoOutput!]!
 
     listarCategoriasServicio: [CategoriaServicioOutput!]!
     listarCategoriasServicioPaginado(page: Int!, size: Int!, filter: String): CategoriaServicioPageResponse!

@@ -5,7 +5,9 @@ import com.dev.ultron.domain.inventario.Producto;
 import com.dev.ultron.domain.inventario.CategoriaProducto;
 import com.dev.ultron.dto.inventario.input.PresentacionProductoInput;
 import com.dev.ultron.dto.inventario.input.ProductoInput;
+import com.dev.ultron.dto.inventario.output.CategoriaProductoOutput;
 import com.dev.ultron.dto.inventario.output.PresentacionProductoOutput;
+import com.dev.ultron.dto.inventario.output.ProductoCatalogoWebOutput;
 import com.dev.ultron.dto.inventario.output.ProductoOutput;
 import com.dev.ultron.dto.inventario.mapper.ProductoMapper;
 import com.dev.ultron.repository.financiero.DetalleFacturaRepository;
@@ -122,6 +124,7 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
         sincronizarPresentaciones(entidad, input.getPresentaciones());
         reflejarPresentacionPrincipal(entidad, input.getPresentaciones());
         validarCodigosBarras(entidad);
+        validarMostrarEnWeb(entidad);
         entidad = guardar(entidad);
         stockProductoSectorService.asegurarStockInicial(entidad, entidad.getStock());
         return toOutput(entidad);
@@ -142,9 +145,53 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
         sincronizarPresentaciones(entidad, input.getPresentaciones());
         reflejarPresentacionPrincipal(entidad, input.getPresentaciones());
         validarCodigosBarras(entidad);
+        validarMostrarEnWeb(entidad);
         entidad = actualizar(entidad);
         stockProductoSectorService.resyncProductoStock(entidad.getId_producto());
         return toOutput(entidad);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductoCatalogoWebOutput> listarCatalogoWeb(String filter) {
+        return repository.buscarCatalogoWeb(filter == null ? "" : filter.trim()).stream()
+                .map(this::toCatalogoWebOutput)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ProductoCatalogoWebOutput buscarCatalogoWebPorId(Long id) {
+        return repository.findCatalogoWebPorId(id)
+                .map(this::toCatalogoWebOutput)
+                .orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CategoriaProductoOutput> listarCategoriasCatalogoWeb() {
+        return repository.buscarCatalogoWeb("").stream()
+                .map(Producto::getCategoriaProducto)
+                .filter(categoria -> categoria != null && categoria.getId_categoria_producto() != null)
+                .collect(java.util.stream.Collectors.toMap(
+                        CategoriaProducto::getId_categoria_producto,
+                        categoria -> categoria,
+                        (a, b) -> a,
+                        java.util.LinkedHashMap::new))
+                .values()
+                .stream()
+                .map(categoria -> {
+                    CategoriaProductoOutput output = new CategoriaProductoOutput();
+                    output.setId_categoria_producto(categoria.getId_categoria_producto());
+                    output.setNombre(categoria.getNombre());
+                    output.setDescripcion(categoria.getDescripcion());
+                    output.setEstado(categoria.isEstado());
+                    if (categoria.getCategoriaPadre() != null) {
+                        CategoriaProductoOutput padre = new CategoriaProductoOutput();
+                        padre.setId_categoria_producto(categoria.getCategoriaPadre().getId_categoria_producto());
+                        padre.setNombre(categoria.getCategoriaPadre().getNombre());
+                        output.setCategoriaPadre(padre);
+                    }
+                    return output;
+                })
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -178,6 +225,60 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
         }
         output.setPresentaciones(presentaciones.stream().map(this::toPresentacionOutput).toList());
         return output;
+    }
+
+    private ProductoCatalogoWebOutput toCatalogoWebOutput(Producto entidad) {
+        ProductoCatalogoWebOutput output = new ProductoCatalogoWebOutput();
+        output.setId_producto(entidad.getId_producto());
+        output.setCodigo(entidad.getCodigo());
+        output.setNombre(entidad.getNombre());
+        output.setDescripcion(entidad.getDescripcion());
+        output.setPrecioVenta(entidad.getPrecioVenta());
+        output.setImagen(entidad.getImagen());
+        output.setTipoIva(entidad.getTipoIva());
+        if (entidad.getCategoriaProducto() != null) {
+            CategoriaProductoOutput categoria = new CategoriaProductoOutput();
+            categoria.setId_categoria_producto(entidad.getCategoriaProducto().getId_categoria_producto());
+            categoria.setNombre(entidad.getCategoriaProducto().getNombre());
+            categoria.setDescripcion(entidad.getCategoriaProducto().getDescripcion());
+            categoria.setEstado(entidad.getCategoriaProducto().isEstado());
+            if (entidad.getCategoriaProducto().getCategoriaPadre() != null) {
+                CategoriaProductoOutput padre = new CategoriaProductoOutput();
+                padre.setId_categoria_producto(entidad.getCategoriaProducto().getCategoriaPadre().getId_categoria_producto());
+                padre.setNombre(entidad.getCategoriaProducto().getCategoriaPadre().getNombre());
+                categoria.setCategoriaPadre(padre);
+            }
+            output.setCategoriaProducto(categoria);
+        }
+        List<PresentacionProducto> presentaciones = entidad.getPresentaciones();
+        if (presentaciones == null || presentaciones.isEmpty()) {
+            output.setPresentaciones(List.of());
+        } else {
+            output.setPresentaciones(presentaciones.stream().map(this::toPresentacionOutput).toList());
+        }
+        return output;
+    }
+
+    /**
+     * Para publicar en la web hace falta foto y precio de venta mayor a cero.
+     */
+    private void validarMostrarEnWeb(Producto producto) {
+        if (!producto.isMostrarEnWeb()) {
+            return;
+        }
+        String imagen = producto.getImagen() == null ? "" : producto.getImagen().trim();
+        if (imagen.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Para mostrar el producto en la página web tenés que cargar una foto");
+        }
+        if (producto.getPrecioVenta() == null || producto.getPrecioVenta().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException(
+                    "Para mostrar el producto en la página web el precio de venta tiene que ser mayor a cero");
+        }
+        if (!producto.isEstado()) {
+            throw new IllegalArgumentException(
+                    "No se puede mostrar en la página web un producto inactivo");
+        }
     }
 
     private PresentacionProductoOutput toPresentacionOutput(PresentacionProducto entidad) {
