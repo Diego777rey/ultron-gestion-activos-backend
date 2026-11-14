@@ -36,8 +36,10 @@ public class ProductoGraphQLController {
     }
 
     @QueryMapping
-    public List<ProductoCatalogoWebOutput> catalogoWebProductos(@Argument String filter) {
-        return service.listarCatalogoWeb(filter);
+    public List<ProductoCatalogoWebOutput> catalogoWebProductos(
+            @Argument String filter,
+            @Argument Long idCategoria) {
+        return service.listarCatalogoWeb(filter, idCategoria);
     }
 
     @QueryMapping
@@ -48,6 +50,11 @@ public class ProductoGraphQLController {
     @QueryMapping
     public List<CategoriaProductoOutput> catalogoWebCategorias() {
         return service.listarCategoriasCatalogoWeb();
+    }
+
+    @QueryMapping
+    public List<CategoriaProductoOutput> catalogoWebCategoriasNav() {
+        return service.listarCategoriasTiendaNav();
     }
 
     @MutationMapping

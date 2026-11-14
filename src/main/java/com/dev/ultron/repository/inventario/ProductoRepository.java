@@ -93,6 +93,11 @@ public interface ProductoRepository extends JpaRepository<Producto, Long>, JpaSp
               AND p.estado = true
               AND p.imagen IS NOT NULL AND TRIM(p.imagen) <> ''
               AND p.precioVenta IS NOT NULL AND p.precioVenta > 0
+              AND (
+                :idCategoria IS NULL
+                OR cp.id_categoria_producto = :idCategoria
+                OR cp.categoriaPadre.id_categoria_producto = :idCategoria
+              )
               AND (:filter IS NULL OR :filter = ''
                 OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :filter, '%'))
                 OR LOWER(p.codigo) LIKE LOWER(CONCAT('%', :filter, '%'))
@@ -100,7 +105,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long>, JpaSp
                 OR LOWER(cp.nombre) LIKE LOWER(CONCAT('%', :filter, '%')))
             ORDER BY p.nombre ASC
             """)
-    List<Producto> buscarCatalogoWeb(@Param("filter") String filter);
+    List<Producto> buscarCatalogoWeb(@Param("filter") String filter, @Param("idCategoria") Long idCategoria);
 
     @Query("""
             SELECT p FROM Producto p

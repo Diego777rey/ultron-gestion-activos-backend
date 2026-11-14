@@ -155,7 +155,8 @@ public class ClienteService extends GenericCrudService<Cliente, Long> {
         return trimmed.replaceAll("[\\s.]", "").replaceFirst("-\\d$", "");
     }
 
-    private Optional<Cliente> buscarEntidadPorDocumento(String documento) {
+    @Transactional(readOnly = true)
+    public Optional<Cliente> buscarEntidadPorDocumento(String documento) {
         String normalizado = SearchNormalizer.normalize(documento);
         if (normalizado == null) {
             return Optional.empty();

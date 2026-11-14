@@ -158,9 +158,12 @@ extend type Query {
     buscarProductoPorId(id: ID!): ProductoOutput
 
     """Catálogo público de la tienda web: activos con mostrarEnWeb, imagen y precio."""
-    catalogoWebProductos(filter: String): [ProductoCatalogoWebOutput!]!
+    catalogoWebProductos(filter: String, idCategoria: ID): [ProductoCatalogoWebOutput!]!
     catalogoWebProductoPorId(id: ID!): ProductoCatalogoWebOutput
+    """Categorías que ya tienen productos publicados en la web."""
     catalogoWebCategorias: [CategoriaProductoOutput!]!
+    """Menú de departamentos (categorías raíz activas), aunque aún no tengan productos web."""
+    catalogoWebCategoriasNav: [CategoriaProductoOutput!]!
 
     listarCategoriasServicio: [CategoriaServicioOutput!]!
     listarCategoriasServicioPaginado(page: Int!, size: Int!, filter: String): CategoriaServicioPageResponse!

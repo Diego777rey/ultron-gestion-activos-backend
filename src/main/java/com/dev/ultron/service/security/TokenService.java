@@ -38,4 +38,19 @@ public class TokenService {
                 
         return this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
+
+    /** JWT para clientes de la tienda web (no usuarios internos del ERP). */
+    public String generateClienteWebToken(String email, Long clienteId) {
+        Instant now = Instant.now();
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuer("self")
+                .issuedAt(now)
+                .expiresAt(now.plus(VIDA_TOKEN_HORAS, ChronoUnit.HOURS))
+                .subject(email)
+                .claim("scope", "CLIENTE_WEB")
+                .claim("tipo", "CLIENTE_WEB")
+                .claim("clienteId", clienteId)
+                .build();
+        return this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+    }
 }
