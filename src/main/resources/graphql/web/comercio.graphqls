@@ -74,11 +74,46 @@ type SuscripcionNewsletterOutput {
     mensaje: String
 }
 
+input RegistroClienteWebInput {
+    nombre: String!
+    apellido: String
+    documento: String!
+    ruc: String
+    email: String!
+    telefono: String
+    direccion: String
+    password: String!
+    passwordConfirmacion: String!
+}
+
+input LoginClienteWebInput {
+    email: String!
+    password: String!
+}
+
+type SesionClienteWebOutput {
+    token: String
+    idCliente: ID
+    idCuenta: ID
+    email: String
+    nombre: String
+    apellido: String
+    documento: String
+    ruc: String
+    telefono: String
+    direccion: String
+    mensaje: String
+}
+
 extend type Query {
     buscarPedidoWebPorCodigo(codigo: String!): PedidoWebOutput
+    """Requiere JWT de cliente web (Authorization: Bearer)."""
+    miCuentaClienteWeb: SesionClienteWebOutput
 }
 
 extend type Mutation {
     registrarPedidoWeb(input: PedidoWebInput!): PedidoWebOutput
     suscribirNewsletter(input: SuscripcionNewsletterInput!): SuscripcionNewsletterOutput
+    registrarCuentaClienteWeb(input: RegistroClienteWebInput!): SesionClienteWebOutput
+    loginClienteWeb(input: LoginClienteWebInput!): SesionClienteWebOutput
 }

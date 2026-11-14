@@ -152,8 +152,8 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductoCatalogoWebOutput> listarCatalogoWeb(String filter) {
-        return repository.buscarCatalogoWeb(filter == null ? "" : filter.trim()).stream()
+    public List<ProductoCatalogoWebOutput> listarCatalogoWeb(String filter, Long idCategoria) {
+        return repository.buscarCatalogoWeb(filter == null ? "" : filter.trim(), idCategoria).stream()
                 .map(this::toCatalogoWebOutput)
                 .toList();
     }
@@ -167,7 +167,7 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
 
     @Transactional(readOnly = true)
     public List<CategoriaProductoOutput> listarCategoriasCatalogoWeb() {
-        return repository.buscarCatalogoWeb("").stream()
+        return repository.buscarCatalogoWeb("", null).stream()
                 .map(Producto::getCategoriaProducto)
                 .filter(categoria -> categoria != null && categoria.getId_categoria_producto() != null)
                 .collect(java.util.stream.Collectors.toMap(
@@ -189,6 +189,22 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
                         padre.setNombre(categoria.getCategoriaPadre().getNombre());
                         output.setCategoriaPadre(padre);
                     }
+                    return output;
+                })
+                .toList();
+    }
+
+    /** Menú de departamentos: categorías raíz activas (aunque aún no tengan productos web). */
+    @Transactional(readOnly = true)
+    public List<CategoriaProductoOutput> listarCategoriasTiendaNav() {
+        return categoriaProductoRepository.findRaices().stream()
+                .filter(CategoriaProducto::isEstado)
+                .map(categoria -> {
+                    CategoriaProductoOutput output = new CategoriaProductoOutput();
+                    output.setId_categoria_producto(categoria.getId_categoria_producto());
+                    output.setNombre(categoria.getNombre());
+                    output.setDescripcion(categoria.getDescripcion());
+                    output.setEstado(categoria.isEstado());
                     return output;
                 })
                 .toList();
