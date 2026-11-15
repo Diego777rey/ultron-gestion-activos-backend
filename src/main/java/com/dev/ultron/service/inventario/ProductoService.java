@@ -158,6 +158,29 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
                 .toList();
     }
 
+    /**
+     * Productos publicados ordenados por unidades vendidas (POS + pedidos web).
+     * Si todavía no hay ventas, se listan igual por nombre.
+     */
+    @Transactional(readOnly = true)
+    public List<ProductoCatalogoWebOutput> listarCatalogoWebMasComprados(Integer limite) {
+        int tope = limite == null || limite < 1 ? 12 : Math.min(limite, 48);
+        List<Long> ids = repository.findIdsCatalogoWebMasComprados(tope);
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        Map<Long, Producto> porId = repository.findCatalogoWebPorIds(ids).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        Producto::getId_producto,
+                        producto -> producto,
+                        (a, b) -> a));
+        return ids.stream()
+                .map(porId::get)
+                .filter(java.util.Objects::nonNull)
+                .map(this::toCatalogoWebOutput)
+                .toList();
+    }
+
     @Transactional(readOnly = true)
     public ProductoCatalogoWebOutput buscarCatalogoWebPorId(Long id) {
         return repository.findCatalogoWebPorId(id)
@@ -194,20 +217,35 @@ public class ProductoService extends GenericCrudService<Producto, Long> {
                 .toList();
     }
 
-    /** Menú de departamentos: categorías raíz activas (aunque aún no tengan productos web). */
+    /**
+     * Menú de la tienda: familias (categorías raíz) activas y, dentro de cada una,
+     * las subcategorías activas que carga el escritorio.
+     */
     @Transactional(readOnly = true)
     public List<CategoriaProductoOutput> listarCategoriasTiendaNav() {
         return categoriaProductoRepository.findRaices().stream()
                 .filter(CategoriaProducto::isEstado)
-                .map(categoria -> {
-                    CategoriaProductoOutput output = new CategoriaProductoOutput();
-                    output.setId_categoria_producto(categoria.getId_categoria_producto());
-                    output.setNombre(categoria.getNombre());
-                    output.setDescripcion(categoria.getDescripcion());
-                    output.setEstado(categoria.isEstado());
+                .map(familia -> {
+                    CategoriaProductoOutput output = aSalidaNav(familia);
+                    List<CategoriaProductoOutput> subcategorias = categoriaProductoRepository
+                            .findSubcategorias(familia.getId_categoria_producto())
+                            .stream()
+                            .filter(CategoriaProducto::isEstado)
+                            .map(this::aSalidaNav)
+                            .toList();
+                    output.setSubcategorias(subcategorias);
                     return output;
                 })
                 .toList();
+    }
+
+    private CategoriaProductoOutput aSalidaNav(CategoriaProducto categoria) {
+        CategoriaProductoOutput output = new CategoriaProductoOutput();
+        output.setId_categoria_producto(categoria.getId_categoria_producto());
+        output.setNombre(categoria.getNombre());
+        output.setDescripcion(categoria.getDescripcion());
+        output.setEstado(categoria.isEstado());
+        return output;
     }
 
     @Transactional(readOnly = true)
