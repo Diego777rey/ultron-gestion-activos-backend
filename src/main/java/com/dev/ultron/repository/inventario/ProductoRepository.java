@@ -118,4 +118,44 @@ public interface ProductoRepository extends JpaRepository<Producto, Long>, JpaSp
               AND p.precioVenta IS NOT NULL AND p.precioVenta > 0
             """)
     Optional<Producto> findCatalogoWebPorId(@Param("id") Long id);
+
+    /**
+     * Ids de productos publicados ordenados por cantidad vendida
+     * (punto de venta + pedidos web). Sin ventas quedan al final por nombre.
+     */
+    @Query(value = """
+            SELECT p.id_producto
+            FROM inventario.producto p
+            LEFT JOIN (
+                SELECT lineas.id_producto, SUM(lineas.cantidad) AS cant
+                FROM (
+                    SELECT id_producto, cantidad
+                    FROM financiero.detalle_venta
+                    WHERE id_producto IS NOT NULL
+                    UNION ALL
+                    SELECT id_producto, cantidad
+                    FROM web.detalle_pedido_web
+                ) lineas
+                GROUP BY lineas.id_producto
+            ) v ON v.id_producto = p.id_producto
+            WHERE p.mostrar_en_web = true
+              AND p.estado = true
+              AND p.imagen IS NOT NULL AND TRIM(p.imagen) <> ''
+              AND p.precio_venta IS NOT NULL AND p.precio_venta > 0
+            ORDER BY COALESCE(v.cant, 0) DESC, p.nombre ASC
+            LIMIT :limite
+            """, nativeQuery = true)
+    List<Long> findIdsCatalogoWebMasComprados(@Param("limite") int limite);
+
+    @Query("""
+            SELECT DISTINCT p FROM Producto p
+            LEFT JOIN FETCH p.categoriaProducto cp
+            LEFT JOIN FETCH cp.categoriaPadre
+            WHERE p.id_producto IN :ids
+              AND p.mostrarEnWeb = true
+              AND p.estado = true
+              AND p.imagen IS NOT NULL AND TRIM(p.imagen) <> ''
+              AND p.precioVenta IS NOT NULL AND p.precioVenta > 0
+            """)
+    List<Producto> findCatalogoWebPorIds(@Param("ids") Collection<Long> ids);
 }

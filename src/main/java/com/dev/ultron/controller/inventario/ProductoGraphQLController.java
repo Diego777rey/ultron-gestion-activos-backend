@@ -43,6 +43,11 @@ public class ProductoGraphQLController {
     }
 
     @QueryMapping
+    public List<ProductoCatalogoWebOutput> catalogoWebProductosMasComprados(@Argument Integer limite) {
+        return service.listarCatalogoWebMasComprados(limite);
+    }
+
+    @QueryMapping
     public ProductoCatalogoWebOutput catalogoWebProductoPorId(@Argument Long id) {
         return service.buscarCatalogoWebPorId(id);
     }
