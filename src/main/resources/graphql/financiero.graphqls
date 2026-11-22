@@ -10,6 +10,9 @@ type CajaOutput {
     responsable: PersonaOutput
     sector: SectorOutput
     activa: Boolean
+    # MAC de la terminal Electron vinculada (AA:BB:CC:DD:EE:FF). Null = sin vínculo.
+    macAddress: String
+    nombreTerminal: String
 }
 
 type CajaPageResponse {
@@ -24,6 +27,9 @@ input CajaInput {
     idResponsable: ID
     idSector: ID!
     activa: Boolean
+    # MAC de la PC. Vacío o null desvincula la terminal.
+    macAddress: String
+    nombreTerminal: String
 }
 
 type MaletinOutput {
@@ -212,6 +218,8 @@ input AbrirCajaInput {
     idMaletin: ID!
     idPersona: ID
     conteos: [ConteoDenominacionInput!]!
+    # MAC de la PC Electron. Obligatoria si la caja está vinculada a una terminal.
+    macAddress: String
 }
 
 input CerrarCajaInput {
@@ -305,9 +313,11 @@ input VentaInput {
 
 extend type Query {
     listarCajas: [CajaOutput!]!
-    listarCajasDisponibles: [CajaOutput!]!
+    # Si se envía macAddress, solo la caja de esa PC (o cajas sin vínculo si la PC no tiene caja).
+    listarCajasDisponibles(macAddress: String): [CajaOutput!]!
     listarCajasPaginado(page: Int!, size: Int!, filter: String): CajaPageResponse!
     buscarCajaPorId(id: ID!): CajaOutput
+    buscarCajaPorMac(macAddress: String!): CajaOutput
 
     listarMaletines: [MaletinOutput!]!
     listarMaletinesDisponibles(idSector: ID): [MaletinOutput!]!

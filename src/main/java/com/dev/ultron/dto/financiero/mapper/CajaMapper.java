@@ -25,6 +25,8 @@ public interface CajaMapper extends BaseMapper<Caja, CajaInput, CajaOutput> {
     @Mapping(target = "responsable", source = "responsable")
     @Mapping(target = "sector", source = "sector")
     @Mapping(target = "activa", source = "input.activa")
+    @Mapping(target = "mac_address", ignore = true)
+    @Mapping(target = "nombre_terminal", ignore = true)
     Caja toEntity(CajaInput input, Persona responsable, Sector sector);
 
     @BeanMapping(nullValuePropertyMappingStrategy = org.mapstruct.NullValuePropertyMappingStrategy.IGNORE)
@@ -35,10 +37,14 @@ public interface CajaMapper extends BaseMapper<Caja, CajaInput, CajaOutput> {
     @Mapping(target = "responsable", source = "responsable")
     @Mapping(target = "sector", source = "sector")
     @Mapping(target = "activa", source = "input.activa")
+    @Mapping(target = "mac_address", ignore = true)
+    @Mapping(target = "nombre_terminal", ignore = true)
     void updateEntity(@MappingTarget Caja entidad, CajaInput input, Persona responsable, Sector sector);
 
     @Mapping(target = "saldoActual", source = "saldo_actual")
     @Mapping(target = "idEmpresa", source = "id_empresa")
+    @Mapping(target = "macAddress", source = "mac_address")
+    @Mapping(target = "nombreTerminal", source = "nombre_terminal")
     @Override
     CajaOutput toOutput(Caja entity);
 }

@@ -12,6 +12,8 @@ import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.repository.financiero.CajaRepository;
 import com.dev.ultron.repository.personas.PersonaRepository;
 import com.dev.ultron.repository.sectores.SectorRepository;
+import com.dev.ultron.util.MacAddressUtil;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,7 +60,12 @@ public class CajaService extends GenericCrudService<Caja, Long> {
         if (entidad.getActiva() == null) {
             entidad.setActiva(true);
         }
-        return mapper.toOutput(guardar(entidad));
+        aplicarVinculoTerminal(entidad, input.getMacAddress(), input.getNombreTerminal(), null);
+        try {
+            return mapper.toOutput(guardar(entidad));
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalArgumentException(mensajeMacDuplicada(ex), ex);
+        }
     }
 
     @Transactional
@@ -70,7 +78,12 @@ public class CajaService extends GenericCrudService<Caja, Long> {
                 ? resolveSector(input.getIdSector())
                 : entidad.getSector();
         mapper.updateEntity(entidad, input, responsable, sector);
-        return mapper.toOutput(actualizar(entidad));
+        aplicarVinculoTerminal(entidad, input.getMacAddress(), input.getNombreTerminal(), id);
+        try {
+            return mapper.toOutput(actualizar(entidad));
+        } catch (DataIntegrityViolationException ex) {
+            throw new IllegalArgumentException(mensajeMacDuplicada(ex), ex);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -90,7 +103,134 @@ public class CajaService extends GenericCrudService<Caja, Long> {
 
     @Transactional(readOnly = true)
     public List<CajaOutput> findDisponibles() {
-        return repository.findDisponibles().stream().map(mapper::toOutput).collect(Collectors.toList());
+        return findDisponibles(null);
+    }
+
+    /**
+     * Cajas libres para abrir. Con {@code macAddress}:
+     * <ul>
+     *   <li>Si esa PC ya tiene caja vinculada → solo esa (si está libre).</li>
+     *   <li>Si no → solo cajas sin vínculo de terminal.</li>
+     * </ul>
+     */
+    @Transactional(readOnly = true)
+    public List<CajaOutput> findDisponibles(String macAddress) {
+        String mac = MacAddressUtil.safeNormalize(macAddress);
+        if (mac == null) {
+            return repository.findDisponibles().stream().map(mapper::toOutput).collect(Collectors.toList());
+        }
+
+        Optional<Caja> vinculada = repository.findByMacAddress(mac);
+        if (vinculada.isPresent()) {
+            Caja caja = vinculada.get();
+            if (Boolean.FALSE.equals(caja.getActiva())) {
+                return List.of();
+            }
+            Long id = caja.getId_caja();
+            return repository.findDisponibles().stream()
+                    .filter(c -> c.getId_caja().equals(id))
+                    .map(mapper::toOutput)
+                    .collect(Collectors.toList());
+        }
+
+        return repository.findDisponiblesSinVinculo().stream()
+                .map(mapper::toOutput)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public CajaOutput findByMac(String macAddress) {
+        String mac = MacAddressUtil.normalize(macAddress);
+        return repository.findByMacAddress(mac)
+                .map(mapper::toOutput)
+                .orElse(null);
+    }
+
+    /**
+     * Reglas de vínculo caja ↔ terminal al abrir:
+     * <ul>
+     *   <li>Caja con MAC: solo esa PC puede abrirla.</li>
+     *   <li>PC con caja asignada: solo puede abrir esa caja.</li>
+     * </ul>
+     */
+    public void validarAperturaEnTerminal(Caja caja, String macAddressRaw) {
+        String macPc = MacAddressUtil.safeNormalize(macAddressRaw);
+        String macCaja = MacAddressUtil.safeNormalize(caja.getMac_address());
+
+        if (macPc != null) {
+            repository.findByMacAddress(macPc).ifPresent(cajaDeEstaPc -> {
+                if (!cajaDeEstaPc.getId_caja().equals(caja.getId_caja())) {
+                    String nombre = cajaDeEstaPc.getNombre() != null
+                            ? cajaDeEstaPc.getNombre()
+                            : ("#" + cajaDeEstaPc.getId_caja());
+                    throw new IllegalArgumentException(
+                            "Esta terminal solo puede abrir la caja " + nombre
+                                    + ". Para mudar la caja, desvinculá o reasigná la MAC desde administración.");
+                }
+            });
+        }
+
+        if (macCaja != null) {
+            if (macPc == null) {
+                throw new IllegalArgumentException(
+                        "La caja " + nombreCaja(caja)
+                                + " está vinculada a una terminal. Abrila desde la aplicación de escritorio en esa PC.");
+            }
+            if (!macCaja.equals(macPc)) {
+                throw new IllegalArgumentException(
+                        "La caja " + nombreCaja(caja)
+                                + " solo puede abrirse en la terminal vinculada"
+                                + (caja.getNombre_terminal() != null && !caja.getNombre_terminal().isBlank()
+                                ? " (" + caja.getNombre_terminal() + ")"
+                                : "")
+                                + ".");
+            }
+        }
+    }
+
+    private static String nombreCaja(Caja caja) {
+        return caja.getNombre() != null ? caja.getNombre() : ("#" + caja.getId_caja());
+    }
+
+    /**
+     * Aplica o limpia el vínculo. Cadena vacía en {@code macAddress} desvincula.
+     * Si ambos campos vienen {@code null} (omitidos), no se modifica el vínculo.
+     */
+    private void aplicarVinculoTerminal(Caja entidad, String macAddress, String nombreTerminal, Long excludeId) {
+        boolean macPresenteEnInput = macAddress != null;
+        boolean nombrePresenteEnInput = nombreTerminal != null;
+
+        if (!macPresenteEnInput && !nombrePresenteEnInput) {
+            return;
+        }
+
+        if (macPresenteEnInput) {
+            String mac = MacAddressUtil.normalize(macAddress);
+            if (mac == null) {
+                entidad.setMac_address(null);
+                if (!nombrePresenteEnInput || nombreTerminal.isBlank()) {
+                    entidad.setNombre_terminal(null);
+                }
+            } else if (repository.existsByMacAddressExcluding(mac, excludeId)) {
+                throw new IllegalArgumentException(
+                        "Ya existe otra caja vinculada a la terminal con MAC " + mac);
+            } else {
+                entidad.setMac_address(mac);
+            }
+        }
+
+        if (nombrePresenteEnInput) {
+            String nombre = nombreTerminal.trim();
+            entidad.setNombre_terminal(nombre.isEmpty() ? null : nombre);
+        }
+    }
+
+    private String mensajeMacDuplicada(DataIntegrityViolationException ex) {
+        String detalle = String.valueOf(ex.getMostSpecificCause().getMessage());
+        if (detalle.contains("uq_caja_mac_address")) {
+            return "Ya existe otra caja vinculada a esa dirección MAC";
+        }
+        return "No se pudo guardar la caja por un conflicto de datos";
     }
 
     private Persona resolveResponsable(Long idResponsable) {
