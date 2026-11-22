@@ -3,6 +3,7 @@ package com.dev.ultron.service.financiero;
 import com.dev.ultron.domain.financiero.Caja;
 import com.dev.ultron.dto.financiero.mapper.CajaMapper;
 import com.dev.ultron.repository.financiero.CajaRepository;
+import com.dev.ultron.repository.financiero.TerminalRepository;
 import com.dev.ultron.repository.personas.PersonaRepository;
 import com.dev.ultron.repository.sectores.SectorRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +24,8 @@ class CajaServiceTerminalTest {
             repository,
             mock(CajaMapper.class),
             mock(PersonaRepository.class),
-            mock(SectorRepository.class));
+            mock(SectorRepository.class),
+            mock(TerminalRepository.class));
 
     private final Caja cajaMostrador = Caja.builder()
             .id_caja(1L)

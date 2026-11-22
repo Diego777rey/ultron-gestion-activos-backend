@@ -1,6 +1,7 @@
 package com.dev.ultron.service.financiero;
 
 import com.dev.ultron.domain.financiero.Caja;
+import com.dev.ultron.domain.financiero.Terminal;
 import com.dev.ultron.domain.personas.Persona;
 import com.dev.ultron.domain.sectores.Sector;
 import com.dev.ultron.dto.financiero.input.CajaInput;
@@ -10,6 +11,7 @@ import com.dev.ultron.generic.EntityNotFoundException;
 import com.dev.ultron.generic.GenericCrudService;
 import com.dev.ultron.generic.PageResponse;
 import com.dev.ultron.repository.financiero.CajaRepository;
+import com.dev.ultron.repository.financiero.TerminalRepository;
 import com.dev.ultron.repository.personas.PersonaRepository;
 import com.dev.ultron.repository.sectores.SectorRepository;
 import com.dev.ultron.util.MacAddressUtil;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,17 +34,20 @@ public class CajaService extends GenericCrudService<Caja, Long> {
     private final CajaMapper mapper;
     private final PersonaRepository personaRepository;
     private final SectorRepository sectorRepository;
+    private final TerminalRepository terminalRepository;
 
     public CajaService(
             CajaRepository repository,
             CajaMapper mapper,
             PersonaRepository personaRepository,
-            SectorRepository sectorRepository
+            SectorRepository sectorRepository,
+            TerminalRepository terminalRepository
     ) {
         this.repository = repository;
         this.mapper = mapper;
         this.personaRepository = personaRepository;
         this.sectorRepository = sectorRepository;
+        this.terminalRepository = terminalRepository;
     }
 
     @Override
@@ -60,9 +66,12 @@ public class CajaService extends GenericCrudService<Caja, Long> {
         if (entidad.getActiva() == null) {
             entidad.setActiva(true);
         }
+        String macAnterior = null;
         aplicarVinculoTerminal(entidad, input.getMacAddress(), input.getNombreTerminal(), null);
         try {
-            return mapper.toOutput(guardar(entidad));
+            Caja guardada = guardar(entidad);
+            sincronizarTerminalConCaja(guardada, macAnterior);
+            return mapper.toOutput(guardada);
         } catch (DataIntegrityViolationException ex) {
             throw new IllegalArgumentException(mensajeMacDuplicada(ex), ex);
         }
@@ -71,6 +80,7 @@ public class CajaService extends GenericCrudService<Caja, Long> {
     @Transactional
     public CajaOutput update(Long id, CajaInput input) {
         Caja entidad = buscarPorIdOrThrow(id);
+        String macAnterior = MacAddressUtil.safeNormalize(entidad.getMac_address());
         Persona responsable = input.getIdResponsable() != null
                 ? resolveResponsable(input.getIdResponsable())
                 : entidad.getResponsable();
@@ -80,7 +90,9 @@ public class CajaService extends GenericCrudService<Caja, Long> {
         mapper.updateEntity(entidad, input, responsable, sector);
         aplicarVinculoTerminal(entidad, input.getMacAddress(), input.getNombreTerminal(), id);
         try {
-            return mapper.toOutput(actualizar(entidad));
+            Caja actualizada = actualizar(entidad);
+            sincronizarTerminalConCaja(actualizada, macAnterior);
+            return mapper.toOutput(actualizada);
         } catch (DataIntegrityViolationException ex) {
             throw new IllegalArgumentException(mensajeMacDuplicada(ex), ex);
         }
@@ -195,6 +207,7 @@ public class CajaService extends GenericCrudService<Caja, Long> {
     /**
      * Aplica o limpia el vínculo. Cadena vacía en {@code macAddress} desvincula.
      * Si ambos campos vienen {@code null} (omitidos), no se modifica el vínculo.
+     * Sincroniza también {@code financiero.terminal.id_caja}.
      */
     private void aplicarVinculoTerminal(Caja entidad, String macAddress, String nombreTerminal, Long excludeId) {
         boolean macPresenteEnInput = macAddress != null;
@@ -223,6 +236,46 @@ public class CajaService extends GenericCrudService<Caja, Long> {
             String nombre = nombreTerminal.trim();
             entidad.setNombre_terminal(nombre.isEmpty() ? null : nombre);
         }
+    }
+
+    private void sincronizarTerminalConCaja(Caja caja, String macAnterior) {
+        String macNueva = MacAddressUtil.safeNormalize(caja.getMac_address());
+        Long idCaja = caja.getId_caja();
+
+        if (macAnterior != null && (macNueva == null || !macAnterior.equals(macNueva))) {
+            terminalRepository.findByMacAddress(macAnterior).ifPresent(t -> {
+                if (t.getCaja() != null && (idCaja == null || t.getCaja().getId_caja().equals(idCaja))) {
+                    t.setCaja(null);
+                    terminalRepository.save(t);
+                }
+            });
+        }
+
+        if (macNueva == null || idCaja == null) {
+            return;
+        }
+
+        terminalRepository.findByCajaId(idCaja).ifPresent(otra -> {
+            if (!macNueva.equals(otra.getMac_address())) {
+                otra.setCaja(null);
+                terminalRepository.save(otra);
+            }
+        });
+
+        Terminal terminal = terminalRepository.findByMacAddress(macNueva).orElseGet(() ->
+                Terminal.builder()
+                        .mac_address(macNueva)
+                        .hostname(caja.getNombre_terminal())
+                        .nombre(caja.getNombre_terminal())
+                        .fecha_registro(LocalDateTime.now())
+                        .ultima_conexion(LocalDateTime.now())
+                        .activa(true)
+                        .build());
+        terminal.setCaja(caja);
+        if (caja.getNombre_terminal() != null && !caja.getNombre_terminal().isBlank()) {
+            terminal.setNombre(caja.getNombre_terminal());
+        }
+        terminalRepository.save(terminal);
     }
 
     private String mensajeMacDuplicada(DataIntegrityViolationException ex) {

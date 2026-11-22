@@ -222,6 +222,36 @@ input AbrirCajaInput {
     macAddress: String
 }
 
+# PC donde corre la app de escritorio (se registra sola con su MAC).
+type TerminalOutput {
+    id_terminal: ID
+    macAddress: String
+    hostname: String
+    nombre: String
+    plataforma: String
+    ultimaConexion: String
+    fechaRegistro: String
+    activa: Boolean
+    idCaja: ID
+    cajaNombre: String
+}
+
+type TerminalPageResponse {
+    content: [TerminalOutput!]!
+    pageInfo: PageInfo!
+}
+
+input RegistrarTerminalInput {
+    macAddress: String!
+    hostname: String
+    plataforma: String
+}
+
+input TerminalInput {
+    nombre: String
+    activa: Boolean
+}
+
 input CerrarCajaInput {
     idSesionCaja: ID!
     conteos: [ConteoDenominacionInput!]!
@@ -318,6 +348,10 @@ extend type Query {
     listarCajasPaginado(page: Int!, size: Int!, filter: String): CajaPageResponse!
     buscarCajaPorId(id: ID!): CajaOutput
     buscarCajaPorMac(macAddress: String!): CajaOutput
+
+    listarTerminalesPaginado(page: Int!, size: Int!, filter: String): TerminalPageResponse!
+    buscarTerminalPorId(id: ID!): TerminalOutput
+    buscarTerminalPorMac(macAddress: String!): TerminalOutput
 
     listarMaletines: [MaletinOutput!]!
     listarMaletinesDisponibles(idSector: ID): [MaletinOutput!]!
@@ -457,6 +491,13 @@ extend type Mutation {
     registrarMaletin(input: MaletinInput!): MaletinOutput
     actualizarMaletin(id: ID!, input: MaletinInput!): MaletinOutput
     eliminarMaletin(id: ID!): Boolean
+
+    # La app Electron llama esto al iniciar (upsert por MAC).
+    registrarTerminal(input: RegistrarTerminalInput!): TerminalOutput!
+    actualizarTerminal(id: ID!, input: TerminalInput!): TerminalOutput
+    # Admin habilita una caja en esa PC de forma remota (guarda MAC en la caja).
+    asignarCajaATerminal(idTerminal: ID!, idCaja: ID!): TerminalOutput!
+    desasignarCajaDeTerminal(idTerminal: ID!): TerminalOutput!
 
     abrirCaja(input: AbrirCajaInput!): SesionCajaOutput
     cerrarCaja(input: CerrarCajaInput!): SesionCajaOutput
