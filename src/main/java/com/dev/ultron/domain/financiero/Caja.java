@@ -42,4 +42,10 @@ public class Caja implements Serializable {
     private Sector sector;
 
     private Boolean activa;
+
+    /** MAC de la PC Electron autorizada (AA:BB:CC:DD:EE:FF). Null = sin vínculo. */
+    private String mac_address;
+
+    /** Nombre legible de la terminal (hostname u otro). */
+    private String nombre_terminal;
 }

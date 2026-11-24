@@ -17,4 +17,6 @@ public class AbrirCajaInput implements Serializable {
     private Long idMaletin;
     private Long idPersona;
     private List<ConteoDenominacionInput> conteos;
+    /** MAC de la PC desde la que se abre (requerida si la caja está vinculada). */
+    private String macAddress;
 }

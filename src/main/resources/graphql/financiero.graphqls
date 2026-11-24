@@ -10,6 +10,9 @@ type CajaOutput {
     responsable: PersonaOutput
     sector: SectorOutput
     activa: Boolean
+    # MAC de la terminal Electron vinculada (AA:BB:CC:DD:EE:FF). Null = sin vínculo.
+    macAddress: String
+    nombreTerminal: String
 }
 
 type CajaPageResponse {
@@ -24,6 +27,9 @@ input CajaInput {
     idResponsable: ID
     idSector: ID!
     activa: Boolean
+    # MAC de la PC. Vacío o null desvincula la terminal.
+    macAddress: String
+    nombreTerminal: String
 }
 
 type MaletinOutput {
@@ -212,6 +218,38 @@ input AbrirCajaInput {
     idMaletin: ID!
     idPersona: ID
     conteos: [ConteoDenominacionInput!]!
+    # MAC de la PC Electron. Obligatoria si la caja está vinculada a una terminal.
+    macAddress: String
+}
+
+# PC donde corre la app de escritorio (se registra sola con su MAC).
+type TerminalOutput {
+    id_terminal: ID
+    macAddress: String
+    hostname: String
+    nombre: String
+    plataforma: String
+    ultimaConexion: String
+    fechaRegistro: String
+    activa: Boolean
+    idCaja: ID
+    cajaNombre: String
+}
+
+type TerminalPageResponse {
+    content: [TerminalOutput!]!
+    pageInfo: PageInfo!
+}
+
+input RegistrarTerminalInput {
+    macAddress: String!
+    hostname: String
+    plataforma: String
+}
+
+input TerminalInput {
+    nombre: String
+    activa: Boolean
 }
 
 input CerrarCajaInput {
@@ -305,9 +343,15 @@ input VentaInput {
 
 extend type Query {
     listarCajas: [CajaOutput!]!
-    listarCajasDisponibles: [CajaOutput!]!
+    # Si se envía macAddress, solo la caja de esa PC (o cajas sin vínculo si la PC no tiene caja).
+    listarCajasDisponibles(macAddress: String): [CajaOutput!]!
     listarCajasPaginado(page: Int!, size: Int!, filter: String): CajaPageResponse!
     buscarCajaPorId(id: ID!): CajaOutput
+    buscarCajaPorMac(macAddress: String!): CajaOutput
+
+    listarTerminalesPaginado(page: Int!, size: Int!, filter: String): TerminalPageResponse!
+    buscarTerminalPorId(id: ID!): TerminalOutput
+    buscarTerminalPorMac(macAddress: String!): TerminalOutput
 
     listarMaletines: [MaletinOutput!]!
     listarMaletinesDisponibles(idSector: ID): [MaletinOutput!]!
@@ -447,6 +491,13 @@ extend type Mutation {
     registrarMaletin(input: MaletinInput!): MaletinOutput
     actualizarMaletin(id: ID!, input: MaletinInput!): MaletinOutput
     eliminarMaletin(id: ID!): Boolean
+
+    # La app Electron llama esto al iniciar (upsert por MAC).
+    registrarTerminal(input: RegistrarTerminalInput!): TerminalOutput!
+    actualizarTerminal(id: ID!, input: TerminalInput!): TerminalOutput
+    # Admin habilita una caja en esa PC de forma remota (guarda MAC en la caja).
+    asignarCajaATerminal(idTerminal: ID!, idCaja: ID!): TerminalOutput!
+    desasignarCajaDeTerminal(idTerminal: ID!): TerminalOutput!
 
     abrirCaja(input: AbrirCajaInput!): SesionCajaOutput
     cerrarCaja(input: CerrarCajaInput!): SesionCajaOutput

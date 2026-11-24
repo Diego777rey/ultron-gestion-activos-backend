@@ -54,6 +54,7 @@ class SesionCajaServiceTest {
     private final PersonaRepository personaRepository = mock(PersonaRepository.class);
     private final ArqueoCajaService arqueoCajaService = mock(ArqueoCajaService.class);
     private final UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
+    private final CajaService cajaService = mock(CajaService.class);
     private final SesionCajaService service = new SesionCajaService(
             repository,
             mock(SesionCajaMapper.class),
@@ -62,7 +63,8 @@ class SesionCajaServiceTest {
             personaRepository,
             usuarioRepository,
             mock(MovimientoCajaRepository.class),
-            arqueoCajaService);
+            arqueoCajaService,
+            cajaService);
 
     private final Sector sector = Sector.builder().id_sector(1L).build();
     private final Caja caja = Caja.builder().id_caja(1L).nombre("Caja 1").sector(sector).activa(true).build();
@@ -172,6 +174,29 @@ class SesionCajaServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> service.misSesionesCerradas(0, 15, "2026-10-06", "2026-10-08"));
         verify(repository, never()).findCerradasPorPersona(anyLong(), any(), any(), any());
+    }
+
+    @Test
+    void abrirValidaElVinculoDeTerminalAntesDeContinuar() {
+        when(repository.findUltimoCierrePorMaletin(any(), any())).thenReturn(List.of());
+        AbrirCajaInput input = apertura(conteo("PYG", "1000", 1));
+        input.setMacAddress("AA:BB:CC:DD:EE:FF");
+
+        service.abrirCaja(input);
+
+        verify(cajaService).validarAperturaEnTerminal(caja, "AA:BB:CC:DD:EE:FF");
+    }
+
+    @Test
+    void abrirFallaSiLaTerminalNoCoincideConLaCaja() {
+        org.mockito.Mockito.doThrow(new IllegalArgumentException("terminal incorrecta"))
+                .when(cajaService).validarAperturaEnTerminal(any(), any());
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.abrirCaja(apertura(conteo("PYG", "1000", 1))));
+        assertEquals("terminal incorrecta", ex.getMessage());
+        verify(repository, never()).save(any(SesionCaja.class));
     }
 
     private static ArqueoMonedaOutput esperado(String moneda, String monto) {

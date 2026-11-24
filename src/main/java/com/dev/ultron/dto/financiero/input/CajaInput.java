@@ -19,4 +19,7 @@ public class CajaInput implements Serializable {
     private Long idResponsable;
     private Long idSector;
     private Boolean activa;
+    /** MAC de la terminal (AA:BB:CC:DD:EE:FF). Vacío o null desvincula. */
+    private String macAddress;
+    private String nombreTerminal;
 }

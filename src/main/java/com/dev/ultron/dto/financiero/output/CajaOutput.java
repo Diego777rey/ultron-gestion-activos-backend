@@ -22,4 +22,6 @@ public class CajaOutput implements Serializable {
     private PersonaOutput responsable;
     private SectorOutput sector;
     private Boolean activa;
+    private String macAddress;
+    private String nombreTerminal;
 }

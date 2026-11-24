@@ -49,6 +49,7 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
     private final UsuarioRepository usuarioRepository;
     private final MovimientoCajaRepository movimientoCajaRepository;
     private final ArqueoCajaService arqueoCajaService;
+    private final CajaService cajaService;
 
     public SesionCajaService(
             SesionCajaRepository repository,
@@ -58,7 +59,8 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
             PersonaRepository personaRepository,
             UsuarioRepository usuarioRepository,
             MovimientoCajaRepository movimientoCajaRepository,
-            ArqueoCajaService arqueoCajaService) {
+            ArqueoCajaService arqueoCajaService,
+            CajaService cajaService) {
         this.repository = repository;
         this.mapper = mapper;
         this.cajaRepository = cajaRepository;
@@ -67,6 +69,7 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
         this.usuarioRepository = usuarioRepository;
         this.movimientoCajaRepository = movimientoCajaRepository;
         this.arqueoCajaService = arqueoCajaService;
+        this.cajaService = cajaService;
     }
 
     @Override
@@ -85,6 +88,7 @@ public class SesionCajaService extends GenericCrudService<SesionCaja, Long> {
         if (Boolean.FALSE.equals(caja.getActiva())) {
             throw new IllegalArgumentException("La caja seleccionada no está activa");
         }
+        cajaService.validarAperturaEnTerminal(caja, input.getMacAddress());
         repository.findPorCajaYEstado(caja.getId_caja(), "ABIERTA").ifPresent(abierta -> {
             throw new IllegalArgumentException(mensajeOcupada("La caja ya está abierta", abierta));
         });

@@ -24,8 +24,8 @@ public class CajaGraphQLController {
     }
 
     @QueryMapping
-    public List<CajaOutput> listarCajasDisponibles() {
-        return service.findDisponibles();
+    public List<CajaOutput> listarCajasDisponibles(@Argument String macAddress) {
+        return service.findDisponibles(macAddress);
     }
 
     @QueryMapping
@@ -36,6 +36,11 @@ public class CajaGraphQLController {
     @QueryMapping
     public CajaOutput buscarCajaPorId(@Argument Long id) {
         return service.findById(id);
+    }
+
+    @QueryMapping
+    public CajaOutput buscarCajaPorMac(@Argument String macAddress) {
+        return service.findByMac(macAddress);
     }
 
     @MutationMapping
